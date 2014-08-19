@@ -5,7 +5,7 @@
     <title>Productization Errors</title>
     <style type="text/css">
         body {
-            background-color: #efefef;
+            background-color: #fdfdfd;
             font-family: Arial, Verdana;
             font-size: 14px;
             margin: 0 auto;
@@ -37,7 +37,25 @@
             text-transform: uppercase;
         }
 
+        code {
+            display: inline-block;
+            background-color: #e1e1e1;
+            font-family: monospace;
+            font-size: 13px;
+            padding: 4px;
+        }
 
+        .warnings,
+        .p12n_warnings {
+            color: #ffbf00;
+            font-weight: bold;
+        }
+
+        .errors,
+        .p12n_errors {
+            color: #f00;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -100,8 +118,9 @@
                     }
                     $html_output .= "<h3>{$product_names[$product]}</h3>";
                     foreach ($json_array[$locale][$product][$channel] as $key => $value) {
-                        $name = str_replace('_', ' ', strtoupper($key));
-                        $html_output .= "<p>{$name}:</p>\n";
+                        $name = str_replace('_', ' ', $key);
+                        $name = strtoupper(str_replace('p12n', 'Productization', $name));
+                        $html_output .= "<p class='{$key}'>{$name}:</p>\n";
                         $html_output .= "<ul>\n";
                         foreach ($value as $message) {
                             $html_output .= "  <li>{$message}</li>\n";
