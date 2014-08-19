@@ -78,6 +78,7 @@
     $products = ['browser', 'mobile', 'suite', 'mail'];
 
     $html_output  = "<h1>Productization Errors</h1>\n";
+    $html_output .= "<p>Last update: {$json_array["metadata"]["creation_date"]}</p>\n";
     $html_output .= "<p>Filter by product</p>\n";
     $html_output .= "<ul class='filter'>\n";
     foreach ($products as $product) {

@@ -755,7 +755,9 @@ def main():
     for index, value in enumerate(images_list):
         image_data[index] = value
     json_data["images"] = image_data
-    json_data["creation_date"] = strftime("%Y-%m-%d %H:%M:%S", localtime())
+    json_errors["metadata"] = {
+        "creation_date": strftime("%Y-%m-%d %H:%M %Z", localtime())
+    }
 
     # Write back updated json with data
     json_file = open(data_filename, "w")
@@ -763,7 +765,9 @@ def main():
     json_file.close()
 
     # Finalize and write json with errors
-    json_errors["creation_date"] = strftime("%Y-%m-%d %H:%M:%S", localtime())
+    json_errors["metadata"] = {
+        "creation_date": strftime("%Y-%m-%d %H:%M %Z", localtime())
+    }
     errors_file = open(errors_filename, "w")
     errors_file.write(json.dumps(json_errors, sort_keys=True))
     errors_file.close()

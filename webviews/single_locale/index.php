@@ -113,7 +113,7 @@
     echo "    </p>
   </div>\n\n";
 
-    echo '  <p id="update">Last update: ' . $jsonarray["creation_date"] . "</p>\n";
+    echo '  <p id="update">Last update: ' . $jsonarray["metadata"]["creation_date"] . "</p>\n";
 
     foreach ($products as $i=>$product) {
         echo "  <div class='product'>
