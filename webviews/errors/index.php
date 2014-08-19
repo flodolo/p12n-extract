@@ -45,6 +45,10 @@
             padding: 4px;
         }
 
+        .update {
+            font-size: 12px;
+        }
+
         .warnings,
         .p12n_warnings {
             color: #ffbf00;
@@ -63,49 +67,94 @@
 
 <?php
     $json_source = '../errors.json';
+    if (! file_exists($json_source)) {
+        die("errors.json is missing");
+    }
     $json_data = file_get_contents($json_source);
     $json_array = json_decode($json_data, true);
+
+    // Local arrays
     $locales = array_keys($json_array);
-
-
     $product_names = [
         'browser' => 'Firefox Desktop',
-        'mobile'  => 'Firefox Mobile (Android)',
+        'mobile'  => 'Firefox Android',
         'suite'   => 'Seamonkey',
         'mail'    => 'Thunderbird'
     ];
     $channels = ['trunk', 'aurora', 'beta', 'release'];
     $products = ['browser', 'mobile', 'suite', 'mail'];
 
-    $html_output  = "<h1>Productization Errors</h1>\n";
-    $html_output .= "<p>Last update: {$json_array["metadata"]["creation_date"]}</p>\n";
+    // Get filter parameters
+    $requested_product = '';
+    if (isset($_REQUEST['product'])) {
+        if (in_array($_REQUEST['product'], $products)) {
+            $requested_product = $_REQUEST['product'];
+        }
+    }
+
+    $requested_channel = '';
+    if (isset($_REQUEST['channel'])) {
+        if (in_array($_REQUEST['channel'], $channels)) {
+            $requested_channel = $_REQUEST['channel'];
+        }
+    }
+
+    // Title section (changes according to filters)
+    $extra_title = '';
+    if ($requested_product) {
+        $extra_title .= " - $product_names[$requested_product]";
+    }
+    if ($requested_channel) {
+        $extra_title .= " ({$requested_channel})";
+    }
+    $html_output  = "<h1>Productization Errors{$extra_title}</h1>\n";
+    $html_output .= "<p class='update'>Last update: {$json_array["metadata"]["creation_date"]}</p>\n";
+
+    // Filter by product
     $html_output .= "<p>Filter by product</p>\n";
     $html_output .= "<ul class='filter'>\n";
     foreach ($products as $product) {
-        $html_output .= "  <li><a href='?product={$product}'>{$product_names[$product]}</a></li>\n";
+        $link = "?product={$product}";
+        if ($requested_channel) {
+            $link .= "&amp;channel={$requested_channel}";
+        }
+        $html_output .= "  <li><a href='{$link}'>{$product_names[$product]}</a></li>\n";
     }
-    $html_output .= "  <li><a href='?'>all</a></li>\n";
+    $reset_link = "?";
+    if ($requested_channel) {
+        // If set, keep channel and reset only product
+        $reset_link .= "channel={$requested_channel}";
+    }
+    $html_output .= "  <li><a href='{$reset_link}'>all</a></li>\n";
     $html_output .= "</ul>\n";
 
+    // Filter by channel
     $html_output .= "<p>Filter by channel</p>\n";
     $html_output .= "<ul class='filter'>\n";
     foreach ($channels as $channel) {
-        $html_output .= "  <li><a href='?channel={$channel}'>{$channel}</a></li>\n";
+        $link = "?channel={$channel}";
+        if ($requested_product) {
+            $link .= "&amp;product={$requested_product}";
+        }
+        $html_output .= "  <li><a href='{$link}'>{$channel}</a></li>\n";
     }
-    $html_output .= "  <li><a href='?'>all</a></li>\n";
+    $reset_link = "?";
+    if ($requested_product) {
+        // If set, keep product and reset only channel
+        $reset_link .= "product={$requested_product}";
+    }
+    $html_output .= "  <li><a href='{$reset_link}'>all</a></li>\n";
     $html_output .= "</ul>\n";
 
-    if (! empty($_REQUEST['channel'])) {
-        if (in_array($_REQUEST['channel'], $channels)) {
-            $channels = [$_REQUEST['channel']];
-        }
+    // Filter channels and products arrays
+    if ($requested_channel) {
+        $channels = [$requested_channel];
     }
-    if (! empty($_REQUEST['product'])) {
-        if (in_array($_REQUEST['product'], $products)) {
-            $products = [$_REQUEST['product']];
-        }
+    if ($requested_product) {
+        $products = [$requested_product];
     }
 
+    $error_count = 0;
     foreach ($channels as $channel) {
         $html_output .= "<h2>Repository: <a id='{$channel}' href='?channel={$channel}'>{$channel}</a></h2>";
         foreach ($locales as $locale) {
@@ -125,12 +174,17 @@
                         $html_output .= "<ul>\n";
                         foreach ($value as $message) {
                             $html_output .= "  <li>{$message}</li>\n";
+                            $error_count++;
                         }
                         $html_output .= "</ul>\n";
                     }
                 }
             }
         }
+    }
+
+    if ($error_count == 0) {
+        $html_output .= "<p>No errors or warnings available.</p>";
     }
 
     echo $html_output;
