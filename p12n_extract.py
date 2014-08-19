@@ -761,7 +761,7 @@ def main():
 
     # Write back updated json with data
     json_file = open(data_filename, "w")
-    json_file.write(json.dumps(json_data)
+    json_file.write(json.dumps(json_data))
     json_file.close()
 
     # Finalize and write json with errors
