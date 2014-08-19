@@ -64,7 +64,7 @@ def extract_sp_product(searchpath, product, locale, channel, json_data,
                     if filename_noext not in sp_list and filename != "list.txt":
                         # Extra file or unused searchplugin, should be removed
                         errors.append(
-                           "file %s not in list.txt %s" % filename
+                           "file %s not in list.txt" % filename
                         )
 
         # For each searchplugin check if the file exists (localized version) or
@@ -84,7 +84,6 @@ def extract_sp_product(searchpath, product, locale, channel, json_data,
                 try:
                     searchplugin_info = "(%s, %s, %s, %s.xml)" \
                                         % (locale, product, channel, sp)
-
                     try:
                         xmldoc = minidom.parse(sp_file)
                     except Exception as e:
@@ -204,7 +203,6 @@ def extract_sp_product(searchpath, product, locale, channel, json_data,
                             % searchplugin_info
                         )
                         images.append(images_list[0])
-
                     json_data[locale][product][channel][sp] = {
                         "file": "%s.xml" % sp,
                         "name": name,
@@ -761,13 +759,13 @@ def main():
 
     # Write back updated json with data
     json_file = open(data_filename, "w")
-    json_file.write(json.dumps(json_data))
+    json_file.write(json.dumps(json_data, sort_keys=True))
     json_file.close()
 
     # Finalize and write json with errors
     json_errors["creation_date"] = strftime("%Y-%m-%d %H:%M:%S", localtime())
     errors_file = open(errors_filename, "w")
-    errors_file.write(json.dumps(json_errors))
+    errors_file.write(json.dumps(json_errors, sort_keys=True))
     errors_file.close()
 
 
