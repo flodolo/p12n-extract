@@ -1,55 +1,117 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en-US">
 <head>
     <meta charset=utf-8>
-    <title>Searchplugins Images</title>
+    <title>Productization Errors</title>
     <style type="text/css">
-        body { background-color: #FCFCFC; font-family: Arial, Verdana; font-size: 14px; margin: 0 auto; width: 300px;}
-        h1 { margin-top: 20px;}
+        body {
+            background-color: #efefef;
+            font-family: Arial, Verdana;
+            font-size: 14px;
+            margin: 0 auto;
+            padding: 10px 20px;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        .filter:after {
+            content: '';
+            display: block;
+            clear: both;
+        }
+
+        .filter li {
+            display: inline;
+            float: left;
+            padding: 8px;
+            border: 1px solid #000;
+            background-color: #888;
+            margin: 0 4px;
+        }
+
+        .filter a {
+            color: #fff;
+            text-decoration: none;
+            text-transform: uppercase;
+        }
+
+
     </style>
 </head>
 
 <body>
 
 <?php
-    include_once('../locales.inc');
-    $filename = '../searchplugins.json';
+    $json_source = '../errors.json';
+    $json_data = file_get_contents($json_source);
+    $json_array = json_decode($json_data, true);
+    $locales = array_keys($json_array);
 
-    $channel = 'beta';
+
+    $product_names = [
+        'browser' => 'Firefox Desktop',
+        'mobile'  => 'Firefox Mobile (Android)',
+        'suite'   => 'Seamonkey',
+        'mail'    => 'Thunderbird'
+    ];
+    $channels = ['trunk', 'aurora', 'beta', 'release'];
     $products = ['browser', 'mobile', 'suite', 'mail'];
-    $productnames = ['Firefox Desktop', 'Firefox Mobile (Android)', 'Seamonkey', 'Thunderbird'];
 
-    $jsondata = file_get_contents($filename);
-    $jsonarray = json_decode($jsondata, true);
+    $html_output  = "<h1>Productization Errors</h1>\n";
+    $html_output .= "<p>Filter by product</p>\n";
+    $html_output .= "<ul class='filter'>\n";
+    foreach ($products as $product) {
+        $html_output .= "  <li><a href='?product={$product}'>{$product_names[$product]}</a></li>\n";
+    }
+    $html_output .= "  <li><a href='?'>all</a></li>\n";
+    $html_output .= "</ul>\n";
 
-    $html_output = '';
-    $images = [];
+    $html_output .= "<p>Filter by channel</p>\n";
+    $html_output .= "<ul class='filter'>\n";
+    foreach ($channels as $channel) {
+        $html_output .= "  <li><a href='?channel={$channel}'>{$channel}</a></li>\n";
+    }
+    $html_output .= "  <li><a href='?'>all</a></li>\n";
+    $html_output .= "</ul>\n";
 
-    foreach ($products as $product_index => $product) {
-        $html_output .= "<h1>{$productnames[$product_index]}</h1>\n";
+    if (! empty($_REQUEST['channel'])) {
+        if (in_array($_REQUEST['channel'], $channels)) {
+            $channels = [$_REQUEST['channel']];
+        }
+    }
+    if (! empty($_REQUEST['product'])) {
+        if (in_array($_REQUEST['product'], $products)) {
+            $products = [$_REQUEST['product']];
+        }
+    }
+
+    foreach ($channels as $channel) {
+        $html_output .= "<h2>Repository: <a id='{$channel}' href='?channel={$channel}'>{$channel}</a></h2>";
         foreach ($locales as $locale) {
-            if ($locale != 'en-US') {
-                if (array_key_exists($product, $jsonarray[$locale])) {
-                    if (array_key_exists($channel, $jsonarray[$locale][$product])) {
-                        // I have searchplugins for this locale
-                        foreach ($jsonarray[$locale][$product][$channel] as $key => $singlesp) {
-                            if ($key != 'p12n') {
-                                foreach ($singlesp['images'] as $imageindex) {
-                                    array_push($images, $imageindex);
-                                }
-                            }
+            $title = "<h3>Locale: <a id='{$locale}_{$channel}' href='#{$locale}_{$channel}'>{$locale}</a></h2>";
+            $printed_title = false;
+            foreach ($products as $product) {
+                if (isset($json_array[$locale][$product][$channel])) {
+                    if (! $printed_title) {
+                        $html_output .= $title;
+                        $printed_title = true;
+                    }
+                    $html_output .= "<h3>{$product_names[$product]}</h3>";
+                    foreach ($json_array[$locale][$product][$channel] as $key => $value) {
+                        $name = str_replace('_', ' ', strtoupper($key));
+                        $html_output .= "<p>{$name}:</p>\n";
+                        $html_output .= "<ul>\n";
+                        foreach ($value as $message) {
+                            $html_output .= "  <li>{$message}</li>\n";
                         }
+                        $html_output .= "</ul>\n";
                     }
                 }
             }
         }
-        $images = array_unique($images);
-        foreach ($images as $imageindex) {
-            $html_output .= "<img style='width: 16px; height: 16px; padding: 2px;' src='{$jsonarray['images'][$imageindex]}' />\n";
-        }
     }
 
-
-    //$html_output .= "<p>Total: " + count($images) + "</p>";
     echo $html_output;
 
