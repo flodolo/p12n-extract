@@ -411,7 +411,8 @@ def extract_splist_enUS (pathsource, splist_enUS):
         print " Error: problem reading list of en-US searchplugins from " + pathsource
 
 
-def extract_p12n_channel(clproduct, pathsource, pathl10n, localeslist, channel, jsondata, clp12n, images_list, html_output):
+def extract_p12n_channel(clproduct, pathsource, pathl10n, localeslist, channel,
+                         jsondata, clp12n, images_list, html_output):
     try:
         # Analyze en-US searchplugins
         html_output.append("<h2>Repository: <a id='" + channel + "' href='#" + channel + "'>" + channel + "</a></h2>")
@@ -419,47 +420,99 @@ def extract_p12n_channel(clproduct, pathsource, pathl10n, localeslist, channel, 
 
         searchpathbase = os.path.join(pathsource, "COMMUN")
         searchpathenUS = {
-            "browser_sp"   : os.path.join(searchpathbase, "browser", "locales", "en-US", "en-US", "searchplugins") + os.sep,
-            "browser_p12n" : os.path.join(searchpathbase, "browser", "locales", "en-US", "en-US", "chrome", "browser-region", "region.properties"),
-            "mobile_sp"    : os.path.join(searchpathbase, "mobile", "locales", "en-US", "en-US", "searchplugins") + os.sep,
-            "mobile_p12n"  : os.path.join(searchpathbase, "mobile", "locales", "en-US", "en-US", "chrome", "region.properties"),
-            "mail_sp"      : os.path.join(searchpathbase, "mail", "locales", "en-US", "en-US", "searchplugins") + os.sep,
-            "mail_p12n"    : os.path.join(searchpathbase, "mail", "locales", "en-US", "en-US", "chrome", "messenger-region", "region.properties"),
-            "suite_sp"     : os.path.join(searchpathbase, "suite", "locales", "en-US", "en-US", "searchplugins") + os.sep,
-            "suite_p12n_a" : os.path.join(searchpathbase, "suite", "locales", "en-US", "en-US", "chrome", "browser", "region.properties"),
-            "suite_p12n_b" : os.path.join(searchpathbase, "suite", "locales", "en-US", "en-US", "chrome", "common", "region.properties"),
+            "browser_sp"   : os.path.join(searchpathbase, "browser", "locales",
+                             "en-US", "en-US", "searchplugins") + os.sep,
+            "browser_p12n" : os.path.join(searchpathbase, "browser", "locales",
+                             "en-US", "en-US", "chrome", "browser-region",
+                             "region.properties"),
+            "mobile_sp"    : os.path.join(searchpathbase, "mobile", "locales",
+                             "en-US", "en-US", "searchplugins") + os.sep,
+            "mobile_p12n"  : os.path.join(searchpathbase, "mobile", "locales",
+                             "en-US", "en-US", "chrome", "region.properties"),
+            "mail_sp"      : os.path.join(searchpathbase, "mail", "locales",
+                             "en-US", "en-US", "searchplugins") + os.sep,
+            "mail_p12n"    : os.path.join(searchpathbase, "mail", "locales",
+                             "en-US", "en-US", "chrome", "messenger-region",
+                             "region.properties"),
+            "suite_sp"     : os.path.join(searchpathbase, "suite", "locales",
+                             "en-US", "en-US", "searchplugins") + os.sep,
+            "suite_p12n_a" : os.path.join(searchpathbase, "suite", "locales",
+                             "en-US", "en-US", "chrome", "browser",
+                             "region.properties"),
+            "suite_p12n_b" : os.path.join(searchpathbase, "suite", "locales",
+                             "en-US", "en-US", "chrome", "common",
+                             "region.properties"),
         }
 
         # Create a list of en-US searchplugins for each channel.
         if clproduct=="all" or clproduct=="browser":
             # Get a list of all .xml files inside the en-US searchplugins folder
             splistenUS_browser = []
-            extract_splist_enUS(searchpathenUS["browser_sp"], splistenUS_browser)
-            extract_sp_product(searchpathenUS["browser_sp"], "browser", "en-US", channel, jsondata, splistenUS_browser, images_list, html_output)
+            extract_splist_enUS(
+                searchpathenUS["browser_sp"],
+                splistenUS_browser
+            )
+            extract_sp_product(
+                searchpathenUS["browser_sp"], "browser", "en-US", channel,
+                jsondata, splistenUS_browser, images_list, html_output
+            )
             if clp12n:
-                extract_p12n_product(searchpathenUS["browser_p12n"], "browser", "en-US", channel, jsondata, html_output)
+                extract_p12n_product(
+                    searchpathenUS["browser_p12n"], "browser",
+                    "en-US", channel, jsondata, html_output
+                )
 
         if clproduct=="all" or clproduct=="mobile":
             splistenUS_mobile = []
-            extract_splist_enUS(searchpathenUS["mobile_sp"], splistenUS_mobile)
-            extract_sp_product(searchpathenUS["mobile_sp"], "mobile", "en-US", channel, jsondata, splistenUS_mobile, images_list, html_output)
+            extract_splist_enUS(
+                searchpathenUS["mobile_sp"],
+                splistenUS_mobile
+            )
+            extract_sp_product(
+                searchpathenUS["mobile_sp"], "mobile", "en-US", channel,
+                jsondata, splistenUS_mobile, images_list, html_output
+            )
             if clp12n:
-                extract_p12n_product(searchpathenUS["mobile_p12n"], "mobile", "en-US", channel, jsondata, html_output)
+                extract_p12n_product(
+                    searchpathenUS["mobile_p12n"], "mobile", "en-US",
+                    channel, jsondata, html_output
+                )
 
         if clproduct=="all" or clproduct=="mail":
             splistenUS_mail = []
-            extract_splist_enUS(searchpathenUS["mail_sp"], splistenUS_mail)
-            extract_sp_product(searchpathenUS["mail_sp"], "mail", "en-US", channel, jsondata, splistenUS_mail, images_list, html_output)
+            extract_splist_enUS(
+                searchpathenUS["mail_sp"],
+                splistenUS_mail
+            )
+            extract_sp_product(
+                searchpathenUS["mail_sp"], "mail", "en-US", channel,
+                jsondata, splistenUS_mail, images_list, html_output
+            )
             if clp12n:
-                extract_p12n_product(searchpathenUS["mail_p12n"], "mail", "en-US", channel, jsondata, html_output)
+                extract_p12n_product(
+                    searchpathenUS["mail_p12n"], "mail", "en-US",
+                    channel, jsondata, html_output
+                )
 
         if clproduct=="all" or clproduct=="suite":
             splistenUS_suite = []
-            extract_splist_enUS(searchpathenUS["suite_sp"], splistenUS_suite)
-            extract_sp_product(searchpathenUS["suite_sp"], "suite", "en-US", channel, jsondata, splistenUS_suite, images_list, html_output)
+            extract_splist_enUS(
+                searchpathenUS["suite_sp"],
+                splistenUS_suite
+            )
+            extract_sp_product(
+                searchpathenUS["suite_sp"], "suite", "en-US", channel,
+                jsondata, splistenUS_suite, images_list, html_output
+            )
             if clp12n:
-                extract_p12n_product(searchpathenUS["suite_p12n_a"], "suite", "en-US", channel, jsondata, html_output)
-                extract_p12n_product(searchpathenUS["suite_p12n_b"], "suite", "en-US", channel, jsondata, html_output)
+                extract_p12n_product(
+                    searchpathenUS["suite_p12n_a"], "suite", "en-US",
+                    channel, jsondata, html_output
+                )
+                extract_p12n_product(
+                    searchpathenUS["suite_p12n_b"], "suite", "en-US",
+                    channel, jsondata, html_output
+                )
 
         locale_list = open(localeslist, "r").read().splitlines()
         for locale in locale_list:
@@ -468,34 +521,88 @@ def extract_p12n_channel(clproduct, pathsource, pathl10n, localeslist, channel, 
 
             searchpathl10nbase = os.path.join(pathl10n, locale)
             searchpathl10n = {
-                "browser_sp"   : os.path.join(searchpathl10nbase, "browser", "searchplugins") + os.sep,
-                "browser_p12n" : os.path.join(searchpathl10nbase, "browser", "chrome", "browser-region", "region.properties"),
-                "mobile_sp"    : os.path.join(searchpathl10nbase, "mobile", "searchplugins") + os.sep,
-                "mobile_p12n"  : os.path.join(searchpathl10nbase, "mobile", "chrome", "region.properties"),
-                "mail_sp"      : os.path.join(searchpathl10nbase, "mail", "searchplugins") + os.sep,
-                "mail_p12n"    : os.path.join(searchpathl10nbase, "mail", "chrome", "messenger-region", "region.properties"),
-                "suite_sp"     : os.path.join(searchpathl10nbase, "suite", "searchplugins") + os.sep,
-                "suite_p12n_a" : os.path.join(searchpathl10nbase, "suite", "chrome", "browser", "region.properties"),
-                "suite_p12n_b" : os.path.join(searchpathl10nbase, "suite", "chrome", "common", "region.properties"),
+                "browser_sp"   : os.path.join(
+                                    searchpathl10nbase, "browser",
+                                    "searchplugins"
+                                 ) + os.sep,
+                "browser_p12n" : os.path.join(
+                                    searchpathl10nbase, "browser", "chrome",
+                                    "browser-region", "region.properties"
+                                 ),
+                "mobile_sp"    : os.path.join(
+                                    searchpathl10nbase, "mobile",
+                                    "searchplugins"
+                                 ) + os.sep,
+                "mobile_p12n"  : os.path.join(
+                                    searchpathl10nbase, "mobile", "chrome",
+                                    "region.properties"
+                                 ),
+                "mail_sp"      : os.path.join(
+                                    searchpathl10nbase, "mail",
+                                    "searchplugins"
+                                 ) + os.sep,
+                "mail_p12n"    : os.path.join(
+                                    searchpathl10nbase, "mail", "chrome",
+                                    "messenger-region", "region.properties"
+                                 ),
+                "suite_sp"     : os.path.join(
+                                    searchpathl10nbase, "suite",
+                                    "searchplugins"
+                                 ) + os.sep,
+                "suite_p12n_a" : os.path.join(
+                                    searchpathl10nbase, "suite", "chrome",
+                                    "browser", "region.properties"
+                                 ),
+                "suite_p12n_b" : os.path.join(
+                                    searchpathl10nbase, "suite", "chrome",
+                                    "common", "region.properties"
+                                 ),
             }
 
             if clproduct=="all" or clproduct=="browser":
-                extract_sp_product(searchpathl10n["browser_sp"], "browser", locale, channel, jsondata, splistenUS_browser, images_list, html_output)
+                extract_sp_product(
+                    searchpathl10n["browser_sp"], "browser", locale, channel,
+                    jsondata, splistenUS_browser, images_list, html_output
+                )
                 if clp12n:
-                    extract_p12n_product(searchpathl10n["browser_p12n"], "browser", locale, channel, jsondata, html_output)
+                    extract_p12n_product(
+                        searchpathl10n["browser_p12n"], "browser", locale,
+                        channel, jsondata, html_output
+                    )
             if clproduct=="all" or clproduct=="mobile":
-                extract_sp_product(searchpathl10n["mobile_sp"], "mobile", locale, channel, jsondata, splistenUS_mobile, images_list, html_output)
+                extract_sp_product(
+                    searchpathl10n["mobile_sp"], "mobile", locale, channel,
+                    jsondata, splistenUS_mobile, images_list, html_output
+                )
                 if clp12n:
-                    extract_p12n_product(searchpathl10n["mobile_p12n"], "mobile", locale, channel, jsondata, html_output)
+                    extract_p12n_product(
+                        searchpathl10n["mobile_p12n"], "mobile", locale,
+                        channel, jsondata, html_output
+                    )
             if clproduct=="all" or clproduct=="mail":
-                extract_sp_product(searchpathl10n["mail_sp"], "mail", locale, channel, jsondata, splistenUS_mail, images_list, html_output)
+                extract_sp_product(
+                    searchpathl10n["mail_sp"], "mail", locale, channel,
+                    jsondata, splistenUS_mail, images_list, html_output
+                )
                 if clp12n:
-                    extract_p12n_product(searchpathl10n["mail_p12n"], "mail", locale, channel, jsondata, html_output)
+                    extract_p12n_product(
+                        searchpathl10n["mail_p12n"], "mail", locale, channel,
+                        jsondata, html_output
+                    )
             if clproduct=="all" or clproduct=="suite":
-                extract_sp_product(searchpathl10n["suite_sp"], "suite", locale, channel, jsondata, splistenUS_suite, images_list, html_output)
+                extract_sp_product(
+                    searchpathl10n["suite_sp"], "suite", locale, channel,
+                    jsondata, splistenUS_suite, images_list, html_output
+                )
                 if clp12n:
-                    extract_p12n_product(searchpathl10n["suite_p12n_a"], "suite", locale, channel, jsondata, html_output)
-                    extract_p12n_product(searchpathl10n["suite_p12n_b"], "suite", locale, channel, jsondata, html_output)
+                    extract_p12n_product(
+                        searchpathl10n["suite_p12n_a"], "suite", locale,
+                        channel, jsondata, html_output
+                    )
+                    extract_p12n_product(
+                        searchpathl10n["suite_p12n_b"], "suite", locale,
+                        channel, jsondata, html_output
+                    )
     except Exception as e:
         print "Error reading list of locales from " + localeslist
         print e
@@ -504,9 +611,15 @@ def extract_p12n_channel(clproduct, pathsource, pathl10n, localeslist, channel, 
 def main():
     # Parse command line options
     clparser = OptionParser()
-    clparser.add_option("-p", "--product", help="Choose a specific product", choices=["browser", "mobile", "mail", "suite", "all"], default="all")
-    clparser.add_option("-b", "--branch", help="Choose a specific branch", choices=["release", "beta", "aurora", "trunk", "all"], default="all")
-    clparser.add_option("-n", "--noproductization", help="Disable productization checks", action="store_true")
+    clparser.add_option("-p", "--product", help="Choose a specific product",
+                        choices=["browser", "mobile", "mail", "suite", "all"],
+                        default="all")
+    clparser.add_option("-b", "--branch", help="Choose a specific branch",
+                        choices=["release", "beta", "aurora", "trunk", "all"],
+                        default="all")
+    clparser.add_option("-n", "--noproductization",
+                        help="Disable productization checks",
+                        action="store_true")
 
     (options, args) = clparser.parse_args()
     clproduct = options.product
@@ -516,8 +629,10 @@ def main():
     # Read configuration file
     parser = SafeConfigParser()
 
-    # Get absolute path of ../config from current script location (not current folder)
-    config_folder = os.path.abspath(os.path.join(os.path.dirname( __file__ ), os.pardir, "config"))
+    # Get absolute path of ../config from current script location (not current
+    # folder)
+    config_folder = os.path.abspath(os.path.join(os.path.dirname( __file__ ),
+                                                 os.pardir, "config"))
     parser.read(os.path.join(config_folder, "config.ini"))
 
     local_install = parser.get("config", "install")
@@ -600,13 +715,21 @@ def main():
     </div>''')
 
     if clbranch=="all" or clbranch=="trunk":
-        extract_p12n_channel(clproduct, trunk_source, trunk_l10n, trunk_locales, "trunk", jsondata, clp12n, images_list, html_output)
+        extract_p12n_channel(clproduct, trunk_source, trunk_l10n,
+                             trunk_locales, "trunk", jsondata,
+                             clp12n, images_list, html_output)
     if clbranch=="all" or clbranch=="aurora":
-        extract_p12n_channel(clproduct, aurora_source, aurora_l10n, aurora_locales, "aurora", jsondata, clp12n, images_list, html_output)
+        extract_p12n_channel(clproduct, aurora_source, aurora_l10n,
+                             aurora_locales, "aurora", jsondata,
+                             clp12n, images_list, html_output)
     if clbranch=="all" or clbranch=="beta":
-        extract_p12n_channel(clproduct, beta_source, beta_l10n, beta_locales, "beta", jsondata, clp12n, images_list, html_output)
+        extract_p12n_channel(clproduct, beta_source, beta_l10n,
+                             beta_locales, "beta", jsondata, clp12n,
+                             images_list, html_output)
     if clbranch=="all" or clbranch=="release":
-        extract_p12n_channel(clproduct, release_source, release_l10n, release_locales, "release", jsondata, clp12n, images_list, html_output)
+        extract_p12n_channel(clproduct, release_source, release_l10n,
+                             release_locales, "release", jsondata,
+                             clp12n, images_list, html_output)
 
     # Create images json structure and save it to file
     image_data = {}
