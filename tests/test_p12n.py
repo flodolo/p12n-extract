@@ -2,6 +2,7 @@ import collections
 import os
 from p12n_extract.p12n_extract import extract_splist_enUS
 from p12n_extract.p12n_extract import extract_sp_product
+from p12n_extract.p12n_extract import extract_p12n_product
 import unittest
 
 class TestSearchpluginAnalysis(unittest.TestCase):
@@ -115,6 +116,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
 
         # Check errors
         single_record = self.json_errors["aa"]["browser"]["aurora"]
+
         self.assertEqual(len(single_record["errors"]), 9)
         self.assertEqual(len(single_record["warnings"]), 1)
 
@@ -150,6 +152,90 @@ class TestSearchpluginAnalysis(unittest.TestCase):
             "#if) that have been stripped in order to parse the XML (aa, "
             "browser, aurora, wikipedia-it.xml)",
             single_record["warnings"]
+        )
+
+
+    def testExtractP12nInfo(self):
+        # Read searchplugins for locale 'bb'
+        search_path = os.path.join(
+            self.filepath, "bb", "searchplugins"
+        )
+        extract_sp_product(
+            search_path, "browser", "bb", "aurora",
+            self.json_data, [], [], self.json_errors
+        )
+
+        # Extract p12n data
+        search_path = os.path.join(
+            self.filepath, "bb", "region.properties"
+        )
+
+        extract_p12n_product(
+            search_path, "browser", "bb", "aurora",
+            self.json_data, self.json_errors
+        )
+
+        # Check searchplugin data
+        single_record = self.json_data["bb"]["browser"]["aurora"]["p12n"]
+
+        # Default engine name
+        self.assertEqual(single_record["defaultenginename"], "Yahoo")
+
+        # Search order
+        self.assertEqual(len(single_record["searchorder"]), 2)
+        self.assertEqual(single_record["searchorder"]["1"], "Google")
+        self.assertEqual(single_record["searchorder"]["2"], "Yahoo")
+
+        # Handler version
+        self.assertEqual(single_record["handlerversion"], "4")
+
+        # Feed handlers
+        self.assertEqual(len(single_record["feedhandlers"]), 2)
+        self.assertEqual(
+            single_record["feedhandlers"]["0"]["title"],
+            "Mio Yahoo!"
+        )
+        self.assertEqual(
+            single_record["feedhandlers"]["0"]["uri"],
+            "https://add.my.yahoo.com/rss?url=%s"
+        )
+        self.assertEqual(
+            single_record["feedhandlers"]["1"]["title"],
+            "òàù+è§"
+        )
+
+        # Content handlers
+        self.assertEqual(len(single_record["contenthandlers"]), 4)
+        self.assertEqual(
+            single_record["contenthandlers"]["irc"]["0"]["name"],
+            "Mibbit"
+        )
+        self.assertEqual(
+            single_record["contenthandlers"]["mailto"]["1"]["name"],
+            "Gmail"
+        )
+
+        # Check errors
+        single_record = self.json_errors["bb"]["browser"]["aurora"]
+
+        self.assertEqual(len(single_record["p12n_errors"]), 2)
+        self.assertEqual(len(single_record["p12n_warnings"]), 1)
+
+        self.assertIn(
+            "Yahoo is set as default but not available in searchplugins "
+            "(check if the name is spelled correctly)",
+            single_record["p12n_errors"]
+        )
+
+        self.assertIn(
+            "Yahoo is defined in searchorder but not available in "
+            "searchplugins (check if the name is spelled correctly)",
+            single_record["p12n_errors"]
+        )
+
+        self.assertIn(
+            "unknown key in region.properties <code>test.key=dummy</code>",
+            single_record["p12n_warnings"]
         )
 
 
