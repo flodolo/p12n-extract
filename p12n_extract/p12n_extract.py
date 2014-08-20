@@ -203,6 +203,16 @@ def extract_sp_product(searchpath, product, locale, channel, json_data,
                             % searchplugin_info
                         )
                         images.append(images_list[0])
+
+                    # No images in the searchplugin
+                    if len(images) == 0:
+                        errors.append(
+                            'no images available %s'
+                            % searchplugin_info
+                        )
+                        # Use default empty image
+                        images = [images_list[0]]
+
                     json_data[locale][product][channel][sp] = {
                         "file": "%s.xml" % sp,
                         "name": name,

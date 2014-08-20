@@ -1,0 +1,19 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+#define TEST_PARAM
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Wikipedia (it)</ShortName>
+<Description>Wikipedia, l'enciclopedia libera</Description>
+<InputEncoding>UTF-8</InputEncoding>
+<Url type="text/html" method="GET" template="http://it.wikipedia.org/wiki/Speciale:Ricerca" resultdomain="wikipedia.org">
+  <Param name="search" value="{searchTerms}" />
+  <Param name="sourceid" value="Mozilla-search" />
+</Url>
+<Url type="application/x-suggestions+json" method="GET" template="http://it.wikipedia.org/w/api.php">
+    <Param name="action" value="opensearch" />
+    <Param name="search" value="{searchTerms}" />
+</Url>
+<SearchForm>http://it.wikipedia.org/wiki/Speciale:Ricerca</SearchForm>
+</SearchPlugin>
