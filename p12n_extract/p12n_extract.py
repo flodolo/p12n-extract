@@ -237,8 +237,9 @@ def extract_sp_product(searchpath, product, locale, channel, json_data,
                     # This means that list.txt references a non existing
                     # plugin, which will cause the build to fail
                     errors.append(
-                        "file referenced in list.txt but not available %s"
-                         % searchplugin_info
+                        "file referenced in list.txt but not available "
+                        "(%s, %s, %s, %s.xml)"
+                        % (locale, product, channel, sp)
                     )
 
         # Save errors and warnings
