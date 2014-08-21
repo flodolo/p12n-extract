@@ -16,6 +16,15 @@
             margin-top: 20px;
         }
 
+        a {
+            color: #0096dd;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
         .filter:after {
             content: '';
             display: block;
@@ -49,16 +58,56 @@
             font-size: 12px;
         }
 
-        .warnings,
-        .p12n_warnings {
-            color: #ffbf00;
-            font-weight: bold;
+        .product {
+            color: #fff;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            margin: 1px 3px 1px 0;
+            display: inline-block;
+            font-size: 10px;
+            border-radius: 6px;
         }
 
-        .errors,
-        .p12n_errors {
-            color: #f00;
-            font-weight: bold;
+        .browser {
+            background-color: #f58667;
+        }
+
+        .mobile {
+            background-color: #3d8014;
+        }
+
+        .suite {
+            background-color: #8ac451;
+        }
+
+        .mail {
+            background-color: #3161a3;
+        }
+
+        .error,
+        .warning {
+            text-transform: uppercase;
+            padding: 2px 8px;
+            margin: 1px 3px 1px 0;
+            display: inline-block;
+            font-size: 10px;
+            border-radius: 6px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .error {
+            background-color: #ea3b28;
+            color: #fff;
+        }
+
+        .warning {
+            background-color: #FAE455;
+            color: #000;
+        }
+
+        .wauto {
+            width: auto;
         }
     </style>
 </head>
@@ -109,6 +158,10 @@
     }
     $html_output  = "<h1>Productization Errors{$extra_title}</h1>\n";
     $html_output .= "<p class='update'>Last update: {$json_array["metadata"]["creation_date"]}</p>\n";
+    $html_output .= "<p><span class='error'>sp</span> identifies an error in /searchplugins,
+                     <span class='error'>p12n</span> identifies an error in region.properties.</br>
+                     <span class='error wauto'>errors</span> and <span class='warning wauto'>warnings</span>
+                     have different colors.</p>";
 
     // Filter by product
     $html_output .= "<p>Filter by product</p>\n";
@@ -160,25 +213,49 @@
         foreach ($locales as $locale) {
             $title = "<h3>Locale: <a id='{$locale}_{$channel}' href='#{$locale}_{$channel}'>{$locale}</a></h2>";
             $printed_title = false;
+            $issues_list = [];
+            $locale_html_output = '';
             foreach ($products as $product) {
                 if (isset($json_array[$locale][$product][$channel])) {
                     if (! $printed_title) {
-                        $html_output .= $title;
+                        $locale_html_output .= $title;
+                        $locale_html_output .= "<ul>\n";
                         $printed_title = true;
                     }
-                    $html_output .= "<h3>{$product_names[$product]}</h3>";
+                    $product_part = "<span class='product {$product}'>{$product_names[$product]}</span>";
                     foreach ($json_array[$locale][$product][$channel] as $key => $value) {
-                        $name = str_replace('_', ' ', $key);
-                        $name = strtoupper(str_replace('p12n', 'Productization', $name));
-                        $html_output .= "<p class='{$key}'>{$name}:</p>\n";
-                        $html_output .= "<ul>\n";
                         foreach ($value as $message) {
-                            $html_output .= "  <li>{$message}</li>\n";
+                            switch ($key) {
+                                case 'errors':
+                                    $error_class = 'error sp';
+                                    $error_text = 'sp';
+                                    break;
+                                case 'warnings':
+                                    $error_class = 'warning sp';
+                                    $error_text = 'sp';
+                                    break;
+                                case 'p12n_errors':
+                                    $error_class = 'error p12n';
+                                    $error_text = 'p12n';
+                                    break;
+                                case 'p12n_warnings':
+                                    $error_class = 'warning p12n';
+                                    $error_text = 'p12n';
+                                    break;
+                                default:
+                                    $error_class = 'issue';
+                                    $error_text = '';
+                                    break;
+                            }
+                            $locale_html_output .= "  <li><span class='{$error_class}'>{$error_text}</span>{$product_part}{$message}</li>\n";
                             $error_count++;
                         }
-                        $html_output .= "</ul>\n";
                     }
                 }
+            }
+            if ($locale_html_output) {
+                $locale_html_output .= "</ul>\n";
+                $html_output .= $locale_html_output;
             }
         }
     }
