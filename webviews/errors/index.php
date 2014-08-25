@@ -207,8 +207,8 @@
         $products = [$requested_product];
     }
 
-    $error_count = 0;
     foreach ($channels as $channel) {
+        $error_count = 0;
         $html_output .= "<h2>Repository: <a id='{$channel}' href='?channel={$channel}'>{$channel}</a></h2>";
         foreach ($locales as $locale) {
             $title = "<h3>Locale: <a id='{$locale}_{$channel}' href='#{$locale}_{$channel}'>{$locale}</a></h2>";
@@ -258,10 +258,9 @@
                 $html_output .= $locale_html_output;
             }
         }
-    }
-
-    if ($error_count == 0) {
-        $html_output .= "<p>No errors or warnings available.</p>";
+        if ($error_count == 0) {
+            $html_output .= "<p>No errors found.</p>";
+        }
     }
 
     echo $html_output;
