@@ -213,7 +213,7 @@ def extract_sp_product(searchpath, product, locale, channel, json_data,
                         # Use default empty image
                         images = [images_list[0]]
 
-                    json_data[locale][product][channel][sp] = {
+                    json_data["locales"][locale][product][channel]["searchplugins"][sp] = {
                         "file": "%s.xml" % sp,
                         "name": name,
                         "description": description,
@@ -230,10 +230,13 @@ def extract_sp_product(searchpath, product, locale, channel, json_data,
             else:
                 # File does not exists, locale is using the same plugin of en-
                 # US, I have to retrieve it from the dictionary
-                if sp in json_data["en-US"][product][channel]:
-                    searchplugin_enUS = json_data["en-US"][product][channel][sp]
+                if sp in json_data["locales"]["en-US"][product] \
+                                  [channel]["searchplugins"]:
+                    searchplugin_enUS = json_data["locales"]["en-US"][product] \
+                                                 [channel]["searchplugins"][sp]
 
-                    json_data[locale][product][channel][sp] = {
+                    json_data["locales"][locale][product] \
+                             [channel]["searchplugins"][sp] = {
                         "file": "%s.xml" % sp,
                         "name": searchplugin_enUS["name"],
                         "description": "(en-US) %s" \
@@ -272,10 +275,11 @@ def extract_p12n_product(source, product, locale, channel,
 
     try:
         available_searchplugins = []
-        if channel in json_data[locale][product]:
+        if channel in json_data["locales"][locale][product]:
             # I need to proceed only if I have searchplugins for this
             # branch+product+locale
-            for element in json_data[locale][product][channel].values():
+            for element in json_data["locales"][locale][product] \
+                                    [channel]["searchplugins"].values():
                 # Store the "name" attribute of each searchplugin, used to
                 # validate search.order
                 if "name" in element:
@@ -417,7 +421,8 @@ def extract_p12n_product(source, product, locale, channel,
 
                 try:
                     if product != "suite":
-                        json_data[locale][product][channel]["p12n"] = {
+                        json_data["locales"][locale][product] \
+                                 [channel]["p12n"] = {
                             "defaultenginename": defaultenginename,
                             "searchorder": searchorder,
                             "feedhandlers": feedhandlers,
@@ -430,7 +435,8 @@ def extract_p12n_product(source, product, locale, channel,
                         # common: has search.order
                         # When analyzing common in ony update
                         # search.order and default
-                        tmp_data = json_data[locale][product][channel]["p12n"]
+                        tmp_data = json_data["locales"][locale][product] \
+                                            [channel]["p12n"]
                         if "/common/region.properties" in source:
                             tmp_data["defaultenginename"] = defaultenginename
                             tmp_data["searchorder"] =  searchorder
@@ -442,7 +448,8 @@ def extract_p12n_product(source, product, locale, channel,
                                 "handlerversion": handlerversion,
                                 "contenthandlers": contenthandlers
                             }
-                        json_data[locale][product][channel]["p12n"] = tmp_data
+                        json_data["locales"][locale][product] \
+                                 [channel]["p12n"] = tmp_data
                 except:
                     errors.append(
                         "problem saving data into json from %s (%s, %s, %s)"
@@ -766,18 +773,19 @@ def main():
     for index, value in enumerate(images_list):
         image_data[index] = value
     json_data["images"] = image_data
-    json_errors["metadata"] = {
-        "creation_date": strftime("%Y-%m-%d %H:%M %Z", localtime())
-    }
+    update_date = strftime("%Y-%m-%d %H:%M %Z", localtime())
 
     # Write back updated json with data
+    json_data["metadata"] = {
+        "creation_date": update_date
+    }
     json_file = open(data_filename, "w")
     json_file.write(json.dumps(json_data, sort_keys=True))
     json_file.close()
 
     # Finalize and write json with errors
     json_errors["metadata"] = {
-        "creation_date": strftime("%Y-%m-%d %H:%M %Z", localtime())
+        "creation_date": update_date
     }
     errors_file = open(errors_filename, "w")
     errors_file.write(json.dumps(json_errors, sort_keys=True))
