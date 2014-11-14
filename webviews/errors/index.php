@@ -119,31 +119,41 @@
     if (! file_exists($json_source)) {
         die("errors.json is missing");
     }
-    $json_data = file_get_contents($json_source);
-    $json_array = json_decode($json_data, true);
+    $json_file = file_get_contents($json_source);
+    $json_data = json_decode($json_file, true);
 
-    // Local arrays
-    $locales = array_keys($json_array);
-    $product_names = [
-        'browser' => 'Firefox Desktop',
-        'mobile'  => 'Firefox Android',
-        'suite'   => 'Seamonkey',
-        'mail'    => 'Thunderbird'
+    // Supported locales
+    $locales = array_keys($json_data["locales"]);
+    $locales = array_unique($locales);
+    sort($locales);
+
+    // Supported channels
+    $channels = [
+        'trunk'   => 'Nightly',
+        'aurora'  => 'Developer Edition',
+        'beta'    => 'Beta',
+        'release' => 'Release',
     ];
-    $channels = ['trunk', 'aurora', 'beta', 'release'];
-    $products = ['browser', 'mobile', 'suite', 'mail'];
+
+    //Supported products
+    $products = [
+        'browser' => 'Firefox',
+        'mobile'  => 'Firefox for Android',
+        'suite'   => 'Seamonkey',
+        'mail'    => 'Thunderbird',
+    ];
 
     // Get filter parameters
     $requested_product = '';
     if (isset($_REQUEST['product'])) {
-        if (in_array($_REQUEST['product'], $products)) {
+        if (isset($products[$_REQUEST['product']])) {
             $requested_product = $_REQUEST['product'];
         }
     }
 
     $requested_channel = '';
     if (isset($_REQUEST['channel'])) {
-        if (in_array($_REQUEST['channel'], $channels)) {
+        if (isset($channels[$_REQUEST['channel']])) {
             $requested_channel = $_REQUEST['channel'];
         }
     }
@@ -151,13 +161,13 @@
     // Title section (changes according to filters)
     $extra_title = '';
     if ($requested_product) {
-        $extra_title .= " - $product_names[$requested_product]";
+        $extra_title .= " - $products[$requested_product]";
     }
     if ($requested_channel) {
-        $extra_title .= " ({$requested_channel})";
+        $extra_title .= " ({$channels[$requested_channel]})";
     }
     $html_output  = "<h1>Productization Errors{$extra_title}</h1>\n";
-    $html_output .= "<p class='update'>Last update: {$json_array["metadata"]["creation_date"]}</p>\n";
+    $html_output .= "<p class='update'>Last update: {$json_data["metadata"]["creation_date"]}</p>\n";
     $html_output .= "<p><span class='error'>sp</span> identifies an error in /searchplugins,
                      <span class='error'>p12n</span> identifies an error in region.properties.</br>
                      <span class='error wauto'>errors</span> and <span class='warning wauto'>warnings</span>
@@ -166,12 +176,12 @@
     // Filter by product
     $html_output .= "<p>Filter by product</p>\n";
     $html_output .= "<ul class='filter'>\n";
-    foreach ($products as $product) {
-        $link = "?product={$product}";
+    foreach ($products as $product_id => $product_name) {
+        $link = "?product={$product_id}";
         if ($requested_channel) {
             $link .= "&amp;channel={$requested_channel}";
         }
-        $html_output .= "  <li><a href='{$link}'>{$product_names[$product]}</a></li>\n";
+        $html_output .= "  <li><a href='{$link}'>{$product_name}</a></li>\n";
     }
     $reset_link = "?";
     if ($requested_channel) {
@@ -184,12 +194,12 @@
     // Filter by channel
     $html_output .= "<p>Filter by channel</p>\n";
     $html_output .= "<ul class='filter'>\n";
-    foreach ($channels as $channel) {
-        $link = "?channel={$channel}";
+    foreach ($channels as $channel_id => $channel_name) {
+        $link = "?channel={$channel_id}";
         if ($requested_product) {
             $link .= "&amp;product={$requested_product}";
         }
-        $html_output .= "  <li><a href='{$link}'>{$channel}</a></li>\n";
+        $html_output .= "  <li><a href='{$link}'>{$channel_name}</a></li>\n";
     }
     $reset_link = "?";
     if ($requested_product) {
@@ -201,29 +211,37 @@
 
     // Filter channels and products arrays
     if ($requested_channel) {
-        $channels = [$requested_channel];
+        foreach (array_keys($channels) as $channel_id) {
+            if ($channel_id != $requested_channel) {
+                unset($channels[$channel_id]);
+            }
+        }
     }
     if ($requested_product) {
-        $products = [$requested_product];
+        foreach (array_keys($products) as $product_id) {
+            if ($product_id != $requested_product) {
+                unset($products[$product_id]);
+            }
+        }
     }
 
-    foreach ($channels as $channel) {
+    foreach ($channels as $channel_id => $channel_name) {
         $error_count = 0;
-        $html_output .= "<h2>Repository: <a id='{$channel}' href='?channel={$channel}'>{$channel}</a></h2>";
+        $html_output .= "<h2>Repository: <a id='{$channel_id}' href='?channel={$channel_id}'>{$channel_name}</a></h2>";
         foreach ($locales as $locale) {
-            $title = "<h3>Locale: <a id='{$locale}_{$channel}' href='#{$locale}_{$channel}'>{$locale}</a></h2>";
+            $title = "<h3>Locale: <a id='{$locale}_{$channel_id}' href='#{$locale}_{$channel_id}'>{$locale}</a></h2>";
             $printed_title = false;
             $issues_list = [];
             $locale_html_output = '';
-            foreach ($products as $product) {
-                if (isset($json_array[$locale][$product][$channel])) {
+            foreach ($products as $product_id => $product_name) {
+                if (isset($json_data['locales'][$locale][$product_id][$channel_id])) {
                     if (! $printed_title) {
                         $locale_html_output .= $title;
                         $locale_html_output .= "<ul>\n";
                         $printed_title = true;
                     }
-                    $product_part = "<span class='product {$product}'>{$product_names[$product]}</span>";
-                    foreach ($json_array[$locale][$product][$channel] as $key => $value) {
+                    $product_part = "<span class='product {$product_id}'>{$product_name}</span>";
+                    foreach ($json_data['locales'][$locale][$product_id][$channel_id] as $key => $value) {
                         foreach ($value as $message) {
                             switch ($key) {
                                 case 'errors':

@@ -1,42 +1,149 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en-US">
 <head>
     <meta charset=utf-8>
     <title>Searchplugins Images</title>
     <style type="text/css">
-        body { background-color: #FCFCFC; font-family: Arial, Verdana; font-size: 14px; margin: 0 auto; width: 300px;}
-        h1 { margin-top: 20px;}
+        body {
+            background-color: #FCFCFC;
+            font-family: Arial, Verdana;
+            font-size: 14px;
+            margin: 0 auto;
+            width: 600px;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        .filter:after {
+            content: '';
+            display: block;
+            clear: both;
+        }
+
+        .filter li {
+            display: inline;
+            float: left;
+            padding: 4px 6px;
+            border: 1px solid #000;
+            background-color: #888;
+            margin: 0 4px;
+        }
+
+        .filter a {
+            color: #fff;
+            text-decoration: none;
+            text-transform: uppercase;
+        }
+
+        #collage {
+            background-color: #FFF;
+            padding: 20px;
+            border: 1px solid #CCC;
+            width: 450px;
+            margin: 30px auto 0;
+        }
     </style>
 </head>
 
 <body>
 
 <?php
-    include_once('../locales.inc');
-    $filename = '../searchplugins.json';
+    $file_name = '../searchplugins.json';
+    $json_file = file_get_contents($file_name);
+    $json_data = json_decode($json_file, true);
 
-    $channel = 'beta';
-    $products = ['browser', 'mobile', 'suite', 'mail'];
-    $productnames = ['Firefox Desktop', 'Firefox Mobile (Android)', 'Seamonkey', 'Thunderbird'];
+    // Supported locales
+    $locales = array_keys($json_data["locales"]);
+    $locales = array_unique($locales);
+    sort($locales);
 
-    $jsondata = file_get_contents($filename);
-    $jsonarray = json_decode($jsondata, true);
+    // Supported channels
+    $channels = [
+        'trunk'   => 'Nightly',
+        'aurora'  => 'Developer Edition',
+        'beta'    => 'Beta',
+        'release' => 'Release',
+    ];
 
-    $html_output = '';
+    //Supported products
+    $products = [
+        'browser' => 'Firefox',
+        'mobile'  => 'Firefox for Android',
+        'suite'   => 'Seamonkey',
+        'mail'    => 'Thunderbird',
+    ];
+
+    // Get filter parameters
+    if (isset($_REQUEST['product'])) {
+        if (isset($products[$_REQUEST['product']])) {
+            $requested_product = $_REQUEST['product'];
+        }
+    } else {
+        $requested_product = 'browser';
+    }
+
+    if (isset($_REQUEST['channel'])) {
+        if (isset($channels[$_REQUEST['channel']])) {
+            $requested_channel = $_REQUEST['channel'];
+        }
+    } else {
+        $requested_channel = 'beta';
+    }
+
+    $html_output = "<h1>Images for $products[$requested_product] ($channels[$requested_channel])</h1>";
+
+    // Filter by product
+    $html_output .= "<p>Filter by product</p>\n";
+    $html_output .= "<ul class='filter'>\n";
+    foreach ($products as $product_id => $product_name) {
+        $link = "?product={$product_id}";
+        if ($requested_channel) {
+            $link .= "&amp;channel={$requested_channel}";
+        }
+        $html_output .= "  <li><a href='{$link}'>{$product_name}</a></li>\n";
+    }
+    $html_output .= "</ul>\n";
+
+    // Filter by channel
+    $html_output .= "<p>Filter by channel</p>\n";
+    $html_output .= "<ul class='filter'>\n";
+    foreach ($channels as $channel_id => $channel_name) {
+        $link = "?channel={$channel_id}";
+        if ($requested_product) {
+            $link .= "&amp;product={$requested_product}";
+        }
+        $html_output .= "  <li><a href='{$link}'>{$channel_name}</a></li>\n";
+    }
+    $html_output .= "</ul>\n";
+
+    // Filter channels and products arrays
+    if ($requested_channel) {
+        foreach (array_keys($channels) as $channel_id) {
+            if ($channel_id != $requested_channel) {
+                unset($channels[$channel_id]);
+            }
+        }
+    }
+    if ($requested_product) {
+        foreach (array_keys($products) as $product_id) {
+            if ($product_id != $requested_product) {
+                unset($products[$product_id]);
+            }
+        }
+    }
+
     $images = [];
-
-    foreach ($products as $product_index => $product) {
-        $html_output .= "<h1>{$productnames[$product_index]}</h1>\n";
+    foreach ($products as $product_id => $product_name) {
         foreach ($locales as $locale) {
             if ($locale != 'en-US') {
-                if (array_key_exists($product, $jsonarray[$locale])) {
-                    if (array_key_exists($channel, $jsonarray[$locale][$product])) {
+                if (isset($json_data['locales'][$locale][$product_id])) {
+                    if (isset($json_data['locales'][$locale][$product_id][$channel_id]['searchplugins'])) {
                         // I have searchplugins for this locale
-                        foreach ($jsonarray[$locale][$product][$channel] as $key => $singlesp) {
-                            if ($key != 'p12n') {
-                                foreach ($singlesp['images'] as $imageindex) {
-                                    array_push($images, $imageindex);
-                                }
+                        foreach ($json_data['locales'][$locale][$product_id][$channel_id]['searchplugins'] as $singlesp) {
+                            foreach ($singlesp['images'] as $imageindex) {
+                                array_push($images, $imageindex);
                             }
                         }
                     }
@@ -44,12 +151,12 @@
             }
         }
         $images = array_unique($images);
+        $html_output .= "<div id='collage'>";
         foreach ($images as $imageindex) {
-            $html_output .= "<img style='width: 16px; height: 16px; padding: 2px;' src='{$jsonarray['images'][$imageindex]}' />\n";
+            $html_output .= "<img style='padding: 4px;' src='{$json_data['images'][$imageindex]}' />\n";
         }
+        $html_output .= "</div>";
     }
 
-
-    //$html_output .= "<p>Total: " + count($images) + "</p>";
     echo $html_output;
 

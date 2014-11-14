@@ -47,7 +47,8 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         )
 
         # Check searchplugins data
-        single_record = self.json_data["en-US"]["browser"]["aurora"]
+        single_record = self.json_data["locales"]["en-US"]["browser"] \
+                                      ["aurora"]["searchplugins"]
         self.assertEqual(
             single_record["google"]["name"], "Google"
         )
@@ -97,7 +98,8 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         )
 
         # Check searchplugin data
-        single_record = self.json_data["aa"]["browser"]["aurora"]
+        single_record = self.json_data["locales"]["aa"]["browser"] \
+                                      ["aurora"]["searchplugins"]
 
         # Name should fall back to English
         self.assertEqual(
@@ -115,7 +117,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         )
 
         # Check errors
-        single_record = self.json_errors["aa"]["browser"]["aurora"]
+        single_record = self.json_errors["locales"]["aa"]["browser"]["aurora"]
 
         self.assertEqual(len(single_record["errors"]), 9)
         self.assertEqual(len(single_record["warnings"]), 1)
@@ -176,7 +178,8 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         )
 
         # Check searchplugin data
-        single_record = self.json_data["bb"]["browser"]["aurora"]["p12n"]
+        single_record = self.json_data["locales"]["bb"]["browser"] \
+                                      ["aurora"]["p12n"]
 
         # Default engine name
         self.assertEqual(single_record["defaultenginename"], "Yahoo")
@@ -216,7 +219,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         )
 
         # Check errors
-        single_record = self.json_errors["bb"]["browser"]["aurora"]
+        single_record = self.json_errors["locales"]["bb"]["browser"]["aurora"]
 
         self.assertEqual(len(single_record["p12n_errors"]), 2)
         self.assertEqual(len(single_record["p12n_warnings"]), 1)
