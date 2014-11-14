@@ -207,7 +207,7 @@ def extract_sp_product(searchpath, product, locale, channel, json_data,
                     # No images in the searchplugin
                     if len(images) == 0:
                         errors.append(
-                            'no images available %s'
+                            "no images available %s"
                             % searchplugin_info
                         )
                         # Use default empty image
@@ -257,9 +257,9 @@ def extract_sp_product(searchpath, product, locale, channel, json_data,
 
         # Save errors and warnings
         if len(errors)>0:
-            json_errors[locale][product][channel]['errors'] = errors
+            json_errors["locales"][locale][product][channel]["errors"] = errors
         if len(warnings)>0:
-            json_errors[locale][product][channel]['warnings'] = warnings
+            json_errors["locales"][locale][product][channel]["warnings"] = warnings
     except Exception as e:
         errors.append(
             "[%s] problem reading %s" % (locale, file_list)
@@ -462,9 +462,11 @@ def extract_p12n_product(source, product, locale, channel,
                 )
         # Save errors and warnings
         if len(errors)>0:
-            json_errors[locale][product][channel]['p12n_errors'] = errors
+            json_errors["locales"][locale][product] \
+                       [channel]["p12n_errors"] = errors
         if len(warnings)>0:
-            json_errors[locale][product][channel]['p12n_warnings'] = warnings
+            json_errors["locales"][locale][product] \
+                       [channel]["p12n_warnings"] = warnings
     except:
         errors.append(
             "[%s] No searchplugins available for this locale"
