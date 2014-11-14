@@ -71,16 +71,12 @@
     $json_file = file_get_contents($file_name);
     $json_data = json_decode($json_file, true);
 
-    // Extract list of locales from JSON data
+    // Supported locales
     $locales = array_keys($json_data["locales"]);
-    // Make sure that locales are sorted and unique
     $locales = array_unique($locales);
     sort($locales);
 
-    $filename = '../searchplugins.json';
-    $jsondata = file_get_contents($filename);
-    $jsonarray = json_decode($jsondata, true);
-
+    // Supported channels
     $channels = [
         'trunk'   => 'Nightly',
         'aurora'  => 'Developer Edition',
@@ -88,6 +84,7 @@
         'release' => 'Release',
     ];
 
+    //Supported products
     $products = [
         'browser' => 'Firefox',
         'mobile'  => 'Firefox for Android',
