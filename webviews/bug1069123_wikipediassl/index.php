@@ -105,8 +105,9 @@
     }
     $html_intro .= "</ul>\n";
 
-    $html_errors = '<h1>Errors</h1><ul>';
+    $html_errors = '<h1>List of searchplugins without SSL</h1><ul>';
     $locale_errors = [];
+    $locale_good = [];
     $html_output = '';
 
     // For this view I'm not interested in Seamonkey and Thunderbird
@@ -132,6 +133,7 @@
                                     $html_errors .= "<li>{$locale} - {$product_name}: {$singlesp['name']} ({$singlesp['file']}), not SSL</li>";
                                 } else {
                                     $html_output .= "<span class='green'>SSL</span></p>";
+                                    array_push($locale_good, $locale);
                                 }
                             }
                         }
@@ -154,4 +156,6 @@
         $html_errors .= '</ul>';
         echo $html_errors;
     }
+    echo "<p>" . count($locale_good) . " searchplugins with SSL.</p>";
+    echo "<p>" . count($locale_errors) . " searchplugins without SSL.</p>";
     echo $html_output;
