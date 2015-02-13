@@ -127,7 +127,6 @@
     }
     $html_intro .= "</ul>\n";
 
-
     $html_output = "<h1>{$products[$requested_product]} - {$channels[$requested_channel]}</h1>";
     $html_output .= "<table>
       <thead>
@@ -151,7 +150,7 @@
         if (isset($json_data['locales'][$locale][$requested_product][$requested_channel])) {
             $p12n_record = $json_data['locales'][$locale][$requested_product][$requested_channel];
             $default = $p12n_record['p12n']['defaultenginename'];
-            for ($i=1; $i < 4; $i++) {
+            for ($i = 1; $i < 4; $i++) {
                 if (isset($p12n_record['p12n']['searchorder'][$i])) {
                     $searchorder[$i] = $p12n_record['p12n']['searchorder'][$i];
                 } else {
@@ -159,7 +158,6 @@
                 }
             }
         }
-
 
         $html_output .= "
         <tr>
@@ -173,7 +171,6 @@
     $html_output .= "
       </tbody>
     </table>\n";
-
 
     echo $html_intro;
     echo $html_output;

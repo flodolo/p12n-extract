@@ -282,4 +282,3 @@
     }
 
     echo $html_output;
-

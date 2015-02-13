@@ -159,4 +159,3 @@
     }
 
     echo $html_output;
-

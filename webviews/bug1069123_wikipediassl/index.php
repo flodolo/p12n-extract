@@ -114,7 +114,7 @@
     unset($products['suite']);
     unset($products['mail']);
 
-    foreach ($products as $product=>$product_name) {
+    foreach ($products as $product => $product_name) {
         $html_output .= "<h1>Details</h1>\n<h2>{$product_name} - {$channels[$channel]}</h2>";
         foreach ($locales as $locale) {
             $html_output .= "<h3>{$locale}</h3>";
