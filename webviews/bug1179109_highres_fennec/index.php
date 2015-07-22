@@ -99,6 +99,13 @@
     ];
     $channel = isset($_REQUEST['channel']) ? $_REQUEST['channel'] : 'aurora';
 
+    $repositories = [
+        'trunk'   => 'https://hg.mozilla.org/l10n-central/',
+        'aurora'  => 'https://hg.mozilla.org/releases/l10n/mozilla-aurora/',
+        'beta'    => 'https://hg.mozilla.org/releases/l10n/mozilla-beta/',
+        'release' => 'https://hg.mozilla.org/releases/l10n/mozilla-release/',
+    ];
+
     // Only interested in Fennec
     $product = 'mobile';
     $product_name = 'Firefox for Android';
@@ -143,7 +150,11 @@
         if (isset($json_data['locales'][$locale][$product])) {
             if (isset($json_data['locales'][$locale][$product][$channel]['searchplugins'])) {
                 // I have searchplugins for this locale
-                $table .= "    <tr id='{$locale}'>\n      <th><a href='#{$locale}'>{$locale}</a></th>\n      <td>";
+                $table .= "<tr id='{$locale}'>
+                             <th>
+                               <a href='#{$locale}'>{$locale}</a>
+                             </th>
+                           <td>\n";
                 $errors = '';
                 foreach ($json_data['locales'][$locale][$product][$channel]['searchplugins'] as $singlesp) {
                     $spfilename = strtolower($singlesp['file']);
@@ -179,7 +190,10 @@
                 } else {
                     $locale_clean++;
                 }
-                $table .= "      <td>{$errors}</td>\n    </tr>\n";
+                $table .= "      <td>
+                                   <a href='{$repositories[$channel]}{$locale}'>Link to repository</a><br/>
+                                   {$errors}
+                                 </td>\n    </tr>\n";
                 $table .= "      </td>\n    </tr>\n";
             }
         }

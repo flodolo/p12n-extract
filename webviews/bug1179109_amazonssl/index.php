@@ -84,6 +84,13 @@
         'release' => 'Release',
     ];
 
+    $repositories = [
+        'trunk'   => 'https://hg.mozilla.org/l10n-central/',
+        'aurora'  => 'https://hg.mozilla.org/releases/l10n/mozilla-aurora/',
+        'beta'    => 'https://hg.mozilla.org/releases/l10n/mozilla-beta/',
+        'release' => 'https://hg.mozilla.org/releases/l10n/mozilla-release/',
+    ];
+
     //Supported products
     $products = [
         'browser' => 'Firefox',
@@ -117,7 +124,7 @@
     foreach ($products as $product => $product_name) {
         $html_output .= "<h1>Details</h1>\n<h2>{$product_name} - {$channels[$channel]}</h2>";
         foreach ($locales as $locale) {
-            $html_output .= "<h3>{$locale}</h3>";
+            $html_output .= "<h3><a href='#{$repositories[$channel]}{$locale}' title='Open repository'>{$locale}</a></h3>";
             if (isset($json_data['locales'][$locale][$product])) {
                 if (isset($json_data['locales'][$locale][$product][$channel]['searchplugins'])) {
                     // I have searchplugins for this locale
@@ -129,7 +136,7 @@
                                 if (! $singlesp['secure']) {
                                     $html_output .= "<span class='red'>not SSL</span></p>";
                                     array_push($locale_errors, $locale);
-                                    $html_errors .= "<li>{$locale} - {$product_name}: {$singlesp['name']} ({$singlesp['file']}), not SSL</li>";
+                                    $html_errors .= "<li><a href='{$repositories[$channel]}{$locale}' title='Open repository'>{$locale}</a> - {$product_name}: {$singlesp['name']} ({$singlesp['file']}), not SSL</li>";
                                 } else {
                                     $html_output .= "<span class='green'>SSL</span></p>";
                                     array_push($locale_good, $locale);
