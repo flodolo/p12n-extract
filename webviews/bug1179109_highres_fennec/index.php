@@ -134,6 +134,9 @@
         $html_intro .= "<li><a href='?channel={$channel_id}'>{$channel_name}</a></li>\n";
     }
     $html_intro .= "</ul>\n";
+    $locale_list = [];
+
+    $errors_detail = [];
 
     $table = '
 <table>
@@ -156,6 +159,7 @@
                              </th>
                            <td>\n";
                 $errors = '';
+                $locale_errors_detail = [];
                 foreach ($json_data['locales'][$locale][$product][$channel]['searchplugins'] as $singlesp) {
                     $spfilename = strtolower($singlesp['file']);
                     // Android only has one image
@@ -171,6 +175,7 @@
                             $errors .= "{$spfilename} uses an outdated image.<br/>";
                             $plugin_has_error = true;
                             $error_numbers++;
+                            $locale_errors_detail[] = $spfilename;
                         }
                     }
                     // Check if the image is not 96px, but only if there are no errors
@@ -181,19 +186,27 @@
                             if ($width < 96 || $height < 96) {
                                 $errors .= "{$spfilename} uses an image smaller than 96px ({$width}x{$height}px).<br/>";
                                 $error_numbers++;
+                                $locale_errors_detail[] = $spfilename;
                             }
                         }
                     }
                 }
                 if ($errors) {
                     $locale_with_errors++;
+                    $locale_list[] = $locale;
+                    // Save list of searchplugins with errors
+                    $locale_errors_detail = array_unique($locale_errors_detail);
+                    $errors_detail[$locale] = $locale_errors_detail;
                 } else {
                     $locale_clean++;
                 }
-                $table .= "      <td>
-                                   <a href='{$repositories[$channel]}{$locale}'>Link to repository</a><br/>
-                                   {$errors}
-                                 </td>\n    </tr>\n";
+                $table .= "      <td>";
+                if ($errors) {
+                    $table .= "<a href='{$repositories[$channel]}{$locale}'>Link to repository</a><br/>{$errors}";
+                } else {
+                    $table .= "&nbsp;";
+                }
+                $table .= "      </td>\n    </tr>\n";
                 $table .= "      </td>\n    </tr>\n";
             }
         }
@@ -203,7 +216,22 @@
   </tbody>
 </table>
 ';
-
     echo $html_intro;
-    echo "<p>Locales with errors: {$locale_with_errors}</p>\n<p>Clean locales: {$locale_clean}</p>\n<p>Errors: {$error_numbers}</p>";
+    echo "<p>Locales with errors ({$locale_with_errors}): " . implode(', ', $locale_list) . ".</p>\n";
+
+    // Consider eBay a special case
+    $locales_ebay = [];
+    foreach ($locale_list as $locale) {
+        if (isset($errors_detail[$locale]) &&
+            count($errors_detail[$locale]) == 1 &&
+            mb_strpos($errors_detail[$locale][0], 'ebay') !== false
+            ) {
+            // The only error for this locale is eBay
+            $locales_ebay[] = $locale;
+        }
+    }
+    $locales_without_ebay = array_diff($locale_list, $locales_ebay);
+
+    echo "<p>Locales with errors ignoring eBay (" . count($locales_without_ebay) . "): " . implode(', ', $locales_without_ebay) . ".</p>\n";
+    echo "<p>Clean locales: {$locale_clean}</p>\n<p>Errors: {$error_numbers}</p>";
     echo $table;
