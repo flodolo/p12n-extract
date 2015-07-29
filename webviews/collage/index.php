@@ -89,7 +89,7 @@
             $requested_channel = $_REQUEST['channel'];
         }
     } else {
-        $requested_channel = 'beta';
+        $requested_channel = 'aurora';
     }
 
     $html_output = "<h1>Images for $products[$requested_product] ($channels[$requested_channel])</h1>";
@@ -118,44 +118,26 @@
     }
     $html_output .= "</ul>\n";
 
-    // Filter channels and products arrays
-    if ($requested_channel) {
-        foreach (array_keys($channels) as $channel_id) {
-            if ($channel_id != $requested_channel) {
-                unset($channels[$channel_id]);
-            }
-        }
-    }
-    if ($requested_product) {
-        foreach (array_keys($products) as $product_id) {
-            if ($product_id != $requested_product) {
-                unset($products[$product_id]);
-            }
-        }
-    }
-
     $images = [];
-    foreach ($products as $product_id => $product_name) {
-        foreach ($locales as $locale) {
-            if ($locale != 'en-US') {
-                if (isset($json_data['locales'][$locale][$product_id])) {
-                    if (isset($json_data['locales'][$locale][$product_id][$channel_id]['searchplugins'])) {
-                        // I have searchplugins for this locale
-                        foreach ($json_data['locales'][$locale][$product_id][$channel_id]['searchplugins'] as $singlesp) {
-                            foreach ($singlesp['images'] as $imageindex) {
-                                array_push($images, $imageindex);
-                            }
+    foreach ($locales as $locale) {
+        if ($locale != 'en-US') {
+            if (isset($json_data['locales'][$locale][$requested_product])) {
+                if (isset($json_data['locales'][$locale][$requested_product][$requested_channel]['searchplugins'])) {
+                    // I have searchplugins for this locale
+                    foreach ($json_data['locales'][$locale][$requested_product][$requested_channel]['searchplugins'] as $singlesp) {
+                        foreach ($singlesp['images'] as $imageindex) {
+                            array_push($images, $imageindex);
                         }
                     }
                 }
             }
         }
-        $images = array_unique($images);
-        $html_output .= "<div id='collage'>";
-        foreach ($images as $imageindex) {
-            $html_output .= "<img style='padding: 4px;' src='{$json_data['images'][$imageindex]}' />\n";
-        }
-        $html_output .= "</div>";
     }
+    $images = array_unique($images);
+    $html_output .= "<div id='collage'>";
+    foreach ($images as $imageindex) {
+        $html_output .= "<img style='padding: 4px;' src='{$json_data['images'][$imageindex]}' />\n";
+    }
+    $html_output .= "</div>";
 
     echo $html_output;
