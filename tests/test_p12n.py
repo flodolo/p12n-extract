@@ -7,6 +7,7 @@ from p12n_extract.p12n_extract import extract_sp_product
 from p12n_extract.p12n_extract import extract_p12n_product
 import unittest
 
+
 class TestSearchpluginAnalysis(unittest.TestCase):
 
     def setUp(self):
@@ -18,12 +19,10 @@ class TestSearchpluginAnalysis(unittest.TestCase):
             "files"
         )
 
-
     def tearDown(self):
         del self.json_data
         del self.json_errors
         del self.filepath
-
 
     def testListEnglishSearchplugins(self):
         search_path = os.path.join(
@@ -34,7 +33,6 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         extract_splist_enUS(search_path, sp_list)
 
         self.assertEqual(sp_list, ["google", "twitter"])
-
 
     def testExtractInfoSearchpluginEnglish(self):
         search_path = os.path.join(
@@ -74,7 +72,6 @@ class TestSearchpluginAnalysis(unittest.TestCase):
 
         # Check errors (should be empty)
         self.assertEqual(len(self.json_errors), 0)
-
 
     def testExtractInfoSearchpluginAA(self):
         # Read en-US searchplugins
@@ -157,7 +154,6 @@ class TestSearchpluginAnalysis(unittest.TestCase):
             "browser, aurora, wikipedia-it.xml)",
             single_record["warnings"]
         )
-
 
     def testExtractP12nInfo(self):
         # Read searchplugins for locale 'bb'

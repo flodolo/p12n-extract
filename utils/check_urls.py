@@ -21,7 +21,8 @@ for locale in locales:
     print "\n\n------\nAnalyzing %s..." % locale
     for product in products:
         if product in json_data['locales'][locale] and 'aurora' in json_data['locales'][locale][product]:
-            searchplugins = json_data['locales'][locale][product]['aurora']['searchplugins']
+            searchplugins = json_data['locales'][locale][
+                product]['aurora']['searchplugins']
             for searchplugin in searchplugins:
                 if '(en-US)' not in searchplugins[searchplugin]['description']:
                     print 'Checking %s' % searchplugins[searchplugin]['file']
@@ -29,12 +30,14 @@ for locale in locales:
                     try:
                         response = urllib2.urlopen(url.encode('UTF-8'))
                     except urllib2.HTTPError as e:
-                        errors.append('[%s - %s] Response: %s - URL: %s' % (locale, product, e.code, url))
+                        errors.append('[%s - %s] Response: %s - URL: %s' %
+                                      (locale, product, e.code, url))
                     except urllib2.URLError as e:
-                        errors.append('[%s - %s] Response: %s - URL: %s' % (locale, product, e.reason, url))
+                        errors.append('[%s - %s] Response: %s - URL: %s' %
+                                      (locale, product, e.reason, url))
                     except Exception as e:
-                        errors.append('[%s - %s] Response: %s - URL: %s' % (locale, product, e.code, url))
+                        errors.append('[%s - %s] Response: %s - URL: %s' %
+                                      (locale, product, e.code, url))
 
 if errors:
     print '\n'.join(errors)
-

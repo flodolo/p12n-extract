@@ -14,6 +14,7 @@ from optparse import OptionParser
 from time import strftime, localtime
 from xml.dom import minidom
 
+
 def extract_sp_product(searchpath, product, locale, channel, json_data,
                        splist_enUS, images_list, json_errors):
     try:
@@ -34,9 +35,9 @@ def extract_sp_product(searchpath, product, locale, channel, json_data,
                     # duplicated elements in list.txt, which is an error
                     duplicated_items = [
                         x for x, y in
-                            collections.Counter(sp_list).items() if y > 1
+                        collections.Counter(sp_list).items() if y > 1
                     ]
-                    duplicated_items_str =  ", ".join(duplicated_items)
+                    duplicated_items_str = ", ".join(duplicated_items)
                     errors.append(
                         "there are duplicated items (%s) in the list"
                         % duplicated_items_str
@@ -47,7 +48,7 @@ def extract_sp_product(searchpath, product, locale, channel, json_data,
             # locales
             sp_list = splist_enUS
 
-        if locale != "en-US" and len(sp_list)>0:
+        if locale != "en-US" and len(sp_list) > 0:
             # Get a list of all files inside searchpath
             for singlefile in glob.glob(os.path.join(searchpath, "*")):
                 # Remove extension
@@ -64,7 +65,7 @@ def extract_sp_product(searchpath, product, locale, channel, json_data,
                     if filename_noext not in sp_list and filename != "list.txt":
                         # Extra file or unused searchplugin, should be removed
                         errors.append(
-                           "file %s not in list.txt" % filename
+                            "file %s not in list.txt" % filename
                         )
 
         # For each searchplugin check if the file exists (localized version) or
@@ -106,12 +107,12 @@ def extract_sp_product(searchpath, product, locale, channel, json_data,
                                 "searchplugin contains preprocessor "
                                 "instructions (e.g. #define, #if) that have "
                                 "been stripped in order to parse the XML %s"
-                                 % searchplugin_info
+                                % searchplugin_info
                             )
                             try:
                                 xmldoc = minidom.parse(
-                                            StringIO.StringIO(newspcontent)
-                                         )
+                                    StringIO.StringIO(newspcontent)
+                                )
                             except Exception as e:
                                 errors.append(
                                     "error parsing XML %s"
@@ -121,8 +122,8 @@ def extract_sp_product(searchpath, product, locale, channel, json_data,
                             # XML is broken
                             xmldoc = []
                             errors.append(
-                                    "error parsing XML %s <code>%s</code>"
-                                    % (searchplugin_info, str(e))
+                                "error parsing XML %s <code>%s</code>"
+                                % (searchplugin_info, str(e))
                             )
 
                     # Some searchplugins use the form <tag>, others <os:tag>
@@ -141,7 +142,8 @@ def extract_sp_product(searchpath, product, locale, channel, json_data,
                     try:
                         node = xmldoc.getElementsByTagName("Description")
                         if len(node) == 0:
-                            node = xmldoc.getElementsByTagName("os:Description")
+                            node = xmldoc.getElementsByTagName(
+                                "os:Description")
                         description = node[0].childNodes[0].nodeValue
                     except Exception as e:
                         # We don't really use description anywhere, and it's
@@ -187,7 +189,7 @@ def extract_sp_product(searchpath, product, locale, channel, json_data,
                                 # Store image in images_list, get index and
                                 # store in json
                                 images_list.append(image)
-                                images.append(len(images_list)-1)
+                                images.append(len(images_list) - 1)
 
                             # On mobile we can't have % characters, see for
                             # example bug 850984. Print a warning in this case
@@ -227,8 +229,8 @@ def extract_sp_product(searchpath, product, locale, channel, json_data,
 
                 except Exception as e:
                     errors.append(
-                            "error analyzing searchplugin %s <code>%s</code>"
-                            % (searchplugin_info, str(e))
+                        "error analyzing searchplugin %s <code>%s</code>"
+                        % (searchplugin_info, str(e))
                     )
             else:
                 # File does not exists, locale is using the same plugin of en-
@@ -242,7 +244,7 @@ def extract_sp_product(searchpath, product, locale, channel, json_data,
                              [channel]["searchplugins"][sp] = {
                         "file": "%s.xml" % sp,
                         "name": searchplugin_enUS["name"],
-                        "description": "(en-US) %s" \
+                        "description": "(en-US) %s"
                                        % searchplugin_enUS["description"],
                         "url": searchplugin_enUS["url"],
                         "secure": searchplugin_enUS["secure"],
@@ -259,10 +261,11 @@ def extract_sp_product(searchpath, product, locale, channel, json_data,
                     )
 
         # Save errors and warnings
-        if len(errors)>0:
+        if len(errors) > 0:
             json_errors["locales"][locale][product][channel]["errors"] = errors
-        if len(warnings)>0:
-            json_errors["locales"][locale][product][channel]["warnings"] = warnings
+        if len(warnings) > 0:
+            json_errors["locales"][locale][product][
+                channel]["warnings"] = warnings
     except Exception as e:
         errors.append(
             "[%s] problem reading %s" % (locale, file_list)
@@ -305,12 +308,12 @@ def extract_p12n_product(source, product, locale, channel,
                             except:
                                 errors.append(
                                     "problem parsing %s (%s, %s, %s)"
-                                    % (source, locale, product , channel)
+                                    % (source, locale, product, channel)
                                 )
                 except:
                     errors.append(
                         "problem reading %s (%s, %s, %s)"
-                        % (source, locale, product , channel)
+                        % (source, locale, product, channel)
                     )
 
                 defaultenginename = "-"
@@ -342,7 +345,7 @@ def extract_p12n_product(source, product, locale, channel,
                         lineok = True
                         searchorder[key[-1:]] = value
                         if (unicode(value, "utf-8") not in
-                            available_searchplugins):
+                                available_searchplugins):
                             if value != "":
                                 errors.append(
                                     "%s is defined in searchorder but not "
@@ -442,7 +445,7 @@ def extract_p12n_product(source, product, locale, channel,
                                             [channel]["p12n"]
                         if "/common/region.properties" in source:
                             tmp_data["defaultenginename"] = defaultenginename
-                            tmp_data["searchorder"] =  searchorder
+                            tmp_data["searchorder"] = searchorder
                         else:
                             tmp_data = {
                                 "defaultenginename": defaultenginename,
@@ -464,10 +467,10 @@ def extract_p12n_product(source, product, locale, channel,
                     % (source, locale, product, channel)
                 )
         # Save errors and warnings
-        if len(errors)>0:
+        if len(errors) > 0:
             json_errors["locales"][locale][product] \
                        [channel]["p12n_errors"] = errors
-        if len(warnings)>0:
+        if len(warnings) > 0:
             json_errors["locales"][locale][product] \
                        [channel]["p12n_warnings"] = warnings
     except:
@@ -477,7 +480,7 @@ def extract_p12n_product(source, product, locale, channel,
         )
 
 
-def extract_splist_enUS (pathsource, splist_enUS):
+def extract_splist_enUS(pathsource, splist_enUS):
     # Store in splist_enUS a list of en-US searchplugins (*.xml) in pathsource.
     try:
         for singlefile in glob.glob(os.path.join(pathsource, "*.xml")):
@@ -495,32 +498,32 @@ def extract_p12n_channel(clproduct, pathsource, pathl10n, localeslist, channel,
         # Analyze en-US searchplugins
         searchpathbase = os.path.join(pathsource, "COMMUN")
         searchpathenUS = {
-            "browser_sp"   : os.path.join(searchpathbase, "browser", "locales",
-                             "en-US", "en-US", "searchplugins") + os.sep,
-            "browser_p12n" : os.path.join(searchpathbase, "browser", "locales",
-                             "en-US", "en-US", "chrome", "browser-region",
-                             "region.properties"),
-            "mobile_sp"    : os.path.join(searchpathbase, "mobile", "locales",
-                             "en-US", "en-US", "searchplugins") + os.sep,
-            "mobile_p12n"  : os.path.join(searchpathbase, "mobile", "locales",
-                             "en-US", "en-US", "chrome", "region.properties"),
-            "mail_sp"      : os.path.join(searchpathbase, "mail", "locales",
-                             "en-US", "en-US", "searchplugins") + os.sep,
-            "mail_p12n"    : os.path.join(searchpathbase, "mail", "locales",
-                             "en-US", "en-US", "chrome", "messenger-region",
-                             "region.properties"),
-            "suite_sp"     : os.path.join(searchpathbase, "suite", "locales",
-                             "en-US", "en-US", "searchplugins") + os.sep,
-            "suite_p12n_a" : os.path.join(searchpathbase, "suite", "locales",
-                             "en-US", "en-US", "chrome", "browser",
-                             "region.properties"),
-            "suite_p12n_b" : os.path.join(searchpathbase, "suite", "locales",
-                             "en-US", "en-US", "chrome", "common",
-                             "region.properties"),
+            "browser_sp": os.path.join(searchpathbase, "browser", "locales",
+                                       "en-US", "en-US", "searchplugins") + os.sep,
+            "browser_p12n": os.path.join(searchpathbase, "browser", "locales",
+                                         "en-US", "en-US", "chrome", "browser-region",
+                                         "region.properties"),
+            "mobile_sp": os.path.join(searchpathbase, "mobile", "locales",
+                                      "en-US", "en-US", "searchplugins") + os.sep,
+            "mobile_p12n": os.path.join(searchpathbase, "mobile", "locales",
+                                        "en-US", "en-US", "chrome", "region.properties"),
+            "mail_sp": os.path.join(searchpathbase, "mail", "locales",
+                                    "en-US", "en-US", "searchplugins") + os.sep,
+            "mail_p12n": os.path.join(searchpathbase, "mail", "locales",
+                                      "en-US", "en-US", "chrome", "messenger-region",
+                                      "region.properties"),
+            "suite_sp": os.path.join(searchpathbase, "suite", "locales",
+                                     "en-US", "en-US", "searchplugins") + os.sep,
+            "suite_p12n_a": os.path.join(searchpathbase, "suite", "locales",
+                                         "en-US", "en-US", "chrome", "browser",
+                                         "region.properties"),
+            "suite_p12n_b": os.path.join(searchpathbase, "suite", "locales",
+                                         "en-US", "en-US", "chrome", "common",
+                                         "region.properties"),
         }
 
         # Create a list of en-US searchplugins for each channel.
-        if clproduct=="all" or clproduct=="browser":
+        if clproduct == "all" or clproduct == "browser":
             # Get a list of all .xml files inside en-US searchplugins folder
             splistenUS_browser = []
             extract_splist_enUS(
@@ -537,7 +540,7 @@ def extract_p12n_channel(clproduct, pathsource, pathl10n, localeslist, channel,
                     "en-US", channel, json_data, json_errors
                 )
 
-        if clproduct=="all" or clproduct=="mobile":
+        if clproduct == "all" or clproduct == "mobile":
             splistenUS_mobile = []
             extract_splist_enUS(
                 searchpathenUS["mobile_sp"],
@@ -553,7 +556,7 @@ def extract_p12n_channel(clproduct, pathsource, pathl10n, localeslist, channel,
                     channel, json_data, json_errors
                 )
 
-        if clproduct=="all" or clproduct=="mail":
+        if clproduct == "all" or clproduct == "mail":
             splistenUS_mail = []
             extract_splist_enUS(
                 searchpathenUS["mail_sp"],
@@ -569,7 +572,7 @@ def extract_p12n_channel(clproduct, pathsource, pathl10n, localeslist, channel,
                     channel, json_data, json_errors
                 )
 
-        if clproduct=="all" or clproduct=="suite":
+        if clproduct == "all" or clproduct == "suite":
             splistenUS_suite = []
             extract_splist_enUS(
                 searchpathenUS["suite_sp"],
@@ -593,45 +596,45 @@ def extract_p12n_channel(clproduct, pathsource, pathl10n, localeslist, channel,
         for locale in locale_list:
             searchpathl10nbase = os.path.join(pathl10n, locale)
             searchpathl10n = {
-                "browser_sp"   : os.path.join(
-                                    searchpathl10nbase, "browser",
-                                    "searchplugins"
-                                 ) + os.sep,
-                "browser_p12n" : os.path.join(
-                                    searchpathl10nbase, "browser", "chrome",
-                                    "browser-region", "region.properties"
-                                 ),
-                "mobile_sp"    : os.path.join(
-                                    searchpathl10nbase, "mobile",
-                                    "searchplugins"
-                                 ) + os.sep,
-                "mobile_p12n"  : os.path.join(
-                                    searchpathl10nbase, "mobile", "chrome",
-                                    "region.properties"
-                                 ),
-                "mail_sp"      : os.path.join(
-                                    searchpathl10nbase, "mail",
-                                    "searchplugins"
-                                 ) + os.sep,
-                "mail_p12n"    : os.path.join(
-                                    searchpathl10nbase, "mail", "chrome",
-                                    "messenger-region", "region.properties"
-                                 ),
-                "suite_sp"     : os.path.join(
-                                    searchpathl10nbase, "suite",
-                                    "searchplugins"
-                                 ) + os.sep,
-                "suite_p12n_a" : os.path.join(
-                                    searchpathl10nbase, "suite", "chrome",
-                                    "browser", "region.properties"
-                                 ),
-                "suite_p12n_b" : os.path.join(
-                                    searchpathl10nbase, "suite", "chrome",
-                                    "common", "region.properties"
-                                 ),
+                "browser_sp": os.path.join(
+                    searchpathl10nbase, "browser",
+                    "searchplugins"
+                ) + os.sep,
+                "browser_p12n": os.path.join(
+                    searchpathl10nbase, "browser", "chrome",
+                    "browser-region", "region.properties"
+                ),
+                "mobile_sp": os.path.join(
+                    searchpathl10nbase, "mobile",
+                    "searchplugins"
+                ) + os.sep,
+                "mobile_p12n": os.path.join(
+                    searchpathl10nbase, "mobile", "chrome",
+                    "region.properties"
+                ),
+                "mail_sp": os.path.join(
+                    searchpathl10nbase, "mail",
+                    "searchplugins"
+                ) + os.sep,
+                "mail_p12n": os.path.join(
+                    searchpathl10nbase, "mail", "chrome",
+                    "messenger-region", "region.properties"
+                ),
+                "suite_sp": os.path.join(
+                    searchpathl10nbase, "suite",
+                    "searchplugins"
+                ) + os.sep,
+                "suite_p12n_a": os.path.join(
+                    searchpathl10nbase, "suite", "chrome",
+                    "browser", "region.properties"
+                ),
+                "suite_p12n_b": os.path.join(
+                    searchpathl10nbase, "suite", "chrome",
+                    "common", "region.properties"
+                ),
             }
 
-            if clproduct=="all" or clproduct=="browser":
+            if clproduct == "all" or clproduct == "browser":
                 extract_sp_product(
                     searchpathl10n["browser_sp"], "browser", locale, channel,
                     json_data, splistenUS_browser, images_list, json_errors
@@ -641,7 +644,7 @@ def extract_p12n_channel(clproduct, pathsource, pathl10n, localeslist, channel,
                         searchpathl10n["browser_p12n"], "browser", locale,
                         channel, json_data, json_errors
                     )
-            if clproduct=="all" or clproduct=="mobile":
+            if clproduct == "all" or clproduct == "mobile":
                 extract_sp_product(
                     searchpathl10n["mobile_sp"], "mobile", locale, channel,
                     json_data, splistenUS_mobile, images_list, json_errors
@@ -651,7 +654,7 @@ def extract_p12n_channel(clproduct, pathsource, pathl10n, localeslist, channel,
                         searchpathl10n["mobile_p12n"], "mobile", locale,
                         channel, json_data, json_errors
                     )
-            if clproduct=="all" or clproduct=="mail":
+            if clproduct == "all" or clproduct == "mail":
                 extract_sp_product(
                     searchpathl10n["mail_sp"], "mail", locale, channel,
                     json_data, splistenUS_mail, images_list, json_errors
@@ -661,7 +664,7 @@ def extract_p12n_channel(clproduct, pathsource, pathl10n, localeslist, channel,
                         searchpathl10n["mail_p12n"], "mail", locale, channel,
                         json_data, json_errors
                     )
-            if clproduct=="all" or clproduct=="suite":
+            if clproduct == "all" or clproduct == "suite":
                 extract_sp_product(
                     searchpathl10n["suite_sp"], "suite", locale, channel,
                     json_data, splistenUS_suite, images_list, json_errors
@@ -703,38 +706,37 @@ def main():
     # Get absolute path of ../config from current script location (not current
     # folder)
     config_folder = os.path.abspath(
-                        os.path.join(
-                            os.path.dirname( __file__ ),
-                            os.pardir, "config"
-                        )
-                    )
+        os.path.join(
+            os.path.dirname(__file__),
+            os.pardir, "config"
+        )
+    )
     parser.read(os.path.join(config_folder, "config.ini"))
 
     local_install = parser.get("config", "install")
-    local_hg      = parser.get("config", "local_hg")
-    config_files  = os.path.join(parser.get("config", "config"), "sources")
+    local_hg = parser.get("config", "local_hg")
+    config_files = os.path.join(parser.get("config", "config"), "sources")
 
     # Set Transvision's folders and locale files
     release_l10n = os.path.join(local_hg, "RELEASE_L10N") + os.sep
-    beta_l10n    = os.path.join(local_hg, "BETA_L10N") + os.sep
-    aurora_l10n  = os.path.join(local_hg, "AURORA_L10N") + os.sep
-    trunk_l10n   = os.path.join(local_hg, "TRUNK_L10N") + os.sep
+    beta_l10n = os.path.join(local_hg, "BETA_L10N") + os.sep
+    aurora_l10n = os.path.join(local_hg, "AURORA_L10N") + os.sep
+    trunk_l10n = os.path.join(local_hg, "TRUNK_L10N") + os.sep
 
     release_source = os.path.join(local_hg, "RELEASE_EN-US") + os.sep
-    beta_source    = os.path.join(local_hg, "BETA_EN-US") + os.sep
-    aurora_source  = os.path.join(local_hg, "AURORA_EN-US") + os.sep
-    trunk_source   = os.path.join(local_hg, "TRUNK_EN-US") + os.sep
+    beta_source = os.path.join(local_hg, "BETA_EN-US") + os.sep
+    aurora_source = os.path.join(local_hg, "AURORA_EN-US") + os.sep
+    trunk_source = os.path.join(local_hg, "TRUNK_EN-US") + os.sep
 
-    trunk_locales   = os.path.join(config_files, "central.txt")
-    aurora_locales  = os.path.join(config_files, "aurora.txt")
-    beta_locales    = os.path.join(config_files, "beta.txt")
+    trunk_locales = os.path.join(config_files, "central.txt")
+    aurora_locales = os.path.join(config_files, "aurora.txt")
+    beta_locales = os.path.join(config_files, "beta.txt")
     release_locales = os.path.join(config_files, "release.txt")
 
     # Create web/p12n if missing
     web_p12n_folder = os.path.join(local_install, "web", "p12n")
     if not os.path.exists(web_p12n_folder):
         os.makedirs(web_p12n_folder)
-
 
     nested_dict = lambda: collections.defaultdict(nested_dict)
     data_filename = os.path.join(web_p12n_folder, "searchplugins.json")
@@ -756,19 +758,19 @@ def main():
         "ElFTkSuQmCC"
     ]
 
-    if clbranch=="all" or clbranch=="trunk":
+    if clbranch == "all" or clbranch == "trunk":
         extract_p12n_channel(clproduct, trunk_source, trunk_l10n,
                              trunk_locales, "trunk", json_data,
                              clp12n, images_list, json_errors)
-    if clbranch=="all" or clbranch=="aurora":
+    if clbranch == "all" or clbranch == "aurora":
         extract_p12n_channel(clproduct, aurora_source, aurora_l10n,
                              aurora_locales, "aurora", json_data,
                              clp12n, images_list, json_errors)
-    if clbranch=="all" or clbranch=="beta":
+    if clbranch == "all" or clbranch == "beta":
         extract_p12n_channel(clproduct, beta_source, beta_l10n,
                              beta_locales, "beta", json_data, clp12n,
                              images_list, json_errors)
-    if clbranch=="all" or clbranch=="release":
+    if clbranch == "all" or clbranch == "release":
         extract_p12n_channel(clproduct, release_source, release_l10n,
                              release_locales, "release", json_data,
                              clp12n, images_list, json_errors)
