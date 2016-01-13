@@ -683,6 +683,67 @@ def extract_p12n_channel(clproduct, pathsource, pathl10n, localeslist, channel,
         print e
 
 
+class ProductizationData():
+
+    def __init__(self, install_path):
+        '''Initialize object'''
+
+        # Check if the path to store files exists
+        web_p12n_folder = os.path.join(install_path, 'web', 'p12n')
+        if not os.path.exists(web_p12n_folder):
+            os.makedirs(web_p12n_folder)
+        self.output_folder = web_p12n_folder
+
+        nested_dict = lambda: collections.defaultdict(nested_dict)
+        self.data = nested_dict()
+        self.errors = nested_dict()
+        self.images_list = [
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34A'
+            'AAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAV5JREFUSImt1k1K'
+            'JEEQhuFHzzC40u7RpZ5CL+FP4yFEGdFzCPYFxOnxAiOCt3DWouhCd44ulG7aRVVBkZ2'
+            'ZVa0dEBRkRL1f5E9F5Zy8rWAL61jDj3L8Gf9wjXPcNnAmbBkXGGHc4CMM0G0L38VbC3'
+            'Dor+g1wQ+/AA59P1f5d+GV74Tw5ciyDHFSPlOgVM5/dOoCfyIvbpaxzYRIPWc7knNew'
+            'VdMnpaTYIahSB1eWT9gjJQn67ihulAkFuslZnkIV5FATqQtfIxLeEwEUyJt4WPcw0cm'
+            'ISfSBB/jfT5T3czsIVPBTJZomk3umew3OZG/cDQFvDqmbUV+wU/NH1oIiImEH9pQrV0'
+            'MIsHthurqIrGcs7p6V9HPQ8BpAl7P6UdyXrAYzFAvA5rWkyfvYAbwvRS8sh1FP58W/J'
+            'KrPLSOop+3+ekPFRu6FAPNNQh1FdeWDaxioRx/wo3i2vIbdynAJ3C4ViylVaDnAAAAA'
+            'ElFTkSuQmCC'
+        ]
+
+    def output_data(self, pretty_output):
+        '''Complete the JSON structure and output data to files'''
+
+        # Add images to the JSON
+        images_data = {}
+        for index, value in enumerate(self.images_list):
+            images_data[index] = value
+        self.data['images'] = images_data
+
+        creation_date = strftime('%Y-%m-%d %H:%M:%S', localtime())
+
+        # Save searchplugins and other productization data
+        self.data['metadata'] = {
+            'creation_date': creation_date
+        }
+        f = open(os.path.join(self.output_folder, 'searchplugins.json'), 'w')
+        if pretty_output:
+            f.write(json.dumps(self.data, sort_keys=True, indent=4))
+        else:
+            f.write(json.dumps(self.data, sort_keys=True))
+        f.close()
+
+        # Save errors
+        self.errors['metadata'] = {
+            'creation_date': creation_date
+        }
+        f = open(os.path.join(self.output_folder, 'errors.json'), 'w')
+        if pretty_output:
+            f.write(json.dumps(self.errors, sort_keys=True, indent=4))
+        else:
+            f.write(json.dumps(self.errors, sort_keys=True))
+        f.close()
+
+
 def main():
     # Parse command line options
     cl_parser = argparse.ArgumentParser()
@@ -707,32 +768,7 @@ def main():
     local_hg = parser.get('config', 'local_hg')
     config_files = os.path.join(parser.get('config', 'config'), 'sources')
 
-    # Create web/p12n folder if missing
-    web_p12n_folder = os.path.join(local_install, 'web', 'p12n')
-    if not os.path.exists(web_p12n_folder):
-        os.makedirs(web_p12n_folder)
-
-    nested_dict = lambda: collections.defaultdict(nested_dict)
-
-    data_filename = os.path.join(web_p12n_folder, 'searchplugins.json')
-    json_data = nested_dict()
-
-    errors_filename = os.path.join(web_p12n_folder, 'errors.json')
-    json_errors = nested_dict()
-
-    images_list = [
-        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34A'
-        'AAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAV5JREFUSImt1k1K'
-        'JEEQhuFHzzC40u7RpZ5CL+FP4yFEGdFzCPYFxOnxAiOCt3DWouhCd44ulG7aRVVBkZ2'
-        'ZVa0dEBRkRL1f5E9F5Zy8rWAL61jDj3L8Gf9wjXPcNnAmbBkXGGHc4CMM0G0L38VbC3'
-        'Dor+g1wQ+/AA59P1f5d+GV74Tw5ciyDHFSPlOgVM5/dOoCfyIvbpaxzYRIPWc7knNew'
-        'VdMnpaTYIahSB1eWT9gjJQn67ihulAkFuslZnkIV5FATqQtfIxLeEwEUyJt4WPcw0cm'
-        'ISfSBB/jfT5T3czsIVPBTJZomk3umew3OZG/cDQFvDqmbUV+wU/NH1oIiImEH9pQrV0'
-        'MIsHthurqIrGcs7p6V9HPQ8BpAl7P6UdyXrAYzFAvA5rWkyfvYAbwvRS8sh1FP58W/J'
-        'KrPLSOop+3+ekPFRu6FAPNNQh1FdeWDaxioRx/wo3i2vIbdynAJ3C4ViylVaDnAAAAA'
-        'ElFTkSuQmCC'
-    ]
-
+    p12n = ProductizationData(local_install)
     for channel in ['release', 'beta', 'aurora', 'trunk']:
         if args.branch in ['all', channel]:
             source_name = 'central.txt' if channel == 'trunk' else '{0}.txt'.format(
@@ -745,38 +781,10 @@ def main():
             extract_p12n_channel(
                 args.product, channel_data['source_path'],
                 channel_data['l10n_path'], channel_data['locales_file'],
-                channel, json_data, args.noproductization,
-                images_list, json_errors
+                channel, p12n.data, args.noproductization,
+                p12n.images_list, p12n.errors
             )
-
-    # Create images JSON structure and save it to file
-    image_data = {}
-    for index, value in enumerate(images_list):
-        image_data[index] = value
-    json_data['images'] = image_data
-
-    # Write back updated JSON with data
-    creation_date = strftime('%Y-%m-%d %H:%M:%S', localtime())
-    json_data['metadata'] = {
-        'creation_date': creation_date
-    }
-    json_file = open(data_filename, 'w')
-    if args.pretty:
-        json_file.write(json.dumps(json_data, sort_keys=True, indent=4))
-    else:
-        json_file.write(json.dumps(json_data, sort_keys=True))
-    json_file.close()
-
-    # Finalize and write JSON with errors
-    json_errors['metadata'] = {
-        'creation_date': creation_date
-    }
-    errors_file = open(errors_filename, 'w')
-    if args.pretty:
-        errors_file.write(json.dumps(json_errors, sort_keys=True, indent=4))
-    else:
-        errors_file.write(json.dumps(json_errors, sort_keys=True))
-    errors_file.close()
+    p12n.output_data(args.pretty)
 
 
 if __name__ == '__main__':
