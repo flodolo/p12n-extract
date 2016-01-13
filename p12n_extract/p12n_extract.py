@@ -480,209 +480,6 @@ def extract_p12n_product(source, product, locale, channel,
         )
 
 
-def extract_splist_enUS(pathsource, splist_enUS):
-    # Store in splist_enUS a list of en-US searchplugins (*.xml) in pathsource.
-    try:
-        for singlefile in glob.glob(os.path.join(pathsource, "*.xml")):
-            filename = os.path.basename(singlefile)
-            filename_noext = os.path.splitext(filename)[0]
-            splist_enUS.append(filename_noext)
-    except:
-        print "Error: problem reading list of en-US searchplugins from " \
-              + pathsource
-
-
-def extract_p12n_channel(clproduct, pathsource, pathl10n, localeslist, channel,
-                         json_data, clp12n, images_list, json_errors):
-    try:
-        # Analyze en-US searchplugins
-        searchpathbase = os.path.join(pathsource, "COMMUN")
-        searchpathenUS = {
-            "browser_sp": os.path.join(searchpathbase, "browser", "locales",
-                                       "en-US", "en-US", "searchplugins") + os.sep,
-            "browser_p12n": os.path.join(searchpathbase, "browser", "locales",
-                                         "en-US", "en-US", "chrome", "browser-region",
-                                         "region.properties"),
-            "mobile_sp": os.path.join(searchpathbase, "mobile", "locales",
-                                      "en-US", "en-US", "searchplugins") + os.sep,
-            "mobile_p12n": os.path.join(searchpathbase, "mobile", "locales",
-                                        "en-US", "en-US", "chrome", "region.properties"),
-            "mail_sp": os.path.join(searchpathbase, "mail", "locales",
-                                    "en-US", "en-US", "searchplugins") + os.sep,
-            "mail_p12n": os.path.join(searchpathbase, "mail", "locales",
-                                      "en-US", "en-US", "chrome", "messenger-region",
-                                      "region.properties"),
-            "suite_sp": os.path.join(searchpathbase, "suite", "locales",
-                                     "en-US", "en-US", "searchplugins") + os.sep,
-            "suite_p12n_a": os.path.join(searchpathbase, "suite", "locales",
-                                         "en-US", "en-US", "chrome", "browser",
-                                         "region.properties"),
-            "suite_p12n_b": os.path.join(searchpathbase, "suite", "locales",
-                                         "en-US", "en-US", "chrome", "common",
-                                         "region.properties"),
-        }
-
-        # Create a list of en-US searchplugins for each channel.
-        if clproduct == "all" or clproduct == "browser":
-            # Get a list of all .xml files inside en-US searchplugins folder
-            splistenUS_browser = []
-            extract_splist_enUS(
-                searchpathenUS["browser_sp"],
-                splistenUS_browser
-            )
-            extract_sp_product(
-                searchpathenUS["browser_sp"], "browser", "en-US", channel,
-                json_data, splistenUS_browser, images_list, json_errors
-            )
-            if clp12n:
-                extract_p12n_product(
-                    searchpathenUS["browser_p12n"], "browser",
-                    "en-US", channel, json_data, json_errors
-                )
-
-        if clproduct == "all" or clproduct == "mobile":
-            splistenUS_mobile = []
-            extract_splist_enUS(
-                searchpathenUS["mobile_sp"],
-                splistenUS_mobile
-            )
-            extract_sp_product(
-                searchpathenUS["mobile_sp"], "mobile", "en-US", channel,
-                json_data, splistenUS_mobile, images_list, json_errors
-            )
-            if clp12n:
-                extract_p12n_product(
-                    searchpathenUS["mobile_p12n"], "mobile", "en-US",
-                    channel, json_data, json_errors
-                )
-
-        if clproduct == "all" or clproduct == "mail":
-            splistenUS_mail = []
-            extract_splist_enUS(
-                searchpathenUS["mail_sp"],
-                splistenUS_mail
-            )
-            extract_sp_product(
-                searchpathenUS["mail_sp"], "mail", "en-US", channel,
-                json_data, splistenUS_mail, images_list, json_errors
-            )
-            if clp12n:
-                extract_p12n_product(
-                    searchpathenUS["mail_p12n"], "mail", "en-US",
-                    channel, json_data, json_errors
-                )
-
-        if clproduct == "all" or clproduct == "suite":
-            splistenUS_suite = []
-            extract_splist_enUS(
-                searchpathenUS["suite_sp"],
-                splistenUS_suite
-            )
-            extract_sp_product(
-                searchpathenUS["suite_sp"], "suite", "en-US", channel,
-                json_data, splistenUS_suite, images_list, json_errors
-            )
-            if clp12n:
-                extract_p12n_product(
-                    searchpathenUS["suite_p12n_a"], "suite", "en-US",
-                    channel, json_data, json_errors
-                )
-                extract_p12n_product(
-                    searchpathenUS["suite_p12n_b"], "suite", "en-US",
-                    channel, json_data, json_errors
-                )
-
-        locale_list = open(localeslist, "r").read().splitlines()
-        for locale in locale_list:
-            searchpathl10nbase = os.path.join(pathl10n, locale)
-            searchpathl10n = {
-                "browser_sp": os.path.join(
-                    searchpathl10nbase, "browser",
-                    "searchplugins"
-                ) + os.sep,
-                "browser_p12n": os.path.join(
-                    searchpathl10nbase, "browser", "chrome",
-                    "browser-region", "region.properties"
-                ),
-                "mobile_sp": os.path.join(
-                    searchpathl10nbase, "mobile",
-                    "searchplugins"
-                ) + os.sep,
-                "mobile_p12n": os.path.join(
-                    searchpathl10nbase, "mobile", "chrome",
-                    "region.properties"
-                ),
-                "mail_sp": os.path.join(
-                    searchpathl10nbase, "mail",
-                    "searchplugins"
-                ) + os.sep,
-                "mail_p12n": os.path.join(
-                    searchpathl10nbase, "mail", "chrome",
-                    "messenger-region", "region.properties"
-                ),
-                "suite_sp": os.path.join(
-                    searchpathl10nbase, "suite",
-                    "searchplugins"
-                ) + os.sep,
-                "suite_p12n_a": os.path.join(
-                    searchpathl10nbase, "suite", "chrome",
-                    "browser", "region.properties"
-                ),
-                "suite_p12n_b": os.path.join(
-                    searchpathl10nbase, "suite", "chrome",
-                    "common", "region.properties"
-                ),
-            }
-
-            if clproduct == "all" or clproduct == "browser":
-                extract_sp_product(
-                    searchpathl10n["browser_sp"], "browser", locale, channel,
-                    json_data, splistenUS_browser, images_list, json_errors
-                )
-                if clp12n:
-                    extract_p12n_product(
-                        searchpathl10n["browser_p12n"], "browser", locale,
-                        channel, json_data, json_errors
-                    )
-            if clproduct == "all" or clproduct == "mobile":
-                extract_sp_product(
-                    searchpathl10n["mobile_sp"], "mobile", locale, channel,
-                    json_data, splistenUS_mobile, images_list, json_errors
-                )
-                if clp12n:
-                    extract_p12n_product(
-                        searchpathl10n["mobile_p12n"], "mobile", locale,
-                        channel, json_data, json_errors
-                    )
-            if clproduct == "all" or clproduct == "mail":
-                extract_sp_product(
-                    searchpathl10n["mail_sp"], "mail", locale, channel,
-                    json_data, splistenUS_mail, images_list, json_errors
-                )
-                if clp12n:
-                    extract_p12n_product(
-                        searchpathl10n["mail_p12n"], "mail", locale, channel,
-                        json_data, json_errors
-                    )
-            if clproduct == "all" or clproduct == "suite":
-                extract_sp_product(
-                    searchpathl10n["suite_sp"], "suite", locale, channel,
-                    json_data, splistenUS_suite, images_list, json_errors
-                )
-                if clp12n:
-                    extract_p12n_product(
-                        searchpathl10n["suite_p12n_a"], "suite", locale,
-                        channel, json_data, json_errors
-                    )
-                    extract_p12n_product(
-                        searchpathl10n["suite_p12n_b"], "suite", locale,
-                        channel, json_data, json_errors
-                    )
-    except Exception as e:
-        print "Error reading list of locales from " + localeslist
-        print e
-
-
 class ProductizationData():
 
     def __init__(self, install_path):
@@ -709,6 +506,87 @@ class ProductizationData():
             'KrPLSOop+3+ekPFRu6FAPNNQh1FdeWDaxioRx/wo3i2vIbdynAJ3C4ViylVaDnAAAAA'
             'ElFTkSuQmCC'
         ]
+
+    def __extract_splist_enUS(self, path, list_sp_enUS):
+        ''' Store in list_sp_enUS a list of en-US searchplugins (*.xml) in paths '''
+        try:
+            for single_file in glob.glob(os.path.join(path, '*.xml')):
+                filename_noext = os.path.splitext(
+                    os.path.basename(single_file))[0]
+                list_sp_enUS.append(filename_noext)
+        except:
+            print 'Error: problem reading list of en-US searchplugins from {0}'.format(pathsource)
+
+    def extract_p12n_channel(self, requested_product, channel_data, requested_channel, check_p12n):
+        '''Extract information from all products for this channel'''
+        try:
+            # Analyze en-US searchplugins first
+            base = os.path.join(channel_data['source_path'], 'COMMUN')
+            search_path_enUS = {
+                'sp': {
+                    'browser': os.path.join(base, 'browser', 'locales', 'en-US', 'en-US', 'searchplugins'),
+                    'mobile': os.path.join(base, 'mobile', 'locales', 'en-US', 'en-US', 'searchplugins'),
+                    'mail': os.path.join(base, 'mail', 'locales', 'en-US', 'en-US', 'searchplugins'),
+                    'suite': os.path.join(base, 'suite', 'locales', 'en-US', 'en-US', 'searchplugins')
+                },
+                'p12n': {
+                    'browser': [os.path.join(base, 'browser', 'locales', 'en-US', 'en-US', 'chrome', 'browser-region', 'region.properties')],
+                    'mobile': [os.path.join(base, 'mobile', 'locales', 'en-US', 'en-US', 'chrome', 'region.properties')],
+                    'mail': [os.path.join(base, 'mail', 'locales', 'en-US', 'en-US', 'chrome', 'messenger-region', 'region.properties')],
+                    'suite': [
+                        os.path.join(base, 'suite', 'locales', 'en-US',
+                                     'en-US', 'chrome', 'browser', 'region.properties'),
+                        os.path.join(base, 'suite', 'locales', 'en-US',
+                                     'en-US', 'chrome', 'common', 'region.properties')
+                    ]
+                }
+            }
+            list_sp_enUS = {}
+            locales_list = open(
+                channel_data['locales_file'], 'r').read().splitlines()
+            for product in ['browser', 'mobile', 'mail', 'suite']:
+                if requested_product in ['all', product]:
+                    # Analyze en-US first
+                    list_sp_enUS[product] = []
+                    self.__extract_splist_enUS(search_path_enUS['sp'][
+                                               product], list_sp_enUS[product])
+                    extract_sp_product(search_path_enUS['sp'][
+                                       product], product, 'en-US', requested_channel, self.data, list_sp_enUS[product], self.images_list, self.errors)
+                    if check_p12n:
+                        for path in search_path_enUS['p12n'][product]:
+                            extract_p12n_product(
+                                path, product, 'en-US', requested_channel, self.data, self.errors)
+
+                    # Analyze all other locales for this product
+                    for locale in locales_list:
+                        base = os.path.join(channel_data['l10n_path'], locale)
+                        search_path_l10n = {
+                            'sp': {
+                                'browser': os.path.join(base, 'browser', 'searchplugins'),
+                                'mobile': os.path.join(base, 'mobile', 'searchplugins'),
+                                'mail': os.path.join(base, 'mail', 'searchplugins'),
+                                'suite': os.path.join(base, 'suite', 'searchplugins')
+                            },
+                            'p12n': {
+                                'browser': [os.path.join(base, 'browser', 'chrome', 'browser-region', 'region.properties')],
+                                'mobile': [os.path.join(base, 'mobile', 'chrome', 'region.properties')],
+                                'mail': [os.path.join(base, 'mail', 'chrome', 'messenger-region', 'region.properties')],
+                                'suite': [
+                                    os.path.join(
+                                        base, 'suite', 'chrome', 'browser', 'region.properties'),
+                                    os.path.join(
+                                        base, 'suite', 'chrome', 'common', 'region.properties')
+                                ]
+                            }
+                        }
+                        extract_sp_product(search_path_l10n['sp'][product], product, locale, requested_channel, self.data, list_sp_enUS[
+                                           product], self.images_list, self.errors)
+                        if check_p12n:
+                            for path in search_path_l10n['p12n'][product]:
+                                extract_p12n_product(
+                                    path, product, locale, requested_channel, self.data, self.errors)
+        except Exception as e:
+            print e
 
     def output_data(self, pretty_output):
         '''Complete the JSON structure and output data to files'''
@@ -778,12 +656,8 @@ def main():
                 'locales_file': os.path.join(config_files, source_name),
                 'source_path': os.path.join(local_hg, '{0}_EN-US'.format(channel.upper())),
             }
-            extract_p12n_channel(
-                args.product, channel_data['source_path'],
-                channel_data['l10n_path'], channel_data['locales_file'],
-                channel, p12n.data, args.noproductization,
-                p12n.images_list, p12n.errors
-            )
+            p12n.extract_p12n_channel(
+                args.product, channel_data, channel, args.noproductization)
     p12n.output_data(args.pretty)
 
 
