@@ -42,7 +42,7 @@ class ProductizationData():
             'ElFTkSuQmCC'
         ]
 
-    def __extract_splist_enUS(self, path, list_sp_enUS):
+    def extract_splist_enUS(self, path, list_sp_enUS):
         ''' Store in list_sp_enUS a list of en-US searchplugins (*.xml) in paths '''
         try:
             for searchplugin in glob.glob(os.path.join(path, '*.xml')):
@@ -52,7 +52,7 @@ class ProductizationData():
         except:
             print 'Error: problem reading list of en-US searchplugins from {0}'.format(pathsource)
 
-    def __extract_searchplugins_product(self, search_path, product, locale, channel, list_sp_enUS):
+    def extract_searchplugins_product(self, search_path, product, locale, channel, list_sp_enUS):
         '''Extract information about searchplugings'''
 
         try:
@@ -83,7 +83,7 @@ class ProductizationData():
                 # in en-US but from other locales
                 list_sp = list_sp_enUS
 
-            if locale != 'en-US' and not errors:
+            if locale != 'en-US':
                 # Get a list of all files inside search_path
                 for searchplugin in glob.glob(os.path.join(search_path, '*')):
                     filename = os.path.basename(searchplugin)
@@ -213,7 +213,7 @@ class ProductizationData():
                         if not images:
                             errors.append('no images available {0}'.format(searchplugin_info))
                             # Use default empty image
-                            images = [images_list[0]]
+                            images = [0]
 
                         self.data['locales'][locale][product][channel]['searchplugins'][sp] = {
                             'file': '{0}.xml'.format(sp),
@@ -253,7 +253,7 @@ class ProductizationData():
         except Exception as e:
             print '[{0}] problem reading {1}'.format(locale, file_list)
 
-    def __extract_productization_product(self, region_file, product, locale, channel):
+    def extract_productization_product(self, region_file, product, locale, channel):
         '''Extract productization data and check for errors'''
 
         # Extract p12n information from region.properties.
@@ -310,7 +310,7 @@ class ProductizationData():
                                 default_engine_name = settings[property_name]
                                 if unicode(default_engine_name, 'utf-8') not in available_searchplugins:
                                     pass
-                                    errors.append('{0} is set as default but not available in searchplugins (check if the name is spelled  correctly)'.format(default_engine_name))
+                                    errors.append('{0} is set as default but not available in searchplugins (check if the name is spelled correctly)'.format(default_engine_name))
 
                             # Search engines order. Example:
                             # browser.search.order.1=Google
@@ -461,14 +461,14 @@ class ProductizationData():
                 if requested_product in ['all', product]:
                     # Analyze en-US first
                     list_sp_enUS[product] = []
-                    self.__extract_splist_enUS(search_path_enUS['sp'][
+                    self.extract_splist_enUS(search_path_enUS['sp'][
                                                product], list_sp_enUS[product])
-                    self.__extract_searchplugins_product(
+                    self.extract_searchplugins_product(
                         search_path_enUS['sp'][product], product, 'en-US',
                         requested_channel, list_sp_enUS[product])
                     if check_p12n:
                         for path in search_path_enUS['p12n'][product]:
-                            self.__extract_productization_product(
+                            self.extract_productization_product(
                                 path, product, 'en-US', requested_channel)
 
                     # Analyze all other locales for this product
@@ -493,12 +493,12 @@ class ProductizationData():
                                 ]
                             }
                         }
-                        self.__extract_searchplugins_product(
+                        self.extract_searchplugins_product(
                             search_path_l10n['sp'][product], product, locale,
                             requested_channel, list_sp_enUS[product])
                         if check_p12n:
                             for path in search_path_l10n['p12n'][product]:
-                                self.__extract_productization_product(
+                                self.extract_productization_product(
                                     path, product, locale, requested_channel)
         except Exception as e:
             print e
