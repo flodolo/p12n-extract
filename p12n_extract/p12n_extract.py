@@ -3,6 +3,7 @@
 # This script is designed to work in Transvision
 # https://github.com/mozfr/transvision
 
+import argparse
 import collections
 import glob
 import json
@@ -10,7 +11,6 @@ import os
 import re
 import StringIO
 from ConfigParser import SafeConfigParser
-from optparse import OptionParser
 from time import strftime, localtime
 from xml.dom import minidom
 
@@ -685,119 +685,99 @@ def extract_p12n_channel(clproduct, pathsource, pathl10n, localeslist, channel,
 
 def main():
     # Parse command line options
-    clparser = OptionParser()
-    clparser.add_option("-p", "--product", help="Choose a specific product",
-                        choices=["browser", "mobile", "mail", "suite", "all"],
-                        default="all")
-    clparser.add_option("-b", "--branch", help="Choose a specific branch",
-                        choices=["release", "beta", "aurora", "trunk", "all"],
-                        default="all")
-    clparser.add_option("-n", "--noproductization",
-                        help="Disable productization checks",
-                        action="store_true")
-    (options, args) = clparser.parse_args()
-    clproduct = options.product
-    clbranch = options.branch
-    clp12n = False if options.noproductization else True
+    cl_parser = argparse.ArgumentParser()
+    cl_parser.add_argument('-p', '--product', help='Choose a specific product',
+                           choices=['browser', 'mobile', 'mail', 'suite', 'all'], default='all')
+    cl_parser.add_argument('-b', '--branch', help='Choose a specific branch',
+                           choices=['release', 'beta', 'aurora', 'trunk', 'all'], default='all')
+    cl_parser.add_argument('-n', '--noproductization',
+                           help='Disable productization checks', action='store_false')
+    cl_parser.add_argument('--pretty',
+                           help='Generate pretty output', action='store_true')
+    args = cl_parser.parse_args()
 
-    # Read configuration file
+    # Read Transvision's configuration file by getting the absolute path of
+    # ../config from current script location (not current folder). Store all
+    # needed folders in vars.
     parser = SafeConfigParser()
+    config_folder = os.path.abspath(os.path.join(
+        os.path.dirname(__file__), os.pardir, 'config'))
+    parser.read(os.path.join(config_folder, 'config.ini'))
+    local_install = parser.get('config', 'install')
+    local_hg = parser.get('config', 'local_hg')
+    config_files = os.path.join(parser.get('config', 'config'), 'sources')
 
-    # Get absolute path of ../config from current script location (not current
-    # folder)
-    config_folder = os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__),
-            os.pardir, "config"
-        )
-    )
-    parser.read(os.path.join(config_folder, "config.ini"))
-
-    local_install = parser.get("config", "install")
-    local_hg = parser.get("config", "local_hg")
-    config_files = os.path.join(parser.get("config", "config"), "sources")
-
-    # Set Transvision's folders and locale files
-    release_l10n = os.path.join(local_hg, "RELEASE_L10N") + os.sep
-    beta_l10n = os.path.join(local_hg, "BETA_L10N") + os.sep
-    aurora_l10n = os.path.join(local_hg, "AURORA_L10N") + os.sep
-    trunk_l10n = os.path.join(local_hg, "TRUNK_L10N") + os.sep
-
-    release_source = os.path.join(local_hg, "RELEASE_EN-US") + os.sep
-    beta_source = os.path.join(local_hg, "BETA_EN-US") + os.sep
-    aurora_source = os.path.join(local_hg, "AURORA_EN-US") + os.sep
-    trunk_source = os.path.join(local_hg, "TRUNK_EN-US") + os.sep
-
-    trunk_locales = os.path.join(config_files, "central.txt")
-    aurora_locales = os.path.join(config_files, "aurora.txt")
-    beta_locales = os.path.join(config_files, "beta.txt")
-    release_locales = os.path.join(config_files, "release.txt")
-
-    # Create web/p12n if missing
-    web_p12n_folder = os.path.join(local_install, "web", "p12n")
+    # Create web/p12n folder if missing
+    web_p12n_folder = os.path.join(local_install, 'web', 'p12n')
     if not os.path.exists(web_p12n_folder):
         os.makedirs(web_p12n_folder)
 
     nested_dict = lambda: collections.defaultdict(nested_dict)
-    data_filename = os.path.join(web_p12n_folder, "searchplugins.json")
+
+    data_filename = os.path.join(web_p12n_folder, 'searchplugins.json')
     json_data = nested_dict()
 
-    errors_filename = os.path.join(web_p12n_folder, "errors.json")
+    errors_filename = os.path.join(web_p12n_folder, 'errors.json')
     json_errors = nested_dict()
 
     images_list = [
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34A"
-        "AAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAV5JREFUSImt1k1K"
-        "JEEQhuFHzzC40u7RpZ5CL+FP4yFEGdFzCPYFxOnxAiOCt3DWouhCd44ulG7aRVVBkZ2"
-        "ZVa0dEBRkRL1f5E9F5Zy8rWAL61jDj3L8Gf9wjXPcNnAmbBkXGGHc4CMM0G0L38VbC3"
-        "Dor+g1wQ+/AA59P1f5d+GV74Tw5ciyDHFSPlOgVM5/dOoCfyIvbpaxzYRIPWc7knNew"
-        "VdMnpaTYIahSB1eWT9gjJQn67ihulAkFuslZnkIV5FATqQtfIxLeEwEUyJt4WPcw0cm"
-        "ISfSBB/jfT5T3czsIVPBTJZomk3umew3OZG/cDQFvDqmbUV+wU/NH1oIiImEH9pQrV0"
-        "MIsHthurqIrGcs7p6V9HPQ8BpAl7P6UdyXrAYzFAvA5rWkyfvYAbwvRS8sh1FP58W/J"
-        "KrPLSOop+3+ekPFRu6FAPNNQh1FdeWDaxioRx/wo3i2vIbdynAJ3C4ViylVaDnAAAAA"
-        "ElFTkSuQmCC"
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34A'
+        'AAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAV5JREFUSImt1k1K'
+        'JEEQhuFHzzC40u7RpZ5CL+FP4yFEGdFzCPYFxOnxAiOCt3DWouhCd44ulG7aRVVBkZ2'
+        'ZVa0dEBRkRL1f5E9F5Zy8rWAL61jDj3L8Gf9wjXPcNnAmbBkXGGHc4CMM0G0L38VbC3'
+        'Dor+g1wQ+/AA59P1f5d+GV74Tw5ciyDHFSPlOgVM5/dOoCfyIvbpaxzYRIPWc7knNew'
+        'VdMnpaTYIahSB1eWT9gjJQn67ihulAkFuslZnkIV5FATqQtfIxLeEwEUyJt4WPcw0cm'
+        'ISfSBB/jfT5T3czsIVPBTJZomk3umew3OZG/cDQFvDqmbUV+wU/NH1oIiImEH9pQrV0'
+        'MIsHthurqIrGcs7p6V9HPQ8BpAl7P6UdyXrAYzFAvA5rWkyfvYAbwvRS8sh1FP58W/J'
+        'KrPLSOop+3+ekPFRu6FAPNNQh1FdeWDaxioRx/wo3i2vIbdynAJ3C4ViylVaDnAAAAA'
+        'ElFTkSuQmCC'
     ]
 
-    if clbranch == "all" or clbranch == "trunk":
-        extract_p12n_channel(clproduct, trunk_source, trunk_l10n,
-                             trunk_locales, "trunk", json_data,
-                             clp12n, images_list, json_errors)
-    if clbranch == "all" or clbranch == "aurora":
-        extract_p12n_channel(clproduct, aurora_source, aurora_l10n,
-                             aurora_locales, "aurora", json_data,
-                             clp12n, images_list, json_errors)
-    if clbranch == "all" or clbranch == "beta":
-        extract_p12n_channel(clproduct, beta_source, beta_l10n,
-                             beta_locales, "beta", json_data, clp12n,
-                             images_list, json_errors)
-    if clbranch == "all" or clbranch == "release":
-        extract_p12n_channel(clproduct, release_source, release_l10n,
-                             release_locales, "release", json_data,
-                             clp12n, images_list, json_errors)
+    for channel in ['release', 'beta', 'aurora', 'trunk']:
+        if args.branch in ['all', channel]:
+            source_name = 'central.txt' if channel == 'trunk' else '{0}.txt'.format(
+                channel)
+            channel_data = {
+                'l10n_path': os.path.join(local_hg, '{0}_L10N'.format(channel.upper())),
+                'locales_file': os.path.join(config_files, source_name),
+                'source_path': os.path.join(local_hg, '{0}_EN-US'.format(channel.upper())),
+            }
+            extract_p12n_channel(
+                args.product, channel_data['source_path'],
+                channel_data['l10n_path'], channel_data['locales_file'],
+                channel, json_data, args.noproductization,
+                images_list, json_errors
+            )
 
-    # Create images json structure and save it to file
+    # Create images JSON structure and save it to file
     image_data = {}
     for index, value in enumerate(images_list):
         image_data[index] = value
-    json_data["images"] = image_data
-    update_date = strftime("%Y-%m-%d %H:%M %Z", localtime())
+    json_data['images'] = image_data
 
-    # Write back updated json with data
-    json_data["metadata"] = {
-        "creation_date": update_date
+    # Write back updated JSON with data
+    creation_date = strftime('%Y-%m-%d %H:%M:%S', localtime())
+    json_data['metadata'] = {
+        'creation_date': creation_date
     }
-    json_file = open(data_filename, "w")
-    json_file.write(json.dumps(json_data, sort_keys=True))
+    json_file = open(data_filename, 'w')
+    if args.pretty:
+        json_file.write(json.dumps(json_data, sort_keys=True, indent=4))
+    else:
+        json_file.write(json.dumps(json_data, sort_keys=True))
     json_file.close()
 
-    # Finalize and write json with errors
-    json_errors["metadata"] = {
-        "creation_date": update_date
+    # Finalize and write JSON with errors
+    json_errors['metadata'] = {
+        'creation_date': creation_date
     }
-    errors_file = open(errors_filename, "w")
-    errors_file.write(json.dumps(json_errors, sort_keys=True))
+    errors_file = open(errors_filename, 'w')
+    if args.pretty:
+        errors_file.write(json.dumps(json_errors, sort_keys=True, indent=4))
+    else:
+        errors_file.write(json.dumps(json_errors, sort_keys=True))
     errors_file.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
