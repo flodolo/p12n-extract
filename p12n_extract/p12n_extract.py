@@ -10,266 +10,10 @@ import json
 import os
 import re
 import StringIO
+import sys
 from ConfigParser import SafeConfigParser
 from time import strftime, localtime
 from xml.dom import minidom
-
-
-def extract_sp_product(searchpath, product, locale, channel, json_data,
-                       splist_enUS, images_list, json_errors):
-    try:
-        sp_list = []
-        errors = []
-        warnings = []
-
-        if locale != "en-US":
-            # Read the list of searchplugins from list.txt
-            file_list = os.path.join(searchpath, "list.txt")
-            if os.path.isfile(file_list):
-                sp_list = open(file_list, "r").read().splitlines()
-                # Remove empty lines
-                sp_list = filter(bool, sp_list)
-                # Check for duplicates
-                if len(sp_list) != len(set(sp_list)):
-                    # set(sp_list) removes duplicates. If I'm here, there are
-                    # duplicated elements in list.txt, which is an error
-                    duplicated_items = [
-                        x for x, y in
-                        collections.Counter(sp_list).items() if y > 1
-                    ]
-                    duplicated_items_str = ", ".join(duplicated_items)
-                    errors.append(
-                        "there are duplicated items (%s) in the list"
-                        % duplicated_items_str
-                    )
-        else:
-            # en-US is different: I must analyze all xml files in the folder,
-            # since some searchplugins are not used in en-US but from other
-            # locales
-            sp_list = splist_enUS
-
-        if locale != "en-US" and len(sp_list) > 0:
-            # Get a list of all files inside searchpath
-            for singlefile in glob.glob(os.path.join(searchpath, "*")):
-                # Remove extension
-                filename = os.path.basename(singlefile)
-                filename_noext = os.path.splitext(filename)[0]
-                if filename_noext in splist_enUS:
-                    # File exists but has the same name of an en-US
-                    # searchplugin.
-                    errors.append(
-                        "file %s should not exist in the locale folder, "
-                        "same name of en-US searchplugin" % filename
-                    )
-                else:
-                    if filename_noext not in sp_list and filename != "list.txt":
-                        # Extra file or unused searchplugin, should be removed
-                        errors.append(
-                            "file %s not in list.txt" % filename
-                        )
-
-        # For each searchplugin check if the file exists (localized version) or
-        # not (using en-US version to extract data)
-        for sp in sp_list:
-            sp_file = os.path.join(searchpath, sp + ".xml")
-            existingfile = os.path.isfile(sp_file)
-
-            if locale != "en-US" and sp in splist_enUS and existingfile:
-                # There's a problem: file exists but has the same name of an
-                # en-US searchplugin. This file will never be picked at build
-                # time, so let's analyze en-US and use it for json, acting
-                # like the file doesn't exist, and print an error
-                existingfile = False
-
-            if existingfile:
-                try:
-                    searchplugin_info = "(%s, %s, %s, %s.xml)" \
-                                        % (locale, product, channel, sp)
-                    try:
-                        xmldoc = minidom.parse(sp_file)
-                    except Exception as e:
-                        # Some searchplugins have preprocessing instructions
-                        # (#define, #if), so they fail validation. In order to
-                        # extract the information I need, I read the file,
-                        # remove lines starting with # and parse that content
-                        # instead of the original XML file
-                        preprocessor = False
-                        newspcontent = ""
-                        for line in open(sp_file, "r").readlines():
-                            if re.match("#", line):
-                                # Line starts with a #
-                                preprocessor = True
-                            else:
-                                # Line is OK, adding it to newspcontent
-                                newspcontent = newspcontent + line
-                        if preprocessor:
-                            warnings.append(
-                                "searchplugin contains preprocessor "
-                                "instructions (e.g. #define, #if) that have "
-                                "been stripped in order to parse the XML %s"
-                                % searchplugin_info
-                            )
-                            try:
-                                xmldoc = minidom.parse(
-                                    StringIO.StringIO(newspcontent)
-                                )
-                            except Exception as e:
-                                errors.append(
-                                    "error parsing XML %s"
-                                    % searchplugin_info
-                                )
-                        else:
-                            # XML is broken
-                            xmldoc = []
-                            errors.append(
-                                "error parsing XML %s <code>%s</code>"
-                                % (searchplugin_info, str(e))
-                            )
-
-                    # Some searchplugins use the form <tag>, others <os:tag>
-                    try:
-                        node = xmldoc.getElementsByTagName("ShortName")
-                        if len(node) == 0:
-                            node = xmldoc.getElementsByTagName("os:ShortName")
-                        name = node[0].childNodes[0].nodeValue
-                    except Exception as e:
-                        errors.append(
-                            "error extracting name %s"
-                            % searchplugin_info
-                        )
-                        name = "not available"
-
-                    try:
-                        node = xmldoc.getElementsByTagName("Description")
-                        if len(node) == 0:
-                            node = xmldoc.getElementsByTagName(
-                                "os:Description")
-                        description = node[0].childNodes[0].nodeValue
-                    except Exception as e:
-                        # We don't really use description anywhere, and it's
-                        # usually removed on mobile, so I don't print errors
-                        description = "not available"
-
-                    try:
-                        # I can have more than one url element, for example one
-                        # for searches and one for suggestions
-                        secure = 0
-
-                        nodes = xmldoc.getElementsByTagName("Url")
-                        if len(nodes) == 0:
-                            nodes = xmldoc.getElementsByTagName("os:Url")
-                        for node in nodes:
-                            if node.attributes["type"].nodeValue == "text/html":
-                                url = node.attributes["template"].nodeValue
-                        p = re.compile("^https://")
-
-                        if p.match(url):
-                            secure = 1
-                    except Exception as e:
-                        errors.append(
-                            "error extracting URL %s"
-                            % searchplugin_info
-                        )
-                        url = "not available"
-
-                    try:
-                        # Since bug 900137, searchplugins can have multiple
-                        # images
-                        images = []
-                        nodes = xmldoc.getElementsByTagName("Image")
-                        if len(nodes) == 0:
-                            nodes = xmldoc.getElementsByTagName("os:Image")
-                        for node in nodes:
-                            image = node.childNodes[0].nodeValue
-                            if image in images_list:
-                                # Image already stored. In the json record store
-                                # only the index
-                                images.append(images_list.index(image))
-                            else:
-                                # Store image in images_list, get index and
-                                # store in json
-                                images_list.append(image)
-                                images.append(len(images_list) - 1)
-
-                            # On mobile we can't have % characters, see for
-                            # example bug 850984. Print a warning in this case
-                            if product == "mobile":
-                                if "%" in image:
-                                    warnings.append(
-                                        "searchplugin's image on mobile can't "
-                                        "contain % character %s"
-                                        % searchplugin_info
-                                    )
-
-                    except Exception as e:
-                        errors.append(
-                            "error extracting image %s"
-                            % searchplugin_info
-                        )
-                        # Add error image
-                        images.append(0)
-
-                    # No images in the searchplugin
-                    if len(images) == 0:
-                        errors.append(
-                            "no images available %s"
-                            % searchplugin_info
-                        )
-                        # Use default empty image
-                        images = [images_list[0]]
-
-                    json_data["locales"][locale][product][channel]["searchplugins"][sp] = {
-                        "file": "%s.xml" % sp,
-                        "name": name,
-                        "description": description,
-                        "url": url,
-                        "secure": secure,
-                        "images": images,
-                    }
-
-                except Exception as e:
-                    errors.append(
-                        "error analyzing searchplugin %s <code>%s</code>"
-                        % (searchplugin_info, str(e))
-                    )
-            else:
-                # File does not exists, locale is using the same plugin of en-
-                # US, I have to retrieve it from the dictionary
-                if sp in json_data["locales"]["en-US"][product] \
-                                  [channel]["searchplugins"]:
-                    searchplugin_enUS = json_data["locales"]["en-US"][product] \
-                                                 [channel]["searchplugins"][sp]
-
-                    json_data["locales"][locale][product] \
-                             [channel]["searchplugins"][sp] = {
-                        "file": "%s.xml" % sp,
-                        "name": searchplugin_enUS["name"],
-                        "description": "(en-US) %s"
-                                       % searchplugin_enUS["description"],
-                        "url": searchplugin_enUS["url"],
-                        "secure": searchplugin_enUS["secure"],
-                        "images": searchplugin_enUS["images"]
-                    }
-                else:
-                    # File does not exist but we don't have the en-US either.
-                    # This means that list.txt references a non existing
-                    # plugin, which will cause the build to fail
-                    errors.append(
-                        "file referenced in list.txt but not available "
-                        "(%s, %s, %s, %s.xml)"
-                        % (locale, product, channel, sp)
-                    )
-
-        # Save errors and warnings
-        if len(errors) > 0:
-            json_errors["locales"][locale][product][channel]["errors"] = errors
-        if len(warnings) > 0:
-            json_errors["locales"][locale][product][
-                channel]["warnings"] = warnings
-    except Exception as e:
-        errors.append(
-            "[%s] problem reading %s" % (locale, file_list)
-        )
 
 
 def extract_p12n_product(source, product, locale, channel,
@@ -510,12 +254,212 @@ class ProductizationData():
     def __extract_splist_enUS(self, path, list_sp_enUS):
         ''' Store in list_sp_enUS a list of en-US searchplugins (*.xml) in paths '''
         try:
-            for single_file in glob.glob(os.path.join(path, '*.xml')):
-                filename_noext = os.path.splitext(
-                    os.path.basename(single_file))[0]
-                list_sp_enUS.append(filename_noext)
+            for searchplugin in glob.glob(os.path.join(path, '*.xml')):
+                searchplugin_noext = os.path.splitext(
+                    os.path.basename(searchplugin))[0]
+                list_sp_enUS.append(searchplugin_noext)
         except:
             print 'Error: problem reading list of en-US searchplugins from {0}'.format(pathsource)
+
+    def __extract_searchplugins_product(self, search_path, product, locale, channel, list_sp_enUS):
+        try:
+            list_sp = []
+            errors = []
+            warnings = []
+
+            if locale != 'en-US':
+                # Read the list of searchplugins from list.txt
+                file_list = os.path.join(search_path, 'list.txt')
+                if os.path.isfile(file_list):
+                    list_sp = open(file_list, 'r').read().splitlines()
+                    # Remove empty lines
+                    list_sp = filter(bool, list_sp)
+                    # Check for duplicates
+                    if len(list_sp) != len(set(list_sp)):
+                        # set(list_sp) removes duplicates. If I'm here, there are
+                        # duplicated elements in list.txt, which is an error
+                        duplicated_items = [
+                            x for x, y in
+                            collections.Counter(list_sp).items() if y > 1
+                        ]
+                        duplicated_items_str = ', '.join(duplicated_items)
+                        errors.append(u'there are duplicated items ({0}) in the list'.format(duplicated_items_str))
+            else:
+                # en-US is different from all other locales: I must analyze all
+                # XML files in the folder, since some searchplugins are not used
+                # in en-US but from other locales
+                list_sp = list_sp_enUS
+
+            if locale != 'en-US' and not errors:
+                # Get a list of all files inside search_path
+                for searchplugin in glob.glob(os.path.join(search_path, '*')):
+                    filename = os.path.basename(searchplugin)
+                    # Remove extension
+                    filename_noext = os.path.splitext(filename)[0]
+                    if filename_noext in list_sp_enUS:
+                        # File exists but has the same name of an en-US
+                        # searchplugin.
+                        errors.append(u'file {0} should not exist in the locale folder, same name of en-US searchplugin'.format(filename))
+                    else:
+                        if filename_noext not in list_sp and filename != 'list.txt':
+                            # Extra file or unused searchplugin, should be removed
+                            errors.append(u'file {0} not in list.txt'.format(filename))
+
+            # For each searchplugin check if the file exists (localized version) or
+            # not (using en-US version to extract data)
+            for sp in list_sp:
+                sp_file = os.path.join(search_path, sp + '.xml')
+                existing_file = os.path.isfile(sp_file)
+
+                if sp in list_sp_enUS and existing_file and locale != 'en-US':
+                    # There's a problem: file exists but has the same name of an
+                    # en-US searchplugin. This file will never be picked at build
+                    # time, so let's analyze en-US and use it for JSON, acting
+                    # like the file doesn't exist, and printing an error
+                    existing_file = False
+
+                if existing_file:
+                    try:
+                        searchplugin_info = u'({0}, {1}, {2}, {3}.xml)'.format(locale, product, channel, sp)
+                        try:
+                            xmldoc = minidom.parse(sp_file)
+                        except Exception as e:
+                            # Some searchplugins have preprocessing instructions
+                            # (#define, #if), so they fail validation. In order to
+                            # extract the information I need, I read the file,
+                            # remove lines starting with # and parse that content
+                            # instead of the original XML file
+                            preprocessor = False
+                            cleaned_sp_content = ''
+                            for line in open(sp_file, 'r').readlines():
+                                if re.match('^#', line):
+                                    # Line starts with a #
+                                    preprocessor = True
+                                else:
+                                    # Line is OK, adding it to newspcontent
+                                    cleaned_sp_content += line
+                            if preprocessor:
+                                warnings.append(u'searchplugin contains preprocessor instructions (e.g. #define, #if) that have been stripped in order to parse the XML {0}'.format(searchplugin_info))
+                                try:
+                                    xmldoc = minidom.parse(StringIO.StringIO(cleaned_sp_content))
+                                except Exception as e:
+                                    errors.append(u'error parsing XML {0}'.format(searchplugin_info))
+                            else:
+                                # XML is broken
+                                xmldoc = []
+                                errors.append(u'error parsing XML {0} <code>{1}</code>'.format(searchplugin_info, str(e)))
+
+                        # Some searchplugins use the form <tag>, others <os:tag>
+                        try:
+                            node = xmldoc.getElementsByTagName('ShortName')
+                            if len(node) == 0:
+                                node = xmldoc.getElementsByTagName('os:ShortName')
+                            name = node[0].childNodes[0].nodeValue
+                        except Exception as e:
+                            errors.append(u'error extracting name {0}'.format(searchplugin_info))
+                            name = 'not available'
+
+                        try:
+                            node = xmldoc.getElementsByTagName('Description')
+                            if len(node) == 0:
+                                node = xmldoc.getElementsByTagName('os:Description')
+                            description = node[0].childNodes[0].nodeValue
+                        except Exception as e:
+                            # We don't really use description anywhere, and it's
+                            # usually removed on mobile, so I don't print errors
+                            description = 'not available'
+
+                        try:
+                            # I can have more than one URL element, for example one
+                            # for searches and one for suggestions
+                            secure = 0
+
+                            nodes = xmldoc.getElementsByTagName('Url')
+                            if len(nodes) == 0:
+                                nodes = xmldoc.getElementsByTagName('os:Url')
+                            for node in nodes:
+                                if node.attributes['type'].nodeValue == 'text/html':
+                                    url = node.attributes['template'].nodeValue
+                            p = re.compile('^https://')
+                            if p.match(url):
+                                secure = 1
+                        except Exception as e:
+                            errors.append(u'error extracting URL {0}'.format(searchplugin_info))
+                            url = 'not available'
+
+                        try:
+                            # Since bug 900137, searchplugins can have multiple
+                            # images
+                            images = []
+                            nodes = xmldoc.getElementsByTagName('Image')
+                            if len(nodes) == 0:
+                                nodes = xmldoc.getElementsByTagName('os:Image')
+                            for node in nodes:
+                                image = node.childNodes[0].nodeValue
+                                if image in self.images_list:
+                                    # Image already stored. In the JSON record. Store
+                                    # only the index
+                                    images.append(self.images_list.index(image))
+                                else:
+                                    # Store image in images_list, get index and
+                                    # store in json
+                                    self.images_list.append(image)
+                                    images.append(len(self.images_list) - 1)
+
+                                # On mobile we can't have % characters, see for
+                                # example bug 850984. Print a warning in this case
+                                if product == 'mobile':
+                                    if '%' in image:
+                                        warnings.append(u'searchplugin\'s image on mobile can\'t contain % character {0}'.format(searchplugin_info))
+                        except Exception as e:
+                            errors.append('error extracting image {0}'.format(searchplugin_info))
+                            # Use default empty image
+                            images.append(0)
+
+                        # No images in the searchplugin
+                        if not images:
+                            errors.append('no images available {0}'.format(searchplugin_info))
+                            # Use default empty image
+                            images = [images_list[0]]
+
+                        self.data['locales'][locale][product][channel]['searchplugins'][sp] = {
+                            'file': u'{0}.xml'.format(sp),
+                            'name': name,
+                            'description': description,
+                            'url': url,
+                            'secure': secure,
+                            'images': images,
+                        }
+                    except Exception as e:
+                        print e
+                        errors.append('error analyzing searchplugin {0} <code>{1}</code>'.format(searchplugin_info, str(e)))
+                else:
+                    # File does not exist, locale is using the same plugin of en-US,
+                    # I have to retrieve it from the existing dictionary
+                    if sp in self.data['locales']['en-US'][product][channel]['searchplugins']:
+                        searchplugin_enUS = self.data['locales']['en-US'][product][channel]['searchplugins'][sp]
+
+                        self.data['locales'][locale][product][channel]['searchplugins'][sp] = {
+                            'file': u'{0}.xml'.format(sp),
+                            'name': searchplugin_enUS['name'],
+                            'description': u'(en-US) {0}'.format(searchplugin_enUS['description']),
+                            'url': searchplugin_enUS['url'],
+                            'secure': searchplugin_enUS['secure'],
+                            'images': searchplugin_enUS['images']
+                        }
+                    else:
+                        # File does not exist but we don't have in in en-US either.
+                        # This means that list.txt references a non existing
+                        # plugin, which will cause the build to fail
+                        errors.append(u'file referenced in list.txt but not available ({0}, {1}, {2}, {3}.xml)'.format(locale, product, channel, sp))
+
+            # Save errors and warnings
+            if errors:
+                self.errors['locales'][locale][product][channel]['errors'] = errors
+            if warnings:
+                self.errors['locales'][locale][product][channel]['warnings'] = warnings
+        except Exception as e:
+            print u'[{0}] problem reading {1}'.format(locale, file_list)
 
     def extract_p12n_channel(self, requested_product, channel_data, requested_channel, check_p12n):
         '''Extract information from all products for this channel'''
@@ -550,8 +494,9 @@ class ProductizationData():
                     list_sp_enUS[product] = []
                     self.__extract_splist_enUS(search_path_enUS['sp'][
                                                product], list_sp_enUS[product])
-                    extract_sp_product(search_path_enUS['sp'][
-                                       product], product, 'en-US', requested_channel, self.data, list_sp_enUS[product], self.images_list, self.errors)
+                    self.__extract_searchplugins_product(
+                        search_path_enUS['sp'][product], product, 'en-US',
+                        requested_channel, list_sp_enUS[product])
                     if check_p12n:
                         for path in search_path_enUS['p12n'][product]:
                             extract_p12n_product(
@@ -579,8 +524,9 @@ class ProductizationData():
                                 ]
                             }
                         }
-                        extract_sp_product(search_path_l10n['sp'][product], product, locale, requested_channel, self.data, list_sp_enUS[
-                                           product], self.images_list, self.errors)
+                        self.__extract_searchplugins_product(
+                            search_path_l10n['sp'][product], product, locale,
+                            requested_channel, list_sp_enUS[product])
                         if check_p12n:
                             for path in search_path_l10n['p12n'][product]:
                                 extract_p12n_product(
