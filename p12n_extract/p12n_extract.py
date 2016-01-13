@@ -15,215 +15,6 @@ from ConfigParser import SafeConfigParser
 from time import strftime, localtime
 from xml.dom import minidom
 
-
-def extract_p12n_product(source, product, locale, channel,
-                         json_data, json_errors):
-    # Extract p12n information from region.properties.
-    errors = []
-    warnings = []
-    nested_dict = lambda: collections.defaultdict(nested_dict)
-
-    try:
-        available_searchplugins = []
-        if channel in json_data["locales"][locale][product]:
-            # I need to proceed only if I have searchplugins for this
-            # branch+product+locale
-            for element in json_data["locales"][locale][product] \
-                                    [channel]["searchplugins"].values():
-                # Store the "name" attribute of each searchplugin, used to
-                # validate search.order
-                if "name" in element:
-                    available_searchplugins.append(element["name"])
-
-            existingfile = os.path.isfile(source)
-            if existingfile:
-                try:
-                    # Read region.properties, ignore comments and empty lines
-                    values = {}
-                    for line in open(source):
-                        li = line.strip()
-                        if not li.startswith("#") and li != "":
-                            try:
-                                # Split considering only the first =
-                                key, value = li.split("=", 1)
-                                # Remove whitespaces, some locales use key =
-                                # value instead of key=value
-                                values[key.strip()] = value.strip()
-                            except:
-                                errors.append(
-                                    "problem parsing %s (%s, %s, %s)"
-                                    % (source, locale, product, channel)
-                                )
-                except:
-                    errors.append(
-                        "problem reading %s (%s, %s, %s)"
-                        % (source, locale, product, channel)
-                    )
-
-                defaultenginename = "-"
-                searchorder = nested_dict()
-                feedhandlers = nested_dict()
-                handlerversion = "-"
-                contenthandlers = nested_dict()
-
-                for key, value in values.iteritems():
-                    lineok = False
-
-                    # Default search engine name. Example:
-                    # browser.search.defaultenginename=Google
-                    property_name = "browser.search.defaultenginename"
-                    if key.startswith(property_name):
-                        lineok = True
-                        defaultenginename = values[property_name]
-                        if unicode(defaultenginename, "utf-8") not in \
-                                available_searchplugins:
-                            errors.append(
-                                "%s is set as default but not available in "
-                                "searchplugins (check if the name is spelled "
-                                "correctly)" % defaultenginename
-                            )
-
-                    # Search engines order. Example:
-                    # browser.search.order.1=Google
-                    if key.startswith("browser.search.order."):
-                        lineok = True
-                        searchorder[key[-1:]] = value
-                        if (unicode(value, "utf-8") not in
-                                available_searchplugins):
-                            if value != "":
-                                errors.append(
-                                    "%s is defined in searchorder but not "
-                                    "available in searchplugins (check if the "
-                                    "name is spelled correctly)" % value
-                                )
-                            else:
-                                errors.append(
-                                    "<code>%s</code> is empty" % key
-                                )
-
-                    # Feed handlers. Example:
-                    # browser.contentHandlers.types.0.title=My Yahoo!
-                    # browser.contentHandlers.types.0.uri=http://add.my.yahoo.com/rss?url=%s
-                    if key.startswith("browser.contentHandlers.types."):
-                        lineok = True
-                        if key.endswith(".title"):
-                            feedhandler_number = key[-7:-6]
-                            if feedhandler_number not in feedhandlers:
-                                feedhandlers[feedhandler_number] = {}
-                            feedhandlers[feedhandler_number]["title"] = value
-                            # Print warning for Google Reader
-                            if "google" in value.lower():
-                                warnings.append(
-                                    "Google Reader has been dismissed, "
-                                    "see bug 882093 (<code>%s</code>)"
-                                    % key
-                                )
-                        if key.endswith(".uri"):
-                            feedhandler_number = key[-5:-4]
-                            feedhandlers[feedhandler_number]["uri"] = value
-
-                    # Handler version. Example:
-                    # gecko.handlerService.defaultHandlersVersion=4
-                    property_name = "gecko.handlerService.defaultHandlersVersion"
-                    if key.startswith(property_name):
-                        lineok = True
-                        handlerversion = values[property_name]
-
-                    # Service handlers. Example:
-                    # gecko.handlerService.schemes.webcal.0.name=30 Boxes
-                    # gecko.handlerService.schemes.webcal.0.uriTemplate=https://30boxes.com/external/widget?refer=ff&url=%s
-                    if key.startswith("gecko.handlerService.schemes."):
-                        lineok = True
-                        splittedkey = key.split(".")
-                        ch_type = splittedkey[3]
-                        ch_number = splittedkey[4]
-                        ch_param = splittedkey[5]
-                        if ch_param == "name":
-                            contenthandlers[ch_type][ch_number]["name"] = value
-                        if ch_param == "uriTemplate":
-                            contenthandlers[ch_type][ch_number]["uri"] = value
-
-                    # Ignore some keys for mail and seamonkey
-                    if product == "suite" or product == "mail":
-                        ignored_keys = [
-                            "app.update.url.details"
-                            "browser.search.defaulturl",
-                            "browser.startup.homepage",
-                            "browser.throbber.url",
-                            "browser.translation.service",
-                            "browser.translation.serviceDomain",
-                            "browser.validate.html.service",
-                            "mail.addr_book.mapit_url.format",
-                            "mailnews.localizedRe",
-                            "mailnews.messageid_browser.url",
-                            "startup.homepage_override_url",
-                        ]
-                        if key in ignored_keys:
-                            lineok = True
-
-                    # Unrecognized line, print warning (not for en-US)
-                    if not lineok and locale != "en-US":
-                        warnings.append(
-                            "unknown key in region.properties "
-                            "<code>%s=%s</code>"
-                            % (key, value)
-                        )
-
-                try:
-                    if product != "suite":
-                        json_data["locales"][locale][product] \
-                                 [channel]["p12n"] = {
-                            "defaultenginename": defaultenginename,
-                            "searchorder": searchorder,
-                            "feedhandlers": feedhandlers,
-                            "handlerversion": handlerversion,
-                            "contenthandlers": contenthandlers
-                        }
-                    else:
-                        # Seamonkey has 2 different region.properties files:
-                        # browser: has contenthandlers
-                        # common: has search.order
-                        # When analyzing common in ony update
-                        # search.order and default
-                        tmp_data = json_data["locales"][locale][product] \
-                                            [channel]["p12n"]
-                        if "/common/region.properties" in source:
-                            tmp_data["defaultenginename"] = defaultenginename
-                            tmp_data["searchorder"] = searchorder
-                        else:
-                            tmp_data = {
-                                "defaultenginename": defaultenginename,
-                                "searchorder": searchorder,
-                                "feedhandlers": feedhandlers,
-                                "handlerversion": handlerversion,
-                                "contenthandlers": contenthandlers
-                            }
-                        json_data["locales"][locale][product] \
-                                 [channel]["p12n"] = tmp_data
-                except:
-                    errors.append(
-                        "problem saving data into json from %s (%s, %s, %s)"
-                        % (source, locale, product, channel)
-                    )
-            else:
-                errors.append(
-                    "file does not exist %s (%s, %s, %s)"
-                    % (source, locale, product, channel)
-                )
-        # Save errors and warnings
-        if len(errors) > 0:
-            json_errors["locales"][locale][product] \
-                       [channel]["p12n_errors"] = errors
-        if len(warnings) > 0:
-            json_errors["locales"][locale][product] \
-                       [channel]["p12n_warnings"] = warnings
-    except:
-        errors.append(
-            "[%s] No searchplugins available for this locale"
-            % product
-        )
-
-
 class ProductizationData():
 
     def __init__(self, install_path):
@@ -262,6 +53,8 @@ class ProductizationData():
             print 'Error: problem reading list of en-US searchplugins from {0}'.format(pathsource)
 
     def __extract_searchplugins_product(self, search_path, product, locale, channel, list_sp_enUS):
+        '''Extract information about searchplugings'''
+
         try:
             list_sp = []
             errors = []
@@ -283,7 +76,7 @@ class ProductizationData():
                             collections.Counter(list_sp).items() if y > 1
                         ]
                         duplicated_items_str = ', '.join(duplicated_items)
-                        errors.append(u'there are duplicated items ({0}) in the list'.format(duplicated_items_str))
+                        errors.append('there are duplicated items ({0}) in the list'.format(duplicated_items_str))
             else:
                 # en-US is different from all other locales: I must analyze all
                 # XML files in the folder, since some searchplugins are not used
@@ -299,11 +92,11 @@ class ProductizationData():
                     if filename_noext in list_sp_enUS:
                         # File exists but has the same name of an en-US
                         # searchplugin.
-                        errors.append(u'file {0} should not exist in the locale folder, same name of en-US searchplugin'.format(filename))
+                        errors.append('file {0} should not exist in the locale folder, same name of en-US searchplugin'.format(filename))
                     else:
                         if filename_noext not in list_sp and filename != 'list.txt':
                             # Extra file or unused searchplugin, should be removed
-                            errors.append(u'file {0} not in list.txt'.format(filename))
+                            errors.append('file {0} not in list.txt'.format(filename))
 
             # For each searchplugin check if the file exists (localized version) or
             # not (using en-US version to extract data)
@@ -320,7 +113,7 @@ class ProductizationData():
 
                 if existing_file:
                     try:
-                        searchplugin_info = u'({0}, {1}, {2}, {3}.xml)'.format(locale, product, channel, sp)
+                        searchplugin_info = '({0}, {1}, {2}, {3}.xml)'.format(locale, product, channel, sp)
                         try:
                             xmldoc = minidom.parse(sp_file)
                         except Exception as e:
@@ -339,15 +132,15 @@ class ProductizationData():
                                     # Line is OK, adding it to newspcontent
                                     cleaned_sp_content += line
                             if preprocessor:
-                                warnings.append(u'searchplugin contains preprocessor instructions (e.g. #define, #if) that have been stripped in order to parse the XML {0}'.format(searchplugin_info))
+                                warnings.append('searchplugin contains preprocessor instructions (e.g. #define, #if) that have been stripped in order to parse the XML {0}'.format(searchplugin_info))
                                 try:
                                     xmldoc = minidom.parse(StringIO.StringIO(cleaned_sp_content))
                                 except Exception as e:
-                                    errors.append(u'error parsing XML {0}'.format(searchplugin_info))
+                                    errors.append('error parsing XML {0}'.format(searchplugin_info))
                             else:
                                 # XML is broken
                                 xmldoc = []
-                                errors.append(u'error parsing XML {0} <code>{1}</code>'.format(searchplugin_info, str(e)))
+                                errors.append('error parsing XML {0} <code>{1}</code>'.format(searchplugin_info, str(e)))
 
                         # Some searchplugins use the form <tag>, others <os:tag>
                         try:
@@ -356,7 +149,7 @@ class ProductizationData():
                                 node = xmldoc.getElementsByTagName('os:ShortName')
                             name = node[0].childNodes[0].nodeValue
                         except Exception as e:
-                            errors.append(u'error extracting name {0}'.format(searchplugin_info))
+                            errors.append('error extracting name {0}'.format(searchplugin_info))
                             name = 'not available'
 
                         try:
@@ -384,7 +177,7 @@ class ProductizationData():
                             if p.match(url):
                                 secure = 1
                         except Exception as e:
-                            errors.append(u'error extracting URL {0}'.format(searchplugin_info))
+                            errors.append('error extracting URL {0}'.format(searchplugin_info))
                             url = 'not available'
 
                         try:
@@ -410,7 +203,7 @@ class ProductizationData():
                                 # example bug 850984. Print a warning in this case
                                 if product == 'mobile':
                                     if '%' in image:
-                                        warnings.append(u'searchplugin\'s image on mobile can\'t contain % character {0}'.format(searchplugin_info))
+                                        warnings.append('searchplugin\'s image on mobile can\'t contain % character {0}'.format(searchplugin_info))
                         except Exception as e:
                             errors.append('error extracting image {0}'.format(searchplugin_info))
                             # Use default empty image
@@ -423,7 +216,7 @@ class ProductizationData():
                             images = [images_list[0]]
 
                         self.data['locales'][locale][product][channel]['searchplugins'][sp] = {
-                            'file': u'{0}.xml'.format(sp),
+                            'file': '{0}.xml'.format(sp),
                             'name': name,
                             'description': description,
                             'url': url,
@@ -431,7 +224,6 @@ class ProductizationData():
                             'images': images,
                         }
                     except Exception as e:
-                        print e
                         errors.append('error analyzing searchplugin {0} <code>{1}</code>'.format(searchplugin_info, str(e)))
                 else:
                     # File does not exist, locale is using the same plugin of en-US,
@@ -440,9 +232,9 @@ class ProductizationData():
                         searchplugin_enUS = self.data['locales']['en-US'][product][channel]['searchplugins'][sp]
 
                         self.data['locales'][locale][product][channel]['searchplugins'][sp] = {
-                            'file': u'{0}.xml'.format(sp),
+                            'file': '{0}.xml'.format(sp),
                             'name': searchplugin_enUS['name'],
-                            'description': u'(en-US) {0}'.format(searchplugin_enUS['description']),
+                            'description': '(en-US) {0}'.format(searchplugin_enUS['description']),
                             'url': searchplugin_enUS['url'],
                             'secure': searchplugin_enUS['secure'],
                             'images': searchplugin_enUS['images']
@@ -451,7 +243,7 @@ class ProductizationData():
                         # File does not exist but we don't have in in en-US either.
                         # This means that list.txt references a non existing
                         # plugin, which will cause the build to fail
-                        errors.append(u'file referenced in list.txt but not available ({0}, {1}, {2}, {3}.xml)'.format(locale, product, channel, sp))
+                        errors.append('file referenced in list.txt but not available ({0}, {1}, {2}, {3}.xml)'.format(locale, product, channel, sp))
 
             # Save errors and warnings
             if errors:
@@ -459,7 +251,184 @@ class ProductizationData():
             if warnings:
                 self.errors['locales'][locale][product][channel]['warnings'] = warnings
         except Exception as e:
-            print u'[{0}] problem reading {1}'.format(locale, file_list)
+            print '[{0}] problem reading {1}'.format(locale, file_list)
+
+    def __extract_productization_product(self, region_file, product, locale, channel):
+        '''Extract productization data and check for errors'''
+
+        # Extract p12n information from region.properties.
+        errors = []
+        warnings = []
+        nested_dict = lambda: collections.defaultdict(nested_dict)
+
+        try:
+            available_searchplugins = []
+            if channel in self.data['locales'][locale][product]:
+                # I need to proceed only if I have searchplugins for this
+                # branch+product+locale
+                for sp_name, sp_data in self.data['locales'][locale][product][channel]['searchplugins'].iteritems():
+                    # Store the 'name' attribute of each searchplugin, used to
+                    # validate search.order
+                    if 'name' in sp_data:
+                        available_searchplugins.append(sp_data['name'])
+
+                existing_file = os.path.isfile(region_file)
+                if existing_file:
+                    try:
+                        # Read region.properties, ignore comments and empty lines
+                        settings = {}
+                        for line in open(region_file):
+                            li = line.strip()
+                            if not li.startswith('#') and li != '':
+                                try:
+                                    # Split considering only the first =
+                                    key, value = li.split('=', 1)
+                                    # Remove whitespaces, some locales use key =
+                                    # value instead of key=value
+                                    settings[key.strip()] = value.strip()
+                                except:
+                                    errors.append('problem parsing {0} ({1}, {2}, {3})'.format(region_file, locale, product, channel))
+                    except Exception as e:
+                        print e
+                        errors.append('problem reading {0} ({1}, {2}, {3})'.format(region_file, locale, product, channel))
+
+                    default_engine_name = '-'
+                    search_order = nested_dict()
+                    feed_handlers = nested_dict()
+                    handler_version = '-'
+                    content_handlers = nested_dict()
+
+                    try:
+                        for key, value in settings.iteritems():
+                            line_ok = False
+
+                            # Default search engine name. Example:
+                            # browser.search.defaultenginename=Google
+                            property_name = 'browser.search.defaultenginename'
+                            if key.startswith(property_name):
+                                line_ok = True
+                                default_engine_name = settings[property_name]
+                                if unicode(default_engine_name, 'utf-8') not in available_searchplugins:
+                                    pass
+                                    errors.append('{0} is set as default but not available in searchplugins (check if the name is spelled  correctly)'.format(default_engine_name))
+
+                            # Search engines order. Example:
+                            # browser.search.order.1=Google
+                            if key.startswith('browser.search.order.'):
+                                line_ok = True
+                                search_order[key[-1:]] = value
+                                if unicode(value, 'utf-8') not in available_searchplugins:
+                                    if value != '':
+                                        pass
+                                        errors.append('{0} is defined in searchorder but not available in searchplugins (check if the name is spelled correctly)'.format(value))
+                                    else:
+                                        errors.append('<code>{0}</code> is empty'.format(key))
+
+                            # Feed handlers. Example:
+                            # browser.contentHandlers.types.0.title=My Yahoo!
+                            # browser.contentHandlers.types.0.uri=http://add.my.yahoo.com/rss?url=%s
+                            if key.startswith('browser.contentHandlers.types.'):
+                                line_ok = True
+                                if key.endswith('.title'):
+                                    feed_handler_number = key[-7:-6]
+                                    if feed_handler_number not in feed_handlers:
+                                        feed_handlers[feed_handler_number] = {}
+                                    feed_handlers[feed_handler_number]['title'] = value
+                                    # Print warning for Google Reader
+                                    if 'google' in value.lower():
+                                        warnings.append('Google Reader has been dismissed, see bug 882093 (<code>{0}</code>)'.format(key))
+                                if key.endswith('.uri'):
+                                    feed_handler_number = key[-5:-4]
+                                    feed_handlers[feed_handler_number]['uri'] = value
+
+                            # Handler version. Example:
+                            # gecko.handlerService.defaultHandlersVersion=4
+                            property_name = 'gecko.handlerService.defaultHandlersVersion'
+                            if key.startswith(property_name):
+                                line_ok = True
+                                handler_version = settings[property_name]
+
+                            # Service handlers. Example:
+                            # gecko.handlerService.schemes.webcal.0.name=30 Boxes
+                            # gecko.handlerService.schemes.webcal.0.uriTemplate=https://30boxes.com/external/widget?refer=ff&url=%s
+                            if key.startswith('gecko.handlerService.schemes.'):
+                                line_ok = True
+                                splitted_key = key.split('.')
+                                ch_type = splitted_key[3]
+                                ch_number = splitted_key[4]
+                                ch_param = splitted_key[5]
+                                if ch_param == 'name':
+                                    content_handlers[ch_type][ch_number]['name'] = value
+                                if ch_param == 'uriTemplate':
+                                    content_handlers[ch_type][ch_number]['uri'] = value
+
+                            # Ignore some keys for mail and seamonkey
+                            if product == 'suite' or product == 'mail':
+                                ignored_keys = [
+                                    'app.update.url.details'
+                                    'browser.search.defaulturl',
+                                    'browser.startup.homepage',
+                                    'browser.throbber.url',
+                                    'browser.translation.service',
+                                    'browser.translation.serviceDomain',
+                                    'browser.validate.html.service',
+                                    'mail.addr_book.mapit_url.format',
+                                    'mailnews.localizedRe',
+                                    'mailnews.messageid_browser.url',
+                                    'startup.homepage_override_url',
+                                ]
+                                if key in ignored_keys:
+                                    line_ok = True
+
+                            # Unrecognized line, print warning (not for en-US)
+                            if not line_ok and locale != 'en-US':
+                                warnings.append('unknown key in region.properties <code>{0}={1}</code>'.format(key, value))
+                    except Exception as e:
+                        print available_searchplugins, key
+                        print 'Error extracting data from region.properties (key: {0}, {1}, {2}, {3})'.format(key, locale, product, channel)
+                        print e
+
+                    try:
+                        if product != 'suite':
+                            self.data['locales'][locale][product][channel]['p12n'] = {
+                                'defaultenginename': default_engine_name,
+                                'searchorder': search_order,
+                                'feedhandlers': feed_handlers,
+                                'handlerversion': handler_version,
+                                'contenthandlers': content_handlers
+                            }
+                        else:
+                            # Seamonkey has 2 different region.properties files:
+                            # browser: has contenthandlers
+                            # common: has search.order
+                            # When analyzing common only update
+                            # search.order and default
+                            tmp_data = self.data['locales'][locale][product][channel]['p12n']
+                            if '/common/region.properties' in region_file:
+                                tmp_data['defaultenginename'] = default_engine_name
+                                tmp_data['searchorder'] = search_order
+                            else:
+                                tmp_data = {
+                                    'defaultenginename': default_engine_name,
+                                    'searchorder': search_order,
+                                    'feedhandlers': feed_handlers,
+                                    'handlerversion': handler_version,
+                                    'contenthandlers': content_handlers
+                                }
+                            self.data['locales'][locale][product][channel]['p12n'] = tmp_data
+                    except Exception as e:
+                        errors.append('problem saving data into JSON from {0} ({1}, {2}, {3})'.format(region_file, locale, product, channel))
+                else:
+                    errors.append('file does not exist {0} ({1}, {2}, {3})'.format(region_file, locale, product, channel))
+
+            # Save errors and warnings
+            if errors:
+                self.errors['locales'][locale][product][channel]['p12n_errors'] = errors
+            if warnings:
+                self.errors['locales'][locale][product][channel]['p12n_warnings'] = warnings
+        except Exception as e:
+            print '[{0}] No searchplugins available for this locale ({1})'.format(product, locale)
+            print e
 
     def extract_p12n_channel(self, requested_product, channel_data, requested_channel, check_p12n):
         '''Extract information from all products for this channel'''
@@ -499,8 +468,8 @@ class ProductizationData():
                         requested_channel, list_sp_enUS[product])
                     if check_p12n:
                         for path in search_path_enUS['p12n'][product]:
-                            extract_p12n_product(
-                                path, product, 'en-US', requested_channel, self.data, self.errors)
+                            self.__extract_productization_product(
+                                path, product, 'en-US', requested_channel)
 
                     # Analyze all other locales for this product
                     for locale in locales_list:
@@ -529,8 +498,8 @@ class ProductizationData():
                             requested_channel, list_sp_enUS[product])
                         if check_p12n:
                             for path in search_path_l10n['p12n'][product]:
-                                extract_p12n_product(
-                                    path, product, locale, requested_channel, self.data, self.errors)
+                                self.__extract_productization_product(
+                                    path, product, locale, requested_channel)
         except Exception as e:
             print e
 
