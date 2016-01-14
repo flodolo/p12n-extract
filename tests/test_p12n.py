@@ -97,6 +97,12 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         self.assertIn(
             'searchplugin contains preprocessor instructions (e.g. #define, #if) that have been stripped in order to parse the XML (aa, browser, aurora, wikipedia-it.xml)', single_record['warnings'])
 
+        # Check hashes
+        single_record = self.p12n.hashes['locales']['aa']['browser']['aurora']
+        self.assertEqual(len(single_record), 2)
+        self.assertEqual(
+            single_record['wikipedia-it.xml'], 'eb4fc9045394c3e2065d41a33c9fdd35')
+
     def testExtractP12nInfo(self):
         # Read searchplugins for locale 'bb'
         search_path = os.path.join(self.file_path, 'bb', 'searchplugins')
@@ -156,6 +162,13 @@ class TestSearchpluginAnalysis(unittest.TestCase):
                       single_record['p12n_errors'])
         self.assertIn('unknown key in region.properties <code>test.key=dummy</code>',
                       single_record['p12n_warnings'])
+
+        # Check hashes
+        single_record = self.p12n.hashes['locales']['bb']['browser']['aurora']
+        self.assertEqual(len(single_record), 2)
+        self.assertEqual(
+            single_record['region.properties'], '97f6db5f07a911cc9b0969c5b8cf3114')
+
 
 if __name__ == '__main__':
     unittest.main()
