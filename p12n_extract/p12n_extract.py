@@ -6,6 +6,7 @@
 import argparse
 import collections
 import glob
+import hashlib
 import json
 import os
 import re
@@ -28,8 +29,13 @@ class ProductizationData():
         self.output_folder = web_p12n_folder
 
         nested_dict = lambda: collections.defaultdict(nested_dict)
+
+        # Data storage
         self.data = nested_dict()
         self.errors = nested_dict()
+        self.hashes = nested_dict()
+
+        # Initialize images with a default one
         self.images_list = [
             'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34A'
             'AAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAV5JREFUSImt1k1K'
@@ -118,6 +124,12 @@ class ProductizationData():
 
                 if existing_file:
                     try:
+                        # Store md5 hash for this file. All files are very
+                        # small, so I don't bother creating a buffer
+                        file_content = open(sp_file, 'rb').read()
+                        self.hashes['locales'][locale][product][channel][
+                            sp + '.xml'] = hashlib.md5(file_content).hexdigest()
+
                         searchplugin_info = '({0}, {1}, {2}, {3}.xml)'.format(
                             locale, product, channel, sp)
                         try:
@@ -301,6 +313,18 @@ class ProductizationData():
                 existing_file = os.path.isfile(region_file)
                 if existing_file:
                     try:
+                        # Store md5 hash for this file. All files are very
+                        # small, so I don't bother creating a buffer
+                        file_content = open(region_file, 'rb').read()
+                        index_name = os.path.basename(region_file)
+                        if product == 'suite':
+                            if 'common' in region_file:
+                                index_name = 'common_' + index_name
+                            else:
+                                index_name = 'browser_' + index_name
+                        self.hashes['locales'][locale][product][channel][
+                            index_name] = hashlib.md5(file_content).hexdigest()
+
                         # Read region.properties, ignore comments and empty
                         # lines
                         settings = {}
@@ -557,29 +581,25 @@ class ProductizationData():
             images_data[index] = value
         self.data['images'] = images_data
 
-        creation_date = strftime('%Y-%m-%d %H:%M:%S', localtime())
-
-        # Save searchplugins and other productization data
-        self.data['metadata'] = {
-            'creation_date': creation_date
+        # Save data on file
+        metadata = {
+            'creation_date': strftime('%Y-%m-%d %H:%M:%S', localtime())
         }
-        f = open(os.path.join(self.output_folder, 'searchplugins.json'), 'w')
-        if pretty_output:
-            f.write(json.dumps(self.data, sort_keys=True, indent=4))
-        else:
-            f.write(json.dumps(self.data, sort_keys=True))
-        f.close()
-
-        # Save errors
-        self.errors['metadata'] = {
-            'creation_date': creation_date
+        data_mapping = {
+            'errors': self.errors,
+            'hashes': self.hashes,
+            'searchplugins': self.data
         }
-        f = open(os.path.join(self.output_folder, 'errors.json'), 'w')
-        if pretty_output:
-            f.write(json.dumps(self.errors, sort_keys=True, indent=4))
-        else:
-            f.write(json.dumps(self.errors, sort_keys=True))
-        f.close()
+        for group in ['errors', 'hashes', 'searchplugins']:
+            json_data = data_mapping[group]
+            json_data['metadata'] = metadata
+            file_name = os.path.join(self.output_folder, group + '.json')
+            f = open(file_name, 'w')
+            if pretty_output:
+                f.write(json.dumps(json_data, sort_keys=True, indent=4))
+            else:
+                f.write(json.dumps(json_data, sort_keys=True))
+            f.close()
 
 
 def main():
