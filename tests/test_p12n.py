@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import collections
 import os
 from p12n_extract.p12n_extract import extract_splist_enUS
