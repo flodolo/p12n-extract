@@ -23,7 +23,9 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         sp_list = []
 
         self.p12n.extract_splist_enUS(search_path, sp_list)
-        self.assertEqual(sp_list, ['google', 'twitter'])
+        self.assertEqual(len(sp_list), 2)
+        self.assertIn('google', sp_list)
+        self.assertIn('twitter', sp_list)
 
     def testExtractInfoSearchpluginEnglish(self):
         search_path = os.path.join(self.file_path, 'en-US', 'searchplugins')
