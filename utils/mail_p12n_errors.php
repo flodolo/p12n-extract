@@ -9,9 +9,20 @@ date_default_timezone_set('Europe/Rome');
 // You should only need to adapt the following variables.
 $to = 'yourmailaddress@example.com';
 $from = 'yourmailaddress@example.com';
-// Path where .json files are stored
-$base_path = '/home/flod/public_html/p12n';
-$url_path = 'https://transvision.mozfr.org/p12n';
+if (file_exists('email.inc.php')) {
+    // email.inc.php can be used to override email addresses without
+    // storing them in the code
+    include('email.inc.php');
+}
+
+// Local path where .json files are stored
+$base_path = '/srv/transvision/p12n';
+
+/* Path to retrieve Transvision data
+ * Standard path: https://transvision.mozfr.org/p12n
+ * Can also be a local path.
+ */
+$uri_path = '/srv/transvision/github/web/p12n';
 
 if (php_sapi_name() != 'cli') {
     die("This command can only be used in CLI mode.\n");
@@ -30,81 +41,86 @@ $products = [
     'mobile'  => 'Firefox for Android',
 ];
 
-
-// Search for errors
-$file_name = "{$base_path}/errors.json";
-if (! file_exists($file_name)) {
-    die("{$file_name} does not exist.\n");
-}
-$json_file = file_get_contents($file_name);
-$json_data = json_decode($json_file, true);
+// Get the most recent version of the errors file
+$errors_file_name = "{$base_path}/errors.json";
+$file_content = file_get_contents("{$uri_path}/errors.json");
+$file_handler = fopen($errors_file_name, 'w');
+fwrite($file_handler, $file_content);
+fclose($file_handler);
+$errors_data = json_decode($file_content, true);
 
 $main_output = '';
 $output = '';
-foreach ($json_data['locales'] as $locale_id => $locale_data) {
+foreach ($errors_data['locales'] as $locale_id => $locale_data) {
     foreach($locale_data as $product_id => $product_data) {
         if (isset($products[$product_id])) {
             // Check only if it's a product I care about
             foreach($product_data as $channel_id => $channel_data) {
                 // Check only if is a channel I care about
                 if (isset($channels[$channel_id])) {
-                    $output .= "<h2>{$locale_id}</h2>" .
+                    $output .= "<h2>{$locale_id}</h2>\n" .
                                "<p>There are errors in {$products[$product_id]} ({$channels[$channel_id]} channel):</p>\n<ul>\n";
                     foreach ($channel_data as $type => $error_group) {
                         foreach ($error_group as $error_message) {
-                            $output .= "<li><strong>{$type}</strong>: {$error_message}</li>";
+                            $output .= "  <li><strong>{$type}</strong>: {$error_message}</li>\n";
                         }
                     }
-                    $output .= '</ul>';
+                    $output .= "</ul>\n";
                 }
             }
         }
     }
 }
 if ($output != '') {
-    $main_output .= '<h1>Errors</h1>' . $output;
+    $main_output .= "\n<h1>Errors</h1>\n{$output}";
 }
 
 // Search for changes
-$file_name = "{$base_path}/hashes.json";
+$hashes_file_name = "{$base_path}/hashes.json";
 
 $output = '';
-if (! file_exists($file_name)) {
+if (! file_exists($hashes_file_name)) {
     // File doesn't exist, it's the first time I run the script
     // Store the file locally.
-    $file_content = file_get_contents("{$url_path}/hashes.json");
-    $file_handler = fopen($file_name, 'w');
+    $file_content = file_get_contents("{$uri_path}/hashes.json");
+    $file_handler = fopen($hashes_file_name, 'w');
     fwrite($file_handler, $file_content);
     fclose($file_handler);
 } else {
-    $local_json = json_decode(file_get_contents($file_name), true);
-    $remote_content = file_get_contents("{$url_path}/hashes.json");
+    $local_json = json_decode(file_get_contents($hashes_file_name), true);
+    $remote_content = file_get_contents("{$uri_path}/hashes.json");
     $remote_json = json_decode($remote_content, true);
     foreach ($remote_json['locales'] as $locale_id => $locale_data) {
+        $locale_errors = false;
+        $locale_output = '';
         foreach($locale_data as $product_id => $product_data) {
             if (isset($products[$product_id])) {
                 // Check only if it's a product I care about
                 foreach($product_data as $channel_id => $channel_data) {
                     // Check only if is a channel I care about
                     foreach ($channel_data as $file_id => $md5_hash) {
-                        try {
-                            if ($local_json['locales'][$locale_id][$product_id][$channel_id][$file_id] != $md5_hash) {
+                        $channel_data = $local_json['locales'][$locale_id][$product_id][$channel_id];
+                        if (isset($channel_data[$file_id])) {
+                            if ($channel_data[$file_id] != $md5_hash) {
                                 // Hash for this file has changed
-                                $output .= "<h2>{$locale_id}</h2>\n";
-                                $output .= "<p><strong>{$file_id}</strong> was changed from the existing version in {$products[$product_id]} ({$channels[$channel_id]} channel).</p>\n";
+                                $locale_errors = true;
+                                $locale_output .= "<p><strong>{$file_id}</strong> was changed from the existing version in {$products[$product_id]} ({$channels[$channel_id]} channel).</p>\n";
                             }
-                        } catch (Exception $e) {
+                        } else {
                             // Local hash doesn't have this key
-                            $output .= "<h2>{$locale_id}</h2>\n";
-                            $output .= "<p><strong>{$file_id}</strong> was added in {$products[$product_id]} ({$channels[$channel_id]} channel).</p>\n";
+                            $locale_errors = true;
+                            $locale_output .= "<p><strong>{$file_id}</strong> was added in {$products[$product_id]} ({$channels[$channel_id]} channel).</p>\n";
                         }
                     }
                 }
             }
         }
+        if ($locale_errors) {
+            $output .= "  \n<h2>{$locale_id}</h2>\n" . $locale_output;
+        }
     }
     // Store the new file
-    $file_handler = fopen($file_name, 'w');
+    $file_handler = fopen($hashes_file_name, 'w');
     fwrite($file_handler, $remote_content);
     fclose($file_handler);
 }
