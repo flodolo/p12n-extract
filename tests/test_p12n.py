@@ -20,19 +20,20 @@ class TestSearchpluginAnalysis(unittest.TestCase):
 
     def testListEnglishSearchplugins(self):
         search_path = os.path.join(self.file_path, 'en-US', 'searchplugins')
-        sp_list = []
 
-        self.p12n.extract_splist_enUS(search_path, sp_list)
-        self.assertEqual(len(sp_list), 2)
-        self.assertIn('google', sp_list)
-        self.assertIn('twitter', sp_list)
+        self.p12n.extract_splist_enUS(search_path, 'browser')
+        self.assertEqual(len(self.p12n.enUS_searchplugins['browser']), 2)
+        self.assertIn('google', self.p12n.enUS_searchplugins['browser'])
+        self.assertIn('twitter', self.p12n.enUS_searchplugins['browser'])
 
     def testExtractInfoSearchpluginEnglish(self):
         search_path = os.path.join(self.file_path, 'en-US', 'searchplugins')
-        list_sp_enUS = ['google', 'twitter']
+        self.p12n.enUS_searchplugins = {
+            'browser': ['google', 'twitter']
+        }
 
         self.p12n.extract_searchplugins_product(
-            search_path, 'browser', 'en-US', 'aurora', list_sp_enUS)
+            search_path, 'browser', 'en-US', 'aurora')
 
         # Check searchplugins data
         single_record = self.p12n.data['locales'][
@@ -55,16 +56,18 @@ class TestSearchpluginAnalysis(unittest.TestCase):
     def testExtractInfoSearchpluginAA(self):
         # Read en-US searchplugins
         search_path = os.path.join(self.file_path, 'en-US', 'searchplugins')
-        list_sp_enUS = ['google', 'twitter']
+        self.p12n.enUS_searchplugins = {
+            'browser': ['google', 'twitter']
+        }
 
         self.p12n.extract_searchplugins_product(
-            search_path, 'browser', 'en-US', 'aurora', list_sp_enUS)
+            search_path, 'browser', 'en-US', 'aurora')
 
         # Read searchplugins for locale 'aa'
         search_path = os.path.join(self.file_path, 'aa', 'searchplugins')
 
         self.p12n.extract_searchplugins_product(
-            search_path, 'browser', 'aa', 'aurora', list_sp_enUS)
+            search_path, 'browser', 'aa', 'aurora')
 
         # Check searchplugin data
         single_record = self.p12n.data['locales'][
@@ -108,8 +111,11 @@ class TestSearchpluginAnalysis(unittest.TestCase):
     def testExtractP12nInfo(self):
         # Read searchplugins for locale 'bb'
         search_path = os.path.join(self.file_path, 'bb', 'searchplugins')
+        self.p12n.enUS_searchplugins = {
+            'browser': []
+        }
         self.p12n.extract_searchplugins_product(
-            search_path, 'browser', 'bb', 'aurora', [])
+            search_path, 'browser', 'bb', 'aurora')
 
         # Extract p12n data
         search_path = os.path.join(self.file_path, 'bb', 'region.properties')
