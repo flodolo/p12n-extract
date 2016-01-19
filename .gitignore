@@ -1,2 +1,3 @@
 *.pyc
+tests/files/web
 utils/email.inc.php
