@@ -4,6 +4,7 @@ import collections
 import json
 import os
 import p12n_extract.p12n_extract
+import shutil
 import unittest
 
 
@@ -11,15 +12,37 @@ class TestSearchpluginAnalysis(unittest.TestCase):
 
     def setUp(self):
         nested_dict = lambda: collections.defaultdict(nested_dict)
-        self.file_path = os.path.join(os.path.dirname(__file__), 'files')
-        self.p12n = p12n_extract.p12n_extract.ProductizationData('')
+        self.files_path = os.path.join(os.path.dirname(__file__), 'files')
+        self.p12n = p12n_extract.p12n_extract.ProductizationData(
+            self.files_path)
 
     def tearDown(self):
-        del self.file_path
+        del self.files_path
         del self.p12n
 
+    @classmethod
+    def tearDownClass(self):
+        # Remove the temporary web/p12n folder
+        files_folder = os.path.join(os.path.dirname(__file__), 'files', 'web')
+        shutil.rmtree(files_folder)
+
+    def testCheckInit(self):
+        files_folder = os.path.join(
+            os.path.dirname(__file__), 'files', 'web', 'p12n')
+
+        # Check that the output folder is set and exist
+        self.assertEqual(self.p12n.output_folder, files_folder)
+        self.assertTrue(os.path.exists(files_folder))
+
+        # Check default image list
+        self.assertEqual(len(self.p12n.images_list), 1)
+
+        # Check one dictionary, and that it's actually a nested dictionary
+        self.p12n.data['test'] = ['a', 'b']
+        self.assertEquals(self.p12n.data['test'], ['a', 'b'])
+
     def testListEnglishSearchplugins(self):
-        search_path = os.path.join(self.file_path, 'en-US', 'searchplugins')
+        search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
 
         self.p12n.extract_splist_enUS(search_path, 'browser')
         self.assertEqual(len(self.p12n.enUS_searchplugins['browser']), 2)
@@ -27,7 +50,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         self.assertIn('twitter', self.p12n.enUS_searchplugins['browser'])
 
     def testExtractInfoSearchpluginEnglish(self):
-        search_path = os.path.join(self.file_path, 'en-US', 'searchplugins')
+        search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
         self.p12n.enUS_searchplugins = {
             'browser': ['google', 'twitter']
         }
@@ -55,17 +78,15 @@ class TestSearchpluginAnalysis(unittest.TestCase):
 
     def testExtractInfoSearchpluginAA(self):
         # Read en-US searchplugins
-        search_path = os.path.join(self.file_path, 'en-US', 'searchplugins')
+        search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
         self.p12n.enUS_searchplugins = {
             'browser': ['google', 'twitter']
         }
-
         self.p12n.extract_searchplugins_product(
             search_path, 'browser', 'en-US', 'aurora')
 
         # Read searchplugins for locale 'aa'
-        search_path = os.path.join(self.file_path, 'aa', 'searchplugins')
-
+        search_path = os.path.join(self.files_path, 'aa', 'searchplugins')
         self.p12n.extract_searchplugins_product(
             search_path, 'browser', 'aa', 'aurora')
 
@@ -110,7 +131,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
 
     def testExtractP12nInfo(self):
         # Read searchplugins for locale 'bb'
-        search_path = os.path.join(self.file_path, 'bb', 'searchplugins')
+        search_path = os.path.join(self.files_path, 'bb', 'searchplugins')
         self.p12n.enUS_searchplugins = {
             'browser': []
         }
@@ -118,8 +139,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
             search_path, 'browser', 'bb', 'aurora')
 
         # Extract p12n data
-        search_path = os.path.join(self.file_path, 'bb', 'region.properties')
-
+        search_path = os.path.join(self.files_path, 'bb', 'region.properties')
         self.p12n.extract_productization_product(
             search_path, 'browser', 'bb', 'aurora')
 
@@ -177,6 +197,41 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         self.assertEqual(
             single_record['region.properties'], '97f6db5f07a911cc9b0969c5b8cf3114')
 
+    def testOutputData(self):
+        search_path = os.path.join(self.files_path, 'bb', 'searchplugins')
+        self.p12n.enUS_searchplugins = {
+            'browser': []
+        }
+        self.p12n.extract_searchplugins_product(
+            search_path, 'browser', 'bb', 'aurora')
+
+        # Extract p12n data
+        search_path = os.path.join(self.files_path, 'bb', 'region.properties')
+        self.p12n.extract_productization_product(
+            search_path, 'browser', 'bb', 'aurora')
+
+        data_mapping = {
+            'errors': self.p12n.errors,
+            'hashes': self.p12n.hashes,
+            'searchplugins': self.p12n.data
+        }
+
+        # Standard output
+        self.p12n.output_data(False)
+        for group in ['errors', 'hashes', 'searchplugins']:
+            json_data = data_mapping[group]
+            file_name = os.path.join(self.p12n.output_folder, group + '.json')
+            cmp_output = open(file_name, 'r').read()
+            self.assertEqual(cmp_output, json.dumps(json_data, sort_keys=True))
+
+        # Pretty output
+        self.p12n.output_data(True)
+        for group in ['errors', 'hashes', 'searchplugins']:
+            json_data = data_mapping[group]
+            file_name = os.path.join(self.p12n.output_folder, group + '.json')
+            cmp_output = open(file_name, 'r').read()
+            self.assertEqual(cmp_output, json.dumps(
+                json_data, sort_keys=True, indent=4))
 
 if __name__ == '__main__':
     unittest.main()
