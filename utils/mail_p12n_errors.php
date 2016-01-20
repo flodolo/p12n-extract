@@ -6,16 +6,13 @@
  */
 date_default_timezone_set('Europe/Rome');
 
-// You should only need to adapt the following variables.
+// You should only need to adapt the following variables. It's more reliable to
+// use a settings.local.inc.php file to override these settings
 $to = 'yourmailaddress@example.com';
 $from = 'yourmailaddress@example.com';
-if (file_exists('email.inc.php')) {
-    // email.inc.php can be used to override email addresses without
-    // storing them in the code
-    include('email.inc.php');
-}
+$log_file = false;
 
-// Local path where .json files are stored
+// Local path where .json files and script are stored
 $base_path = '/srv/transvision/p12n';
 
 /* Path to retrieve Transvision data
@@ -23,6 +20,13 @@ $base_path = '/srv/transvision/p12n';
  * Can also be a local path.
  */
 $uri_path = '/srv/transvision/github/web/p12n';
+
+$settings_file_name = "{$base_path}/settings.local.inc.php";
+if (file_exists($settings_file_name)) {
+    // settings.local.inc.php can be used to override email addresses and
+    // $log_file without storing them within the code.
+    include($settings_file_name);
+}
 
 if (php_sapi_name() != 'cli') {
     die("This command can only be used in CLI mode.\n");
@@ -98,18 +102,20 @@ if (! file_exists($hashes_file_name)) {
                 // Check only if it's a product I care about
                 foreach($product_data as $channel_id => $channel_data) {
                     // Check only if is a channel I care about
-                    foreach ($channel_data as $file_id => $md5_hash) {
-                        $channel_data = $local_json['locales'][$locale_id][$product_id][$channel_id];
-                        if (isset($channel_data[$file_id])) {
-                            if ($channel_data[$file_id] != $md5_hash) {
-                                // Hash for this file has changed
+                    if (isset($channels[$channel_id])) {
+                        foreach ($channel_data as $file_id => $md5_hash) {
+                            $files_data = $local_json['locales'][$locale_id][$product_id][$channel_id];
+                            if (isset($files_data[$file_id])) {
+                                if ($files_data[$file_id] != $md5_hash) {
+                                    // Hash for this file has changed
+                                    $locale_errors = true;
+                                    $locale_output .= "<p><strong>{$file_id}</strong> was changed from the existing version in {$products[$product_id]} ({$channels[$channel_id]} channel).</p>\n";
+                                }
+                            } else {
+                                // Local hash doesn't have this key
                                 $locale_errors = true;
-                                $locale_output .= "<p><strong>{$file_id}</strong> was changed from the existing version in {$products[$product_id]} ({$channels[$channel_id]} channel).</p>\n";
+                                $locale_output .= "<p><strong>{$file_id}</strong> was added in {$products[$product_id]} ({$channels[$channel_id]} channel).</p>\n";
                             }
-                        } else {
-                            // Local hash doesn't have this key
-                            $locale_errors = true;
-                            $locale_output .= "<p><strong>{$file_id}</strong> was added in {$products[$product_id]} ({$channels[$channel_id]} channel).</p>\n";
                         }
                     }
                 }
@@ -125,18 +131,30 @@ if (! file_exists($hashes_file_name)) {
     fclose($file_handler);
 }
 if ($output != '') {
-    $main_output .= '<h1>Changes</h1>' . $output;
+    $main_output .= '<h1>Changes ' . date('Y-m-d') . '</h1>' . $output;
 }
 
 if ($main_output != '') {
+    // Send email only if there are errors
     // $to and $from are defined at the beginning of the file
-    $output = '<html><head><title>Mozilla Productization Errors</title></head><body>' .
-              $output .
-              '</body></html>';
+    $mail_content = '<html><head><title>Mozilla Productization Errors</title></head><body>' .
+        $main_output .
+        '</body></html>';
     $subject = 'Mozilla Productization Errors - Notification for ' . date('Y-m-d');
     $headers = "From: {$from}\r\n";
     $headers .= "Reply-To: {$from}\r\n";
     $headers .= "MIME-Version: 1.0\r\n";
     $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-    mail($to, $subject, $main_output, $headers);
+    mail($to, $subject, $mail_content, $headers);
+} else {
+    $main_output = '<h1>No Changes for ' . date('Y-m-d') . "</h1>\n";
+}
+
+if ($log_file) {
+    // Write an output.log file for debugging, also if there are no changes
+    $file_name = "{$base_path}/output.log";
+    $file_content = file_get_contents($file_name);
+    $file_handler = fopen($file_name, 'w');
+    fwrite($file_handler, $file_content . $main_output);
+    fclose($file_handler);
 }
