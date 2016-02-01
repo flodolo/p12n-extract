@@ -438,16 +438,16 @@ class ProductizationData():
                                     'browser.search.defaulturl',
                                     'browser.startup.homepage',
                                     'browser.throbber.url',
-                                    'browser.translation.service',
-                                    'browser.translation.serviceDomain',
+                                    'browser.translation.',
                                     'browser.validate.html.service',
-                                    'mail.addr_book.mapit_url.format',
+                                    'mail.addr_book.mapit_url.',
                                     'mailnews.localizedRe',
                                     'mailnews.messageid_browser.url',
                                     'startup.homepage_override_url',
                                 ]
-                                if key in ignored_keys:
-                                    line_ok = True
+                                for ignored_key in ignored_keys:
+                                    if key.startswith(ignored_key):
+                                        line_ok = True
 
                             # Unrecognized line, print warning (not for en-US)
                             if not line_ok and locale != 'en-US':
