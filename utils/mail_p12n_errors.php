@@ -9,6 +9,7 @@ date_default_timezone_set('Europe/Rome');
 // You should only need to adapt the following variables. It's more reliable to
 // use a settings.local.inc.php file to override these settings
 $to = 'yourmailaddress@example.com';
+$cc = 'yourmailaddress@example.com';
 $from = 'yourmailaddress@example.com';
 $log_file = false;
 
@@ -137,11 +138,12 @@ if ($output != '') {
 if ($main_output != '') {
     // Send email only if there are errors
     // $to and $from are defined at the beginning of the file
-    $mail_content = '<html><head><title>Mozilla Productization Errors</title></head><body>' .
+    $mail_content = '<html><head><title>Mozilla Productization Updates and Errors</title></head><body>' .
         $main_output .
         '</body></html>';
-    $subject = 'Mozilla Productization Errors - Notification for ' . date('Y-m-d');
+    $subject = 'Mozilla Productization Updates and Errors - Notification for ' . date('Y-m-d');
     $headers = "From: {$from}\r\n";
+    $headers .= "Cc: {$cc}\r\n";
     $headers .= "Reply-To: {$from}\r\n";
     $headers .= "MIME-Version: 1.0\r\n";
     $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
