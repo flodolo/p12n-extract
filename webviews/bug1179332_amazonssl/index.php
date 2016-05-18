@@ -99,7 +99,12 @@
         'mail'    => 'Thunderbird',
     ];
 
-    $channel = isset($_REQUEST['channel']) ? $_REQUEST['channel'] : 'aurora';
+    $channel = 'aurora';
+    if (isset($_REQUEST['channel'])) {
+        if (isset($channels[$_REQUEST['channel']])) {
+            $channel = $_REQUEST['channel'];
+        }
+    }
 
     $html_intro = "<p>Last update: {$json_data['metadata']['creation_date']}</p>\n";
     $html_intro .= "<p>Bug reference: <a href='https://bugzilla.mozilla.org/show_bug.cgi?id=1179332'>bug 1179332</a>.";

@@ -92,8 +92,20 @@
         'mail'    => 'Thunderbird',
     ];
 
-    $requested_channel = isset($_REQUEST['channel']) ? $_REQUEST['channel'] : 'aurora';
-    $requested_product = isset($_REQUEST['product']) ? $_REQUEST['product'] : 'browser';
+    // Get filter parameters
+    $requested_product = 'browser';
+    if (isset($_REQUEST['product'])) {
+        if (isset($products[$_REQUEST['product']])) {
+            $requested_product = $_REQUEST['product'];
+        }
+    }
+
+    $requested_channel = 'aurora';
+    if (isset($_REQUEST['channel'])) {
+        if (isset($channels[$_REQUEST['channel']])) {
+            $requested_channel = $_REQUEST['channel'];
+        }
+    }
 
     $html_intro = "<p>Last update: {$json_data['metadata']['creation_date']}</p>\n";
 

@@ -97,7 +97,12 @@
         'beta'    => 'Beta',
         'release' => 'Release',
     ];
-    $channel = isset($_REQUEST['channel']) ? $_REQUEST['channel'] : 'aurora';
+    $channel = 'aurora';
+    if (isset($_REQUEST['channel'])) {
+        if (isset($channels[$_REQUEST['channel']])) {
+            $channel = $_REQUEST['channel'];
+        }
+    }
 
     $repositories = [
         'trunk'   => 'https://hg.mozilla.org/l10n-central/',

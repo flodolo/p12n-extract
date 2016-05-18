@@ -90,7 +90,12 @@
         'mail'    => 'Thunderbird',
     ];
 
-    $channel = isset($_REQUEST['channel']) ? $_REQUEST['channel'] : 'aurora';
+    $channel = 'aurora';
+    if (isset($_REQUEST['channel'])) {
+        if (isset($channels[$_REQUEST['channel']])) {
+            $channel = $_REQUEST['channel'];
+        }
+    }
 
     // For this view I'm not interested in Seamonkey and Thunderbird
     unset($products['suite']);
