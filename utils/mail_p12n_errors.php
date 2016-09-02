@@ -80,10 +80,11 @@ if ($output != '') {
     $main_output .= "\n<h1>Errors</h1>\n{$output}";
 }
 
-// Search for changes
+
+// Search for changes in region.properties, XML files
 $hashes_file_name = "{$base_path}/hashes.json";
 
-$output = '';
+$output = [];
 if (! file_exists($hashes_file_name)) {
     // File doesn't exist, it's the first time I run the script
     // Store the file locally.
@@ -104,8 +105,8 @@ if (! file_exists($hashes_file_name)) {
                 foreach($product_data as $channel_id => $channel_data) {
                     // Check only if is a channel I care about
                     if (isset($channels[$channel_id])) {
+                        $files_data = $local_json['locales'][$locale_id][$product_id][$channel_id];
                         foreach ($channel_data as $file_id => $md5_hash) {
-                            $files_data = $local_json['locales'][$locale_id][$product_id][$channel_id];
                             if (isset($files_data[$file_id])) {
                                 if ($files_data[$file_id] != $md5_hash) {
                                     // Hash for this file has changed
@@ -118,12 +119,25 @@ if (! file_exists($hashes_file_name)) {
                                 $locale_output .= "<p><strong>{$file_id}</strong> was added in {$products[$product_id]} ({$channels[$channel_id]} channel).</p>\n";
                             }
                         }
+
+                        $local_files = array_keys($files_data);
+                        $remote_files = array_keys($channel_data);
+                        $removed_files = array_diff($local_files, $remote_files);
+                        if (count($removed_files) > 0) {
+                            $locale_errors = true;
+                            $locale_output .= "<p>The following files were removed from the repository in {$products[$product_id]} ({$channels[$channel_id]} channel).</p>\n";
+                            $locale_output .= '<ul>';
+                            foreach ($removed_files as $removed_file) {
+                                $locale_output .= "<li>{$removed_file}</li>";
+                            }
+                            $locale_output .= '</ul>';
+                        }
                     }
                 }
             }
         }
         if ($locale_errors) {
-            $output .= "  \n<h2>{$locale_id}</h2>\n" . $locale_output;
+            $output[$locale_id][] = $locale_output;
         }
     }
     // Store the new file
@@ -131,8 +145,61 @@ if (! file_exists($hashes_file_name)) {
     fwrite($file_handler, $remote_content);
     fclose($file_handler);
 }
-if ($output != '') {
-    $main_output .= '<h1>Changes ' . date('Y-m-d') . '</h1>' . $output;
+
+/*
+    Compare list of searchplugins to see if the list changed (we can only
+    detect additions by looking at hashes.
+*/
+$searchplugins_file_name = "{$base_path}/searchplugins.json";
+if (! file_exists($searchplugins_file_name)) {
+    // File doesn't exist, it's the first time I run the script
+    // Store the file locally.
+    $file_content = file_get_contents("{$uri_path}/searchplugins.json");
+    $file_handler = fopen($searchplugins_file_name, 'w');
+    fwrite($file_handler, $file_content);
+    fclose($file_handler);
+} else {
+    $local_json = json_decode(file_get_contents($searchplugins_file_name), true);
+    $remote_content = file_get_contents("{$uri_path}/searchplugins.json");
+    $remote_json = json_decode($remote_content, true);
+    foreach ($remote_json['locales'] as $locale_id => $locale_data) {
+        $locale_errors = false;
+        $locale_output = '';
+        foreach($locale_data as $product_id => $product_data) {
+            if (isset($products[$product_id])) {
+                // Check only if it's a product I care about
+                foreach($product_data as $channel_id => $channel_data) {
+                    // Check only if is a channel I care about
+                    if (isset($channels[$channel_id]) && isset($channel_data['searchplugins'])) {
+                        $local_searchplugins = array_keys($local_json['locales'][$locale_id][$product_id][$channel_id]['searchplugins']);
+                        sort($local_searchplugins);
+                        $remote_searchplugins = array_keys($remote_json['locales'][$locale_id][$product_id][$channel_id]['searchplugins']);
+                        sort($remote_searchplugins);
+                        if ($local_searchplugins != $remote_searchplugins) {
+                            $locale_errors = true;
+                            $locale_output .= "<p>The list of searchplugins changed for {$products[$product_id]} ({$channels[$channel_id]} channel).</p>\n";
+                            $locale_output .= '<ul><li>Previous version: ' . implode(', ', $local_searchplugins) . '</li>';
+                            $locale_output .= '<li>New version: ' . implode(', ', $remote_searchplugins) . '</li></ul>';
+                        }
+                    }
+                }
+            }
+        }
+        if ($locale_errors) {
+            $output[$locale_id][] = $locale_output;
+        }
+    }
+    // Store the new file
+    $file_handler = fopen($searchplugins_file_name, 'w');
+    fwrite($file_handler, $remote_content);
+    fclose($file_handler);
+}
+if (count($output) > 0) {
+    ksort($output);
+    $main_output .= '<h1>Changes ' . date('Y-m-d') . '</h1>';
+    foreach ($output as $locale_id => $messages) {
+        $main_output .= "  \n<h2>{$locale_id}</h2>\n" . implode("\n", $messages);
+    }
 }
 
 if ($main_output != '') {
