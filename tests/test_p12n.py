@@ -44,15 +44,17 @@ class TestSearchpluginAnalysis(unittest.TestCase):
     def testListEnglishSearchplugins(self):
         search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
 
-        self.p12n.extract_splist_enUS(search_path, 'browser')
-        self.assertEqual(len(self.p12n.enUS_searchplugins['browser']), 2)
-        self.assertIn('google', self.p12n.enUS_searchplugins['browser'])
-        self.assertIn('twitter', self.p12n.enUS_searchplugins['browser'])
+        self.p12n.extract_splist_enUS(search_path, 'browser', 'aurora')
+        self.assertEqual(len(self.p12n.enUS_searchplugins['browser']['aurora']), 2)
+        self.assertIn('google', self.p12n.enUS_searchplugins['browser']['aurora'])
+        self.assertIn('twitter', self.p12n.enUS_searchplugins['browser']['aurora'])
 
     def testExtractInfoSearchpluginEnglish(self):
         search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
         self.p12n.enUS_searchplugins = {
-            'browser': ['google', 'twitter']
+            'browser': {
+                'aurora': ['google', 'twitter']
+            }
         }
 
         self.p12n.extract_searchplugins_product(
@@ -80,7 +82,9 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         # Read en-US searchplugins
         search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
         self.p12n.enUS_searchplugins = {
-            'browser': ['google', 'twitter']
+            'browser': {
+                'aurora': ['google', 'twitter']
+            }
         }
         self.p12n.extract_searchplugins_product(
             search_path, 'browser', 'en-US', 'aurora')
@@ -133,7 +137,9 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         # Read searchplugins for locale 'bb'
         search_path = os.path.join(self.files_path, 'bb', 'searchplugins')
         self.p12n.enUS_searchplugins = {
-            'browser': []
+            'browser': {
+                'aurora': []
+            }
         }
         self.p12n.extract_searchplugins_product(
             search_path, 'browser', 'bb', 'aurora')
@@ -200,7 +206,9 @@ class TestSearchpluginAnalysis(unittest.TestCase):
     def testOutputData(self):
         search_path = os.path.join(self.files_path, 'bb', 'searchplugins')
         self.p12n.enUS_searchplugins = {
-            'browser': []
+            'browser': {
+                'aurora': []
+            }
         }
         self.p12n.extract_searchplugins_product(
             search_path, 'browser', 'bb', 'aurora')
