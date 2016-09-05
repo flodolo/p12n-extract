@@ -210,7 +210,9 @@ if ($main_output != '') {
         '</body></html>';
     $subject = 'Mozilla Productization Updates and Errors - Notification for ' . date('Y-m-d');
     $headers = "From: {$from}\r\n";
-    $headers .= "Cc: {$cc}\r\n";
+    if ($cc != '') {
+        $headers .= "Cc: {$cc}\r\n";
+    }
     $headers .= "Reply-To: {$from}\r\n";
     $headers .= "MIME-Version: 1.0\r\n";
     $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
