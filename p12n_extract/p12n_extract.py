@@ -64,7 +64,8 @@ class ProductizationData():
             for searchplugin in glob.glob(os.path.join(path, '*.xml')):
                 searchplugin_noext = os.path.splitext(
                     os.path.basename(searchplugin))[0]
-                self.enUS_searchplugins[product][channel].append(searchplugin_noext)
+                self.enUS_searchplugins[product][
+                    channel].append(searchplugin_noext)
         except:
             print 'Error: problem reading list of en-US searchplugins from {0}'.format(pathsource)
 
@@ -78,11 +79,12 @@ class ProductizationData():
 
             if locale != 'en-US':
                 if centralized_source != '' and os.path.isfile(centralized_source):
-                    # We have a centralized JSON file
+                    # Use centralized JSON as data source
                     try:
                         with open(centralized_source) as data_file:
                             centralized_json = json.load(data_file)
-                        list_sp = centralized_json['locales'][locale]['default']['visibleDefaultEngines']
+                        list_sp = centralized_json['locales'][locale][
+                            'default']['visibleDefaultEngines']
                     except Exception as e:
                         print e
                 else:
@@ -555,7 +557,8 @@ class ProductizationData():
                 if requested_product in ['all', product]:
                     # Analyze en-US first
                     path_enUS = search_path_enUS['sp'][product]
-                    path_centralized = search_path_enUS['sp_centralized'].get(product, '')
+                    path_centralized = search_path_enUS[
+                        'sp_centralized'].get(product, '')
                     self.extract_splist_enUS(
                         path_centralized, path_enUS, product,
                         requested_channel)
