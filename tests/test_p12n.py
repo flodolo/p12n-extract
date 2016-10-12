@@ -16,15 +16,18 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         self.p12n = p12n_extract.p12n_extract.ProductizationData(
             self.files_path)
 
+
     def tearDown(self):
         del self.files_path
         del self.p12n
+
 
     @classmethod
     def tearDownClass(self):
         # Remove the temporary web/p12n folder
         files_folder = os.path.join(os.path.dirname(__file__), 'files', 'web')
         shutil.rmtree(files_folder)
+
 
     def testCheckInit(self):
         files_folder = os.path.join(
@@ -41,13 +44,15 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         self.p12n.data['test'] = ['a', 'b']
         self.assertEquals(self.p12n.data['test'], ['a', 'b'])
 
+
     def testListEnglishSearchplugins(self):
         search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
 
-        self.p12n.extract_splist_enUS(search_path, 'browser', 'aurora')
+        self.p12n.extract_splist_enUS('', search_path, 'browser', 'aurora')
         self.assertEqual(len(self.p12n.enUS_searchplugins['browser']['aurora']), 2)
         self.assertIn('google', self.p12n.enUS_searchplugins['browser']['aurora'])
         self.assertIn('twitter', self.p12n.enUS_searchplugins['browser']['aurora'])
+
 
     def testExtractInfoSearchpluginEnglish(self):
         search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
@@ -58,7 +63,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         }
 
         self.p12n.extract_searchplugins_product(
-            search_path, 'browser', 'en-US', 'aurora')
+            '', search_path, 'browser', 'en-US', 'aurora')
 
         # Check searchplugins data
         single_record = self.p12n.data['locales'][
@@ -78,6 +83,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         # Check errors (should be empty)
         self.assertEqual(len(self.p12n.errors), 0)
 
+
     def testExtractInfoSearchpluginAA(self):
         # Read en-US searchplugins
         search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
@@ -87,12 +93,12 @@ class TestSearchpluginAnalysis(unittest.TestCase):
             }
         }
         self.p12n.extract_searchplugins_product(
-            search_path, 'browser', 'en-US', 'aurora')
+            '', search_path, 'browser', 'en-US', 'aurora')
 
         # Read searchplugins for locale 'aa'
         search_path = os.path.join(self.files_path, 'aa', 'searchplugins')
         self.p12n.extract_searchplugins_product(
-            search_path, 'browser', 'aa', 'aurora')
+            '', search_path, 'browser', 'aa', 'aurora')
 
         # Check searchplugin data
         single_record = self.p12n.data['locales'][
@@ -114,7 +120,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
 
         self.assertIn(
             'there are duplicated items (google) in the list', single_record['errors'])
-        self.assertIn('file extrafile.xml not in list.txt',
+        self.assertIn('file extrafile.xml not expected',
                       single_record['errors'])
         self.assertIn(
             'file google.xml should not exist in the locale folder, same name of en-US searchplugin', single_record['errors'])
@@ -123,7 +129,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         self.assertIn(
             'no images available (aa, browser, aurora, wikipedia-it.xml)', single_record['errors'])
         self.assertIn(
-            'file referenced in list.txt but not available (aa, browser, aurora, wikipedia-aa.xml)', single_record['errors'])
+            'file referenced in the list of searchplugins but not available (aa, browser, aurora, wikipedia-aa.xml)', single_record['errors'])
         self.assertIn(
             'searchplugin contains preprocessor instructions (e.g. #define, #if) that have been stripped in order to parse the XML (aa, browser, aurora, wikipedia-it.xml)', single_record['warnings'])
 
@@ -132,6 +138,105 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         self.assertEqual(len(single_record), 2)
         self.assertEqual(
             single_record['wikipedia-it.xml'], 'eb4fc9045394c3e2065d41a33c9fdd35')
+
+
+    def testCentralizedListEnglishSearchplugins(self):
+        search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
+        centralized_source = os.path.join(self.files_path, 'list.json')
+
+        self.p12n.extract_splist_enUS(centralized_source, search_path, 'browser', 'aurora')
+        self.assertEqual(len(self.p12n.enUS_searchplugins['browser']['aurora']), 2)
+        self.assertIn('google', self.p12n.enUS_searchplugins['browser']['aurora'])
+        self.assertIn('twitter', self.p12n.enUS_searchplugins['browser']['aurora'])
+
+
+    def testCentralizedExtractInfoSearchpluginEnglish(self):
+        search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
+        centralized_source = os.path.join(self.files_path, 'list.json')
+        self.p12n.enUS_searchplugins = {
+            'browser': {
+                'aurora': ['google', 'twitter']
+            }
+        }
+
+        self.p12n.extract_searchplugins_product(
+            centralized_source, search_path, 'browser', 'en-US', 'aurora')
+
+        # Check searchplugins data
+        single_record = self.p12n.data['locales'][
+            'en-US']['browser']['aurora']['searchplugins']
+        self.assertEqual(single_record['google']['name'], 'Google')
+        self.assertEqual(single_record['google'][
+                         'description'], 'Google Search')
+        self.assertEqual(single_record['google']['secure'], 1)
+        self.assertEqual(single_record['google']['file'], 'google.xml')
+        self.assertEqual(single_record['google'][
+                         'url'], 'https://www.google.com/')
+        self.assertEqual(len(single_record['twitter']['images']), 3)
+
+        # Check number of extracted images
+        self.assertEqual(len(self.p12n.images_list), 7)
+
+        # Check errors (should be empty)
+        self.assertEqual(len(self.p12n.errors), 0)
+
+
+    def testCentralizedExtractInfoSearchpluginAA(self):
+        # Read en-US searchplugins
+        search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
+        centralized_source = os.path.join(self.files_path, 'list.json')
+        self.p12n.enUS_searchplugins = {
+            'browser': {
+                'aurora': ['google', 'twitter']
+            }
+        }
+        self.p12n.extract_searchplugins_product(
+            centralized_source, search_path, 'browser', 'en-US', 'aurora')
+
+        # Read searchplugins for locale 'aa'
+        search_path = os.path.join(self.files_path, 'aa', 'searchplugins')
+        self.p12n.extract_searchplugins_product(
+            centralized_source, search_path, 'browser', 'aa', 'aurora')
+
+        # Check searchplugin data
+        single_record = self.p12n.data['locales'][
+            'aa']['browser']['aurora']['searchplugins']
+
+        # Name should fall back to English
+        self.assertEqual(single_record['google']['name'], 'Google')
+        # Description should include '(en-US)'
+        self.assertEqual(single_record['twitter'][
+                         'description'], '(en-US) Realtime Twitter Search')
+        # Missing image should fall back to record 0
+        self.assertEqual(single_record['wikipedia-it']['images'], [0])
+
+        # Check errors
+        single_record = self.p12n.errors['locales']['aa']['browser']['aurora']
+
+        self.assertEqual(len(single_record['errors']), 9)
+        self.assertEqual(len(single_record['warnings']), 1)
+
+        self.assertIn(
+            'there are duplicated items (google) in the list', single_record['errors'])
+        self.assertIn('file extrafile.xml not expected',
+                      single_record['errors'])
+        self.assertIn(
+            'file google.xml should not exist in the locale folder, same name of en-US searchplugin', single_record['errors'])
+        self.assertIn(
+            'error parsing XML (aa, browser, aurora, broken.xml) <code>mismatched tag: line 18, column 2</code>', single_record['errors'])
+        self.assertIn(
+            'no images available (aa, browser, aurora, wikipedia-it.xml)', single_record['errors'])
+        self.assertIn(
+            'file referenced in the list of searchplugins but not available (aa, browser, aurora, wikipedia-aa.xml)', single_record['errors'])
+        self.assertIn(
+            'searchplugin contains preprocessor instructions (e.g. #define, #if) that have been stripped in order to parse the XML (aa, browser, aurora, wikipedia-it.xml)', single_record['warnings'])
+
+        # Check hashes
+        single_record = self.p12n.hashes['locales']['aa']['browser']['aurora']
+        self.assertEqual(len(single_record), 2)
+        self.assertEqual(
+            single_record['wikipedia-it.xml'], 'eb4fc9045394c3e2065d41a33c9fdd35')
+
 
     def testExtractP12nInfo(self):
         # Read searchplugins for locale 'bb'
@@ -142,7 +247,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
             }
         }
         self.p12n.extract_searchplugins_product(
-            search_path, 'browser', 'bb', 'aurora')
+            '', search_path, 'browser', 'bb', 'aurora')
 
         # Extract p12n data
         search_path = os.path.join(self.files_path, 'bb', 'region.properties')
@@ -203,6 +308,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         self.assertEqual(
             single_record['region.properties'], '97f6db5f07a911cc9b0969c5b8cf3114')
 
+
     def testOutputData(self):
         search_path = os.path.join(self.files_path, 'bb', 'searchplugins')
         self.p12n.enUS_searchplugins = {
@@ -211,7 +317,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
             }
         }
         self.p12n.extract_searchplugins_product(
-            search_path, 'browser', 'bb', 'aurora')
+            '', search_path, 'browser', 'bb', 'aurora')
 
         # Extract p12n data
         search_path = os.path.join(self.files_path, 'bb', 'region.properties')
@@ -240,6 +346,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
             cmp_output = open(file_name, 'r').read()
             self.assertEqual(cmp_output, json.dumps(
                 json_data, sort_keys=True, indent=4))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,0 +1,18 @@
+{
+  "locales": {
+    "en-US": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "twitter"
+        ]
+      }
+    },
+    "aa": {
+      "default": {
+        "visibleDefaultEngines": [
+          "broken", "google", "twitter", "wikipedia-it", "wikipedia-aa", "google", "google:hidden"
+        ]
+      }
+    }
+  }
+}
