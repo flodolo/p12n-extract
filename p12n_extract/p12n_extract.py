@@ -79,9 +79,12 @@ class ProductizationData():
             if locale != 'en-US':
                 if centralized_source != '' and os.path.isfile(centralized_source):
                     # We have a centralized JSON file
-                    with open(centralized_source) as data_file:
-                        centralized_json = json.load(data_file)
-                    list_sp = centralized_json['locales'][locale]['default']['visibleDefaultEngines']
+                    try:
+                        with open(centralized_source) as data_file:
+                            centralized_json = json.load(data_file)
+                        list_sp = centralized_json['locales'][locale]['default']['visibleDefaultEngines']
+                    except Exception as e:
+                        print e
                 else:
                     # Read the list of searchplugins from list.txt
                     file_list = os.path.join(search_path, 'list.txt')

@@ -44,7 +44,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
     def testListEnglishSearchplugins(self):
         search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
 
-        self.p12n.extract_splist_enUS(search_path, 'browser', 'aurora')
+        self.p12n.extract_splist_enUS('', search_path, 'browser', 'aurora')
         self.assertEqual(len(self.p12n.enUS_searchplugins['browser']['aurora']), 2)
         self.assertIn('google', self.p12n.enUS_searchplugins['browser']['aurora'])
         self.assertIn('twitter', self.p12n.enUS_searchplugins['browser']['aurora'])
@@ -58,7 +58,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         }
 
         self.p12n.extract_searchplugins_product(
-            search_path, 'browser', 'en-US', 'aurora')
+            '', search_path, 'browser', 'en-US', 'aurora')
 
         # Check searchplugins data
         single_record = self.p12n.data['locales'][
@@ -87,12 +87,12 @@ class TestSearchpluginAnalysis(unittest.TestCase):
             }
         }
         self.p12n.extract_searchplugins_product(
-            search_path, 'browser', 'en-US', 'aurora')
+            '', search_path, 'browser', 'en-US', 'aurora')
 
         # Read searchplugins for locale 'aa'
         search_path = os.path.join(self.files_path, 'aa', 'searchplugins')
         self.p12n.extract_searchplugins_product(
-            search_path, 'browser', 'aa', 'aurora')
+            '', search_path, 'browser', 'aa', 'aurora')
 
         # Check searchplugin data
         single_record = self.p12n.data['locales'][
@@ -114,7 +114,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
 
         self.assertIn(
             'there are duplicated items (google) in the list', single_record['errors'])
-        self.assertIn('file extrafile.xml not in list.txt',
+        self.assertIn('file extrafile.xml not expected',
                       single_record['errors'])
         self.assertIn(
             'file google.xml should not exist in the locale folder, same name of en-US searchplugin', single_record['errors'])
@@ -123,7 +123,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         self.assertIn(
             'no images available (aa, browser, aurora, wikipedia-it.xml)', single_record['errors'])
         self.assertIn(
-            'file referenced in list.txt but not available (aa, browser, aurora, wikipedia-aa.xml)', single_record['errors'])
+            'file referenced in the list of searchplugins but not available (aa, browser, aurora, wikipedia-aa.xml)', single_record['errors'])
         self.assertIn(
             'searchplugin contains preprocessor instructions (e.g. #define, #if) that have been stripped in order to parse the XML (aa, browser, aurora, wikipedia-it.xml)', single_record['warnings'])
 
@@ -132,6 +132,8 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         self.assertEqual(len(single_record), 2)
         self.assertEqual(
             single_record['wikipedia-it.xml'], 'eb4fc9045394c3e2065d41a33c9fdd35')
+
+
 
     def testExtractP12nInfo(self):
         # Read searchplugins for locale 'bb'
@@ -142,7 +144,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
             }
         }
         self.p12n.extract_searchplugins_product(
-            search_path, 'browser', 'bb', 'aurora')
+            '', search_path, 'browser', 'bb', 'aurora')
 
         # Extract p12n data
         search_path = os.path.join(self.files_path, 'bb', 'region.properties')
@@ -211,7 +213,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
             }
         }
         self.p12n.extract_searchplugins_product(
-            search_path, 'browser', 'bb', 'aurora')
+            '', search_path, 'browser', 'bb', 'aurora')
 
         # Extract p12n data
         search_path = os.path.join(self.files_path, 'bb', 'region.properties')
