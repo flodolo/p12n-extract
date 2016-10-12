@@ -53,7 +53,7 @@ class ProductizationData():
             'ElFTkSuQmCC'
         ]
 
-    def extract_splist_enUS(self, centralized_path, path, product, channel):
+    def extract_splist_enUS(self, centralized_source, path, product, channel):
         '''Store in enUS_searchplugins a list of en-US searchplugins (*.xml) in paths.'''
 
         try:
@@ -68,7 +68,7 @@ class ProductizationData():
         except:
             print 'Error: problem reading list of en-US searchplugins from {0}'.format(pathsource)
 
-    def extract_searchplugins_product(self, centralized_path, search_path, product, locale, channel):
+    def extract_searchplugins_product(self, centralized_source, search_path, product, locale, channel):
         '''Extract information about searchplugings'''
 
         try:
@@ -77,23 +77,29 @@ class ProductizationData():
             warnings = []
 
             if locale != 'en-US':
-                # Read the list of searchplugins from list.txt
-                file_list = os.path.join(search_path, 'list.txt')
-                if os.path.isfile(file_list):
-                    list_sp = open(file_list, 'r').read().splitlines()
-                    # Remove empty lines
-                    list_sp = filter(bool, list_sp)
-                    # Check for duplicates
-                    if len(list_sp) != len(set(list_sp)):
-                        # set(list_sp) removes duplicates. If I'm here, there are
-                        # duplicated elements in list.txt, which is an error
-                        duplicated_items = [
-                            x for x, y in
-                            collections.Counter(list_sp).items() if y > 1
-                        ]
-                        duplicated_items_str = ', '.join(duplicated_items)
-                        errors.append('there are duplicated items ({0}) in the list'.format(
-                            duplicated_items_str))
+                if centralized_source != '' and os.path.isfile(centralized_source):
+                    # We have a centralized JSON file
+                    with open(centralized_source) as data_file:
+                        centralized_json = json.load(data_file)
+                    list_sp = centralized_json['locales'][locale]['default']['visibleDefaultEngines']
+                else:
+                    # Read the list of searchplugins from list.txt
+                    file_list = os.path.join(search_path, 'list.txt')
+                    if os.path.isfile(file_list):
+                        list_sp = open(file_list, 'r').read().splitlines()
+                        # Remove empty lines
+                        list_sp = filter(bool, list_sp)
+                        # Check for duplicates
+                        if len(list_sp) != len(set(list_sp)):
+                            # set(list_sp) removes duplicates. If I'm here, there are
+                            # duplicated elements in list.txt, which is an error
+                            duplicated_items = [
+                                x for x, y in
+                                collections.Counter(list_sp).items() if y > 1
+                            ]
+                            duplicated_items_str = ', '.join(duplicated_items)
+                            errors.append('there are duplicated items ({0}) in the list'.format(
+                                duplicated_items_str))
             else:
                 # en-US is different from all other locales: I must analyze all
                 # XML files in the folder, since some searchplugins are not used
@@ -116,7 +122,7 @@ class ProductizationData():
                             # Extra file or unused searchplugin, should be
                             # removed
                             errors.append(
-                                'file {0} not in list.txt'.format(filename))
+                                'file {0} not expected'.format(filename))
 
             # For each searchplugin check if the file exists (localized version) or
             # not (using en-US version to extract data)
@@ -290,7 +296,7 @@ class ProductizationData():
                         # Starting from April 2016, we need to deal with :hidden
                         # searchplugins in l10n repos (don't report errors)
                         if not sp.endswith(':hidden'):
-                            errors.append('file referenced in list.txt but not available ({0}, {1}, {2}, {3}.xml)'.format(
+                            errors.append('file referenced in the list of searchplugins but not available ({0}, {1}, {2}, {3}.xml)'.format(
                                 locale, product, channel, sp))
 
             # Save errors and warnings
@@ -526,7 +532,7 @@ class ProductizationData():
                     'suite': os.path.join(base, 'suite', 'locales', 'en-US', 'en-US', 'searchplugins')
                 },
                 'sp_centralized': {
-                    'browser': os.path.join(channel_data['centralized_path'], 'browser', 'locales', 'search', 'list.json'),
+                    'browser': os.path.join(channel_data['centralized_source'], 'browser', 'locales', 'search', 'list.json'),
                 },
                 'p12n': {
                     'browser': [os.path.join(base, 'browser', 'locales', 'en-US', 'en-US', 'chrome', 'browser-region', 'region.properties')],
@@ -656,7 +662,7 @@ def main():
                 'l10n_path': os.path.join(local_hg, '{0}_L10N'.format(channel.upper())),
                 'locales_file': os.path.join(config_files, source_name),
                 'source_path': os.path.join(local_hg, '{0}_EN-US'.format(channel.upper())),
-                'centralized_path': os.path.join(local_hg, '{0}_EN-US'.format(channel.upper()), repo_folder),
+                'centralized_source': os.path.join(local_hg, '{0}_EN-US'.format(channel.upper()), repo_folder),
             }
             p12n.extract_p12n_channel(
                 args.product, channel_data, channel, args.noproductization)
