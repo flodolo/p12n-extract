@@ -53,7 +53,7 @@ class ProductizationData():
             'ElFTkSuQmCC'
         ]
 
-    def extract_splist_enUS(self, path, product, channel):
+    def extract_splist_enUS(self, centralized_path, path, product, channel):
         '''Store in enUS_searchplugins a list of en-US searchplugins (*.xml) in paths.'''
 
         try:
@@ -68,7 +68,7 @@ class ProductizationData():
         except:
             print 'Error: problem reading list of en-US searchplugins from {0}'.format(pathsource)
 
-    def extract_searchplugins_product(self, search_path, product, locale, channel):
+    def extract_searchplugins_product(self, centralized_path, search_path, product, locale, channel):
         '''Extract information about searchplugings'''
 
         try:
@@ -525,6 +525,9 @@ class ProductizationData():
                     'mail': os.path.join(base, 'mail', 'locales', 'en-US', 'en-US', 'searchplugins'),
                     'suite': os.path.join(base, 'suite', 'locales', 'en-US', 'en-US', 'searchplugins')
                 },
+                'sp_centralized': {
+                    'browser': os.path.join(channel_data['centralized_path'], 'browser', 'locales', 'search', 'list.json'),
+                },
                 'p12n': {
                     'browser': [os.path.join(base, 'browser', 'locales', 'en-US', 'en-US', 'chrome', 'browser-region', 'region.properties')],
                     'mobile': [os.path.join(base, 'mobile', 'locales', 'en-US', 'en-US', 'chrome', 'region.properties')],
@@ -542,11 +545,13 @@ class ProductizationData():
             for product in ['browser', 'mobile', 'mail', 'suite']:
                 if requested_product in ['all', product]:
                     # Analyze en-US first
+                    path_enUS = search_path_enUS['sp'][product]
+                    path_centralized = search_path_enUS['sp_centralized'].get(product, '')
                     self.extract_splist_enUS(
-                        search_path_enUS['sp'][product], product,
+                        path_centralized, path_enUS, product,
                         requested_channel)
                     self.extract_searchplugins_product(
-                        search_path_enUS['sp'][product], product, 'en-US',
+                        path_centralized, path_enUS, product, 'en-US',
                         requested_channel)
                     if check_p12n:
                         for path in search_path_enUS['p12n'][product]:
@@ -576,7 +581,8 @@ class ProductizationData():
                             }
                         }
                         self.extract_searchplugins_product(
-                            search_path_l10n['sp'][product], product, locale,
+                            path_centralized, search_path_l10n['sp'][product],
+                            product, locale,
                             requested_channel)
                         if check_p12n:
                             for path in search_path_l10n['p12n'][product]:
@@ -644,10 +650,13 @@ def main():
         if args.branch in ['all', channel]:
             source_name = 'central.txt' if channel == 'trunk' else '{0}.txt'.format(
                 channel)
+            repo_folder = 'mozilla-central' if channel == 'trunk' else 'mozilla-{0}'.format(
+                channel)
             channel_data = {
                 'l10n_path': os.path.join(local_hg, '{0}_L10N'.format(channel.upper())),
                 'locales_file': os.path.join(config_files, source_name),
                 'source_path': os.path.join(local_hg, '{0}_EN-US'.format(channel.upper())),
+                'centralized_path': os.path.join(local_hg, '{0}_EN-US'.format(channel.upper()), repo_folder),
             }
             p12n.extract_p12n_channel(
                 args.product, channel_data, channel, args.noproductization)
