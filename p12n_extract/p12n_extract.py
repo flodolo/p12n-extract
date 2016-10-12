@@ -92,17 +92,17 @@ class ProductizationData():
                         list_sp = open(file_list, 'r').read().splitlines()
                         # Remove empty lines
                         list_sp = filter(bool, list_sp)
-                        # Check for duplicates
-                        if len(list_sp) != len(set(list_sp)):
-                            # set(list_sp) removes duplicates. If I'm here, there are
-                            # duplicated elements in list.txt, which is an error
-                            duplicated_items = [
-                                x for x, y in
-                                collections.Counter(list_sp).items() if y > 1
-                            ]
-                            duplicated_items_str = ', '.join(duplicated_items)
-                            errors.append('there are duplicated items ({0}) in the list'.format(
-                                duplicated_items_str))
+                # Check for duplicates
+                if len(list_sp) != len(set(list_sp)):
+                    # set(list_sp) removes duplicates. If I'm here, there are
+                    # duplicated elements in list.txt, which is an error
+                    duplicated_items = [
+                        x for x, y in
+                        collections.Counter(list_sp).items() if y > 1
+                    ]
+                    duplicated_items_str = ', '.join(duplicated_items)
+                    errors.append('there are duplicated items ({0}) in the list'.format(
+                        duplicated_items_str))
             else:
                 # en-US is different from all other locales: I must analyze all
                 # XML files in the folder, since some searchplugins are not used
