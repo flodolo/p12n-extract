@@ -636,6 +636,7 @@ class ProductizationData():
 def main():
     # Parse command line options
     cl_parser = argparse.ArgumentParser()
+    cl_parser.add_argument('config_folder', help='Path to Transvision /config folder')
     cl_parser.add_argument('-p', '--product', help='Choose a specific product',
                            choices=['browser', 'mobile', 'mail', 'suite', 'all'], default='all')
     cl_parser.add_argument('-b', '--branch', help='Choose a specific branch',
@@ -650,9 +651,11 @@ def main():
     # ../config from current script location (not current folder). Store all
     # needed folders in vars.
     parser = SafeConfigParser()
-    config_folder = os.path.abspath(os.path.join(
-        os.path.dirname(__file__), os.pardir, 'config'))
-    parser.read(os.path.join(config_folder, 'config.ini'))
+    transvision_config = os.path.abspath(os.path.join(args.config_folder, 'config.ini'))
+    if not os.path.isfile(transvision_config):
+        print "config.ini not found in {0}".format(args.config_folder)
+        sys.exit(1)
+    parser.read(transvision_config)
     local_install = parser.get('config', 'install')
     local_hg = parser.get('config', 'local_hg')
     config_files = os.path.join(parser.get('config', 'config'), 'sources')

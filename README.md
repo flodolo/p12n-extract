@@ -7,6 +7,10 @@ Usage:
 ```
 usage: p12n_extract.py [-h] [-p {browser,mobile,mail,suite,all}]
                        [-b {release,beta,aurora,trunk,all}] [-n] [--pretty]
+                       config_folder
+
+positional arguments:
+  config_folder         Path to Transvision /config folder
 
 optional arguments:
   -h, --help            show this help message and exit
