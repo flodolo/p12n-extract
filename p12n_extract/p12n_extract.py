@@ -633,7 +633,8 @@ class ProductizationData():
         self.data['images'] = images_data
 
         # Remove the extra locale 'shared' from data before saving
-        del(self.data['locales']['shared'])
+        if 'shared' in self.data['locales']:
+            del(self.data['locales']['shared'])
 
         # Save data on file
         metadata = {

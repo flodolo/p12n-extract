@@ -93,6 +93,8 @@ class TestSearchpluginAnalysis(unittest.TestCase):
             }
         }
         self.p12n.extract_searchplugins_product(
+            '', search_path, 'browser', 'shared', 'aurora')
+        self.p12n.extract_searchplugins_product(
             '', search_path, 'browser', 'en-US', 'aurora')
 
         # Read searchplugins for locale 'aa'
@@ -190,6 +192,8 @@ class TestSearchpluginAnalysis(unittest.TestCase):
                 'aurora': ['google', 'twitter']
             }
         }
+        self.p12n.extract_searchplugins_product(
+            centralized_source, search_path, 'browser', 'shared', 'aurora')
         self.p12n.extract_searchplugins_product(
             centralized_source, search_path, 'browser', 'en-US', 'aurora')
 
