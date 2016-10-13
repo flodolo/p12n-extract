@@ -575,7 +575,8 @@ class ProductizationData():
                         path_centralized, path_enUS, product,
                         requested_channel)
 
-                    # Extract all shared searchplugins in a special 'shared' locale
+                    # Extract all shared searchplugins in a special 'shared'
+                    # locale
                     self.extract_searchplugins_product(
                         path_centralized, path_enUS, product, 'shared',
                         requested_channel)
