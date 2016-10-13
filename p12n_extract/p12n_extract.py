@@ -559,13 +559,17 @@ class ProductizationData():
                     path_enUS = search_path_enUS['sp'][product]
 
                     # Define path to centralized list.json
-                    path_centralized = '';
+                    path_centralized = ''
                     if product == 'browser':
-                        repo_folder = 'mozilla-central' if requested_channel == 'trunk' else 'mozilla-{0}'.format(requested_channel)
-                        path_centralized = os.path.join(channel_data['source_path'], repo_folder, 'browser', 'locales', 'search', 'list.json')
+                        repo_folder = 'mozilla-central' if requested_channel == 'trunk' else 'mozilla-{0}'.format(
+                            requested_channel)
+                        path_centralized = os.path.join(
+                            channel_data['source_path'], repo_folder, 'browser', 'locales', 'search', 'list.json')
                     elif product == 'mail':
-                        repo_folder = 'comm-central' if requested_channel == 'trunk' else 'comm-{0}'.format(requested_channel)
-                        path_centralized = os.path.join(channel_data['source_path'], repo_folder, 'mail', 'locales', 'search', 'list.json')
+                        repo_folder = 'comm-central' if requested_channel == 'trunk' else 'comm-{0}'.format(
+                            requested_channel)
+                        path_centralized = os.path.join(
+                            channel_data['source_path'], repo_folder, 'mail', 'locales', 'search', 'list.json')
 
                     self.extract_splist_enUS(
                         path_centralized, path_enUS, product,
@@ -644,7 +648,8 @@ class ProductizationData():
 def main():
     # Parse command line options
     cl_parser = argparse.ArgumentParser()
-    cl_parser.add_argument('config_folder', help='Path to Transvision /config folder')
+    cl_parser.add_argument(
+        'config_folder', help='Path to Transvision /config folder')
     cl_parser.add_argument('-p', '--product', help='Choose a specific product',
                            choices=['browser', 'mobile', 'mail', 'suite', 'all'], default='all')
     cl_parser.add_argument('-b', '--branch', help='Choose a specific branch',
@@ -659,7 +664,8 @@ def main():
     # ../config from current script location (not current folder). Store all
     # needed folders in vars.
     parser = SafeConfigParser()
-    transvision_config = os.path.abspath(os.path.join(args.config_folder, 'config.ini'))
+    transvision_config = os.path.abspath(
+        os.path.join(args.config_folder, 'config.ini'))
     if not os.path.isfile(transvision_config):
         print "config.ini not found in {0}".format(args.config_folder)
         sys.exit(1)
