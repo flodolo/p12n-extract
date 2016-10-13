@@ -54,7 +54,7 @@ class ProductizationData():
         ]
 
     def extract_shared_splist(self, centralized_source, path, product, channel):
-        '''Store in share_searchplugins a list of searchplugins in /en-US (*.xml) in paths.'''
+        '''Store in shared_searchplugins a list of searchplugins in /en-US (*.xml)'''
 
         try:
             if product not in self.shared_searchplugins:
@@ -109,7 +109,7 @@ class ProductizationData():
                     errors.append('there are duplicated items ({0}) in the list'.format(
                         duplicated_items_str))
             else:
-                # For 'shared' I must analyze all XML files in the en-US folder,
+                # For 'shared' I must analyze all XML files in the folder,
                 # since some searchplugins are not used in en-US but by other
                 # locales
                 list_sp = self.shared_searchplugins[product][channel]
@@ -283,8 +283,9 @@ class ProductizationData():
                         errors.append(
                             'error analyzing searchplugin {0} <code>{1}</code>'.format(searchplugin_info, str(e)))
                 else:
-                    # File does not exist, locale is using the same plugin available in /en-US,
-                    # I have to retrieve it from the existing dictionary
+                    # File does not exist, locale is using the same plugin
+                    # available in the shared folder. I have to retrieve it
+                    # from the existing dictionary
                     if sp in self.data['locales']['shared'][product][channel]['searchplugins']:
                         searchplugin_shared = self.data['locales'][
                             'shared'][product][channel]['searchplugins'][sp]
