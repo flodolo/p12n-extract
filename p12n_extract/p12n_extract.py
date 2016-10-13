@@ -77,7 +77,7 @@ class ProductizationData():
             errors = []
             warnings = []
 
-            if locale != 'en-US':
+            if locale != 'shared':
                 if centralized_source != '' and os.path.isfile(centralized_source):
                     # Use centralized JSON as data source
                     try:
@@ -109,12 +109,12 @@ class ProductizationData():
                     errors.append('there are duplicated items ({0}) in the list'.format(
                         duplicated_items_str))
             else:
-                # en-US is different from all other locales: I must analyze all
-                # XML files in the folder, since some searchplugins are not used
-                # in en-US but by other locales
+                # For 'shared' I must analyze all XML files in the en-US folder,
+                # since some searchplugins are not used in en-US but by other
+                # locales
                 list_sp = self.shared_searchplugins[product][channel]
 
-            if locale != 'en-US':
+            if locale not in ['en-US', 'shared']:
                 # Get a list of all files inside search_path
                 for searchplugin in glob.glob(os.path.join(search_path, '*')):
                     filename = os.path.basename(searchplugin)
@@ -138,7 +138,7 @@ class ProductizationData():
                 sp_file = os.path.join(search_path, sp + '.xml')
                 existing_file = os.path.isfile(sp_file)
 
-                if sp in self.shared_searchplugins[product][channel] and existing_file and locale != 'en-US':
+                if sp in self.shared_searchplugins[product][channel] and existing_file and locale not in ['en-US', 'shared']:
                     # There's a problem: file exists but has the same name of an
                     # en-US searchplugin. This file will never be picked at build
                     # time, so let's analyze en-US and use it for JSON, acting
@@ -283,19 +283,19 @@ class ProductizationData():
                         errors.append(
                             'error analyzing searchplugin {0} <code>{1}</code>'.format(searchplugin_info, str(e)))
                 else:
-                    # File does not exist, locale is using the same plugin of en-US,
+                    # File does not exist, locale is using the same plugin available in /en-US,
                     # I have to retrieve it from the existing dictionary
-                    if sp in self.data['locales']['en-US'][product][channel]['searchplugins']:
-                        searchplugin_enUS = self.data['locales'][
-                            'en-US'][product][channel]['searchplugins'][sp]
+                    if sp in self.data['locales']['shared'][product][channel]['searchplugins']:
+                        searchplugin_shared = self.data['locales'][
+                            'shared'][product][channel]['searchplugins'][sp]
 
                         self.data['locales'][locale][product][channel]['searchplugins'][sp] = {
                             'file': '{0}.xml'.format(sp),
-                            'name': searchplugin_enUS['name'],
-                            'description': '(en-US) {0}'.format(searchplugin_enUS['description']),
-                            'url': searchplugin_enUS['url'],
-                            'secure': searchplugin_enUS['secure'],
-                            'images': searchplugin_enUS['images']
+                            'name': searchplugin_shared['name'],
+                            'description': '(en-US) {0}'.format(searchplugin_shared['description']),
+                            'url': searchplugin_shared['url'],
+                            'secure': searchplugin_shared['secure'],
+                            'images': searchplugin_shared['images']
                         }
                     else:
                         # File does not exist but we don't have it in en-US either.
@@ -574,9 +574,17 @@ class ProductizationData():
                     self.extract_shared_splist(
                         path_centralized, path_enUS, product,
                         requested_channel)
+
+                    # Extract all shared searchplugins in a special 'shared' locale
+                    self.extract_searchplugins_product(
+                        path_centralized, path_enUS, product, 'shared',
+                        requested_channel)
+
+                    # Extract searchplugins for en-US
                     self.extract_searchplugins_product(
                         path_centralized, path_enUS, product, 'en-US',
                         requested_channel)
+
                     if check_p12n:
                         for path in search_path_enUS['p12n'][product]:
                             self.extract_productization_product(
@@ -623,6 +631,9 @@ class ProductizationData():
         for index, value in enumerate(self.images_list):
             images_data[index] = value
         self.data['images'] = images_data
+
+        # Remove the extra locale 'shared' from data before saving
+        del(self.data['locales']['shared'])
 
         # Save data on file
         metadata = {
