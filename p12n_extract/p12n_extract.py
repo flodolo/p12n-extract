@@ -37,7 +37,7 @@ class ProductizationData():
         self.data = nested_dict()
         self.errors = nested_dict()
         self.hashes = nested_dict()
-        self.enUS_searchplugins = {}
+        self.shared_searchplugins = {}
 
         # Initialize images with a default one
         self.images_list = [
@@ -53,18 +53,18 @@ class ProductizationData():
             'ElFTkSuQmCC'
         ]
 
-    def extract_splist_enUS(self, centralized_source, path, product, channel):
-        '''Store in enUS_searchplugins a list of en-US searchplugins (*.xml) in paths.'''
+    def extract_shared_splist(self, centralized_source, path, product, channel):
+        '''Store in share_searchplugins a list of searchplugins in /en-US (*.xml) in paths.'''
 
         try:
-            if product not in self.enUS_searchplugins:
-                self.enUS_searchplugins[product] = {}
-            if channel not in self.enUS_searchplugins[product]:
-                self.enUS_searchplugins[product][channel] = []
+            if product not in self.shared_searchplugins:
+                self.shared_searchplugins[product] = {}
+            if channel not in self.shared_searchplugins[product]:
+                self.shared_searchplugins[product][channel] = []
             for searchplugin in glob.glob(os.path.join(path, '*.xml')):
                 searchplugin_noext = os.path.splitext(
                     os.path.basename(searchplugin))[0]
-                self.enUS_searchplugins[product][
+                self.shared_searchplugins[product][
                     channel].append(searchplugin_noext)
         except:
             print 'Error: problem reading list of en-US searchplugins from {0}'.format(pathsource)
@@ -112,7 +112,7 @@ class ProductizationData():
                 # en-US is different from all other locales: I must analyze all
                 # XML files in the folder, since some searchplugins are not used
                 # in en-US but by other locales
-                list_sp = self.enUS_searchplugins[product][channel]
+                list_sp = self.shared_searchplugins[product][channel]
 
             if locale != 'en-US':
                 # Get a list of all files inside search_path
@@ -120,7 +120,7 @@ class ProductizationData():
                     filename = os.path.basename(searchplugin)
                     # Remove extension
                     filename_noext = os.path.splitext(filename)[0]
-                    if filename_noext in self.enUS_searchplugins[product][channel]:
+                    if filename_noext in self.shared_searchplugins[product][channel]:
                         # File exists but has the same name of an en-US
                         # searchplugin.
                         errors.append(
@@ -138,7 +138,7 @@ class ProductizationData():
                 sp_file = os.path.join(search_path, sp + '.xml')
                 existing_file = os.path.isfile(sp_file)
 
-                if sp in self.enUS_searchplugins[product][channel] and existing_file and locale != 'en-US':
+                if sp in self.shared_searchplugins[product][channel] and existing_file and locale != 'en-US':
                     # There's a problem: file exists but has the same name of an
                     # en-US searchplugin. This file will never be picked at build
                     # time, so let's analyze en-US and use it for JSON, acting
@@ -571,7 +571,7 @@ class ProductizationData():
                         path_centralized = os.path.join(
                             channel_data['source_path'], repo_folder, 'mail', 'locales', 'search', 'list.json')
 
-                    self.extract_splist_enUS(
+                    self.extract_shared_splist(
                         path_centralized, path_enUS, product,
                         requested_channel)
                     self.extract_searchplugins_product(
