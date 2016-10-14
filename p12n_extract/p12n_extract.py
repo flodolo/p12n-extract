@@ -634,10 +634,6 @@ class ProductizationData():
             images_data[index] = value
         self.data['images'] = images_data
 
-        # Remove the extra locale 'shared' from data before saving
-        if 'shared' in self.data['locales']:
-            del(self.data['locales']['shared'])
-
         # Save data on file
         metadata = {
             'creation_date': strftime('%Y-%m-%d %H:%M:%S', localtime())
@@ -650,6 +646,11 @@ class ProductizationData():
         for group in ['errors', 'hashes', 'searchplugins']:
             json_data = data_mapping[group]
             json_data['metadata'] = metadata
+
+            # Remove the pseudo locale 'shared' from data before saving
+            if 'shared' in json_data['locales']:
+                del(json_data['locales']['shared'])
+
             file_name = os.path.join(self.output_folder, group + '.json')
             f = open(file_name, 'w')
             if pretty_output:
