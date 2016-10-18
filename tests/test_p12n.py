@@ -147,9 +147,14 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         centralized_source = os.path.join(self.files_path, 'list.json')
 
         self.p12n.extract_shared_splist(centralized_source, search_path, 'browser', 'aurora')
+
         self.assertEqual(len(self.p12n.shared_searchplugins['browser']['aurora']), 2)
         self.assertIn('google', self.p12n.shared_searchplugins['browser']['aurora'])
         self.assertIn('twitter', self.p12n.shared_searchplugins['browser']['aurora'])
+
+        self.assertEqual(len(self.p12n.default_searchplugins['browser']['aurora']), 7)
+        self.assertIn('ddg', self.p12n.default_searchplugins['browser']['aurora'])
+        self.assertNotIn('ddg', self.p12n.default_searchplugins['test'])
 
 
     def testCentralizedExtractInfoSearchpluginEnglish(self):

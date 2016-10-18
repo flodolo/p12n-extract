@@ -37,7 +37,8 @@ class ProductizationData():
         self.data = nested_dict()
         self.errors = nested_dict()
         self.hashes = nested_dict()
-        self.shared_searchplugins = {}
+        self.shared_searchplugins = nested_dict()
+        self.default_searchplugins = nested_dict()
 
         # Initialize images with a default one
         self.images_list = [
@@ -56,18 +57,32 @@ class ProductizationData():
     def extract_shared_splist(self, centralized_source, path, product, channel):
         '''Store in shared_searchplugins a list of searchplugins in /en-US (*.xml)'''
 
+        # Store all XML files in self.shared_searchplugins
         try:
-            if product not in self.shared_searchplugins:
-                self.shared_searchplugins[product] = {}
-            if channel not in self.shared_searchplugins[product]:
-                self.shared_searchplugins[product][channel] = []
             for searchplugin in glob.glob(os.path.join(path, '*.xml')):
                 searchplugin_noext = os.path.splitext(
                     os.path.basename(searchplugin))[0]
-                self.shared_searchplugins[product][
-                    channel].append(searchplugin_noext)
-        except:
-            print 'Error: problem reading list of en-US searchplugins from {0}'.format(pathsource)
+                if channel in self.shared_searchplugins[product]:
+                    self.shared_searchplugins[product][
+                        channel].append(searchplugin_noext)
+                else:
+                    self.shared_searchplugins[product][
+                        channel] = [searchplugin_noext]
+        except Exception as e:
+            print 'Error: problem reading list of shared searchplugins from {0}'.format(pathsource)
+            print e
+
+        # Store the default list of searchplugins
+        if centralized_source != '' and os.path.isfile(centralized_source):
+            # Use centralized JSON as data source
+            try:
+                with open(centralized_source) as data_file:
+                    centralized_json = json.load(data_file)
+                self.default_searchplugins[product][channel] = centralized_json[
+                    'default']['visibleDefaultEngines']
+            except Exception as e:
+                print e
+
 
     def extract_searchplugins_product(self, centralized_source, search_path, product, locale, channel):
         '''Extract information about searchplugings'''

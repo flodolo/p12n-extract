@@ -1,4 +1,9 @@
 {
+  "default": {
+    "visibleDefaultEngines": [
+      "google", "yahoo", "amazondotcom", "bing", "ddg", "twitter", "wikipedia"
+    ]
+  },
   "locales": {
     "en-US": {
       "default": {
