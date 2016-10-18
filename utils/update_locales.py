@@ -93,6 +93,8 @@ def main():
                     locale = locale.strip()
                     if locale != '' and locale not in channel_locales:
                         channel_locales.append(locale)
+            # Include en-US
+            channel_locales.append('en-US')
             channel_locales.sort()
             supported_locales[product][channel_id] = channel_locales
 
