@@ -8,7 +8,7 @@ import urllib2
 def main():
     update_sources = {
         'browser': {
-            'nightly': [
+            'trunk': [
                 'http://hg.mozilla.org/mozilla-central/raw-file/default/browser/locales/all-locales'
             ],
             'aurora': [
@@ -22,7 +22,7 @@ def main():
             ]
         },
         'mail': {
-            'nightly': [
+            'trunk': [
                 'http://hg.mozilla.org/comm-central/raw-file/default/mail/locales/all-locales'
             ],
             'aurora': [
@@ -36,7 +36,7 @@ def main():
             ]
         },
         'mobile': {
-            'nightly': [
+            'trunk': [
                 'http://hg.mozilla.org/mozilla-central/raw-file/default/mobile/android/locales/maemo-locales',
                 'http://hg.mozilla.org/mozilla-central/raw-file/default/mobile/android/locales/all-locales'
             ],
@@ -54,7 +54,7 @@ def main():
             ]
         },
         'suite': {
-            'nightly': [
+            'trunk': [
                 'http://hg.mozilla.org/comm-central/raw-file/default/suite/locales/all-locales'
             ],
             'aurora': [
