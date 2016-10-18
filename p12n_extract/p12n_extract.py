@@ -62,7 +62,7 @@ class ProductizationData():
             'ElFTkSuQmCC'
         ]
 
-    def extract_shared_splist(self, centralized_source, path, product, channel):
+    def extract_shared_defaults(self, centralized_source, path, product, channel):
         '''Store in shared_searchplugins a list of searchplugins in /en-US (*.xml)'''
 
         # Store all XML files in self.shared_searchplugins
@@ -604,7 +604,7 @@ class ProductizationData():
                         path_centralized = os.path.join(
                             channel_data['source_path'], repo_folder, 'mail', 'locales', 'search', 'list.json')
 
-                    self.extract_shared_splist(
+                    self.extract_shared_defaults(
                         path_centralized, path_enUS, product,
                         requested_channel)
 
