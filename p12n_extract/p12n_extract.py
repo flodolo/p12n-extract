@@ -19,7 +19,7 @@ from xml.dom import minidom
 
 class ProductizationData():
 
-    def __init__(self, install_path):
+    def __init__(self, install_path, script_config_folder):
         '''Initialize object'''
 
         # Check if the path to store files exists. If it doesn't, create it
@@ -39,6 +39,13 @@ class ProductizationData():
         self.hashes = nested_dict()
         self.shared_searchplugins = nested_dict()
         self.default_searchplugins = nested_dict()
+
+        try:
+            shipping_locales_list = os.path.join(script_config_folder, 'shipping_locales.json')
+            with open(shipping_locales_list) as data_file:
+                self.shipping_locales = json.load(data_file)
+        except Exception as e:
+            print 'Error reading config/shipping_locales.json', e
 
         # Initialize images with a default one
         self.images_list = [
@@ -102,7 +109,13 @@ class ProductizationData():
                             list_sp = centralized_json['locales'][locale][
                                 'default']['visibleDefaultEngines']
                         else:
-                            errors.append('locale is not defined in list.json')
+                            # If it's a shipping locale and is missing from
+                            # list.json, we fallback to 'default'
+                            if locale in self.shipping_locales[product][channel]:
+                                list_sp = self.default_searchplugins[product][channel]
+                                warnings.append('locale is falling back to default searchplugins')
+                            else:
+                                errors.append('locale is not defined in list.json and not shipping for this product/channel')
                     except Exception as e:
                         print e
                 else:
@@ -704,7 +717,13 @@ def main():
     local_hg = parser.get('config', 'local_hg')
     config_files = os.path.join(parser.get('config', 'config'), 'sources')
 
-    p12n = ProductizationData(local_install)
+    # Path to ../config, for the list of shipping locales
+    script_config_folder = os.path.abspath(
+        os.path.join(os.path.dirname(__file__),
+                     os.pardir,
+                     'config'))
+
+    p12n = ProductizationData(local_install, script_config_folder)
     for channel in ['release', 'beta', 'aurora', 'trunk']:
         if args.branch in ['all', channel]:
             source_name = 'central.txt' if channel == 'trunk' else '{0}.txt'.format(
