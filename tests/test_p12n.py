@@ -14,20 +14,17 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         nested_dict = lambda: collections.defaultdict(nested_dict)
         self.files_path = os.path.join(os.path.dirname(__file__), 'files')
         self.p12n = p12n_extract.p12n_extract.ProductizationData(
-            self.files_path)
-
+            self.files_path, self.files_path)
 
     def tearDown(self):
         del self.files_path
         del self.p12n
-
 
     @classmethod
     def tearDownClass(self):
         # Remove the temporary web/p12n folder
         files_folder = os.path.join(os.path.dirname(__file__), 'files', 'web')
         shutil.rmtree(files_folder)
-
 
     def testCheckInit(self):
         files_folder = os.path.join(
@@ -44,15 +41,16 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         self.p12n.data['test'] = ['a', 'b']
         self.assertEquals(self.p12n.data['test'], ['a', 'b'])
 
-
     def testListEnglishSearchplugins(self):
         search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
 
         self.p12n.extract_shared_splist('', search_path, 'browser', 'aurora')
-        self.assertEqual(len(self.p12n.shared_searchplugins['browser']['aurora']), 2)
-        self.assertIn('google', self.p12n.shared_searchplugins['browser']['aurora'])
-        self.assertIn('twitter', self.p12n.shared_searchplugins['browser']['aurora'])
-
+        self.assertEqual(
+            len(self.p12n.shared_searchplugins['browser']['aurora']), 2)
+        self.assertIn('google', self.p12n.shared_searchplugins[
+                      'browser']['aurora'])
+        self.assertIn('twitter', self.p12n.shared_searchplugins[
+                      'browser']['aurora'])
 
     def testExtractInfoSearchpluginEnglish(self):
         search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
@@ -82,7 +80,6 @@ class TestSearchpluginAnalysis(unittest.TestCase):
 
         # Check errors (should be empty)
         self.assertEqual(len(self.p12n.errors), 0)
-
 
     def testExtractInfoSearchpluginAA(self):
         # Read en-US searchplugins
@@ -141,16 +138,25 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         self.assertEqual(
             single_record['wikipedia-it.xml'], 'eb4fc9045394c3e2065d41a33c9fdd35')
 
-
     def testCentralizedListEnglishSearchplugins(self):
         search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
         centralized_source = os.path.join(self.files_path, 'list.json')
 
-        self.p12n.extract_shared_splist(centralized_source, search_path, 'browser', 'aurora')
-        self.assertEqual(len(self.p12n.shared_searchplugins['browser']['aurora']), 2)
-        self.assertIn('google', self.p12n.shared_searchplugins['browser']['aurora'])
-        self.assertIn('twitter', self.p12n.shared_searchplugins['browser']['aurora'])
+        self.p12n.extract_shared_splist(
+            centralized_source, search_path, 'browser', 'aurora')
 
+        self.assertEqual(
+            len(self.p12n.shared_searchplugins['browser']['aurora']), 2)
+        self.assertIn('google', self.p12n.shared_searchplugins[
+                      'browser']['aurora'])
+        self.assertIn('twitter', self.p12n.shared_searchplugins[
+                      'browser']['aurora'])
+
+        self.assertEqual(
+            len(self.p12n.default_searchplugins['browser']['aurora']), 7)
+        self.assertIn('ddg', self.p12n.default_searchplugins[
+                      'browser']['aurora'])
+        self.assertNotIn('ddg', self.p12n.default_searchplugins['test'])
 
     def testCentralizedExtractInfoSearchpluginEnglish(self):
         search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
@@ -182,6 +188,53 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         # Check errors (should be empty)
         self.assertEqual(len(self.p12n.errors), 0)
 
+    def testCentralizedExtractInfoSearchpluginMissing(self):
+        # Read en-US searchplugins
+        search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
+        centralized_source = os.path.join(self.files_path, 'list.json')
+
+        self.p12n.extract_shared_splist(centralized_source, search_path,
+                                        'browser', 'aurora')
+
+        self.p12n.extract_searchplugins_product(
+            centralized_source, search_path, 'browser', 'shared', 'aurora')
+        self.p12n.extract_searchplugins_product(
+            centralized_source, search_path, 'browser', 'en-US', 'aurora')
+
+        # Read searchplugins for locale 'test' (not available, but shipping)
+        search_path = os.path.join(self.files_path, 'test', 'searchplugins')
+        self.p12n.extract_searchplugins_product(
+            centralized_source, search_path, 'browser', 'test', 'aurora')
+
+        # Check searchplugin data
+        single_record = self.p12n.data['locales'][
+            'test']['browser']['aurora']['searchplugins']
+        self.assertEqual(len(single_record), 2)
+
+        # Check warning
+        single_record = self.p12n.errors[
+            'locales']['test']['browser']['aurora']
+        self.assertEqual(len(single_record['errors']), 5)
+        self.assertEqual(len(single_record['warnings']), 1)
+        self.assertIn(
+            'locale is falling back to default searchplugins', single_record['warnings'])
+
+        # Read searchplugins for locale 'test2' (not available, not shipping)
+        self.p12n.extract_searchplugins_product(
+            centralized_source, search_path, 'browser', 'test2', 'aurora')
+
+        # Check searchplugin data
+        single_record = self.p12n.data['locales'][
+            'test2']['browser']['aurora']['searchplugins']
+        self.assertEqual(len(single_record), 0)
+
+        # Check warning
+        single_record = self.p12n.errors[
+            'locales']['test2']['browser']['aurora']
+        self.assertEqual(len(single_record['errors']), 1)
+        self.assertEqual(len(single_record['warnings']), 0)
+        self.assertIn(
+            'locale is not defined in list.json and not shipping for this product/channel', single_record['errors'])
 
     def testCentralizedExtractInfoSearchpluginAA(self):
         # Read en-US searchplugins
@@ -240,7 +293,6 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         self.assertEqual(len(single_record), 2)
         self.assertEqual(
             single_record['wikipedia-it.xml'], 'eb4fc9045394c3e2065d41a33c9fdd35')
-
 
     def testExtractP12nInfo(self):
         # Read searchplugins for locale 'bb'
@@ -311,7 +363,6 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         self.assertEqual(len(single_record), 2)
         self.assertEqual(
             single_record['region.properties'], '97f6db5f07a911cc9b0969c5b8cf3114')
-
 
     def testOutputData(self):
         search_path = os.path.join(self.files_path, 'bb', 'searchplugins')

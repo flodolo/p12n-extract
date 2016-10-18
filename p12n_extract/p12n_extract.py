@@ -19,7 +19,7 @@ from xml.dom import minidom
 
 class ProductizationData():
 
-    def __init__(self, install_path):
+    def __init__(self, install_path, script_config_folder):
         '''Initialize object'''
 
         # Check if the path to store files exists. If it doesn't, create it
@@ -37,7 +37,16 @@ class ProductizationData():
         self.data = nested_dict()
         self.errors = nested_dict()
         self.hashes = nested_dict()
-        self.shared_searchplugins = {}
+        self.shared_searchplugins = nested_dict()
+        self.default_searchplugins = nested_dict()
+
+        try:
+            shipping_locales_list = os.path.join(
+                script_config_folder, 'shipping_locales.json')
+            with open(shipping_locales_list) as data_file:
+                self.shipping_locales = json.load(data_file)
+        except Exception as e:
+            print 'Error reading config/shipping_locales.json', e
 
         # Initialize images with a default one
         self.images_list = [
@@ -56,18 +65,31 @@ class ProductizationData():
     def extract_shared_splist(self, centralized_source, path, product, channel):
         '''Store in shared_searchplugins a list of searchplugins in /en-US (*.xml)'''
 
+        # Store all XML files in self.shared_searchplugins
         try:
-            if product not in self.shared_searchplugins:
-                self.shared_searchplugins[product] = {}
-            if channel not in self.shared_searchplugins[product]:
-                self.shared_searchplugins[product][channel] = []
             for searchplugin in glob.glob(os.path.join(path, '*.xml')):
                 searchplugin_noext = os.path.splitext(
                     os.path.basename(searchplugin))[0]
-                self.shared_searchplugins[product][
-                    channel].append(searchplugin_noext)
-        except:
-            print 'Error: problem reading list of en-US searchplugins from {0}'.format(pathsource)
+                if channel in self.shared_searchplugins[product]:
+                    self.shared_searchplugins[product][
+                        channel].append(searchplugin_noext)
+                else:
+                    self.shared_searchplugins[product][
+                        channel] = [searchplugin_noext]
+        except Exception as e:
+            print 'Error: problem reading list of shared searchplugins from {0}'.format(pathsource)
+            print e
+
+        # Store the default list of searchplugins
+        if centralized_source != '' and os.path.isfile(centralized_source):
+            # Use centralized JSON as data source
+            try:
+                with open(centralized_source) as data_file:
+                    centralized_json = json.load(data_file)
+                self.default_searchplugins[product][channel] = centralized_json[
+                    'default']['visibleDefaultEngines']
+            except Exception as e:
+                print e
 
     def extract_searchplugins_product(self, centralized_source, search_path, product, locale, channel):
         '''Extract information about searchplugings'''
@@ -83,11 +105,21 @@ class ProductizationData():
                     try:
                         with open(centralized_source) as data_file:
                             centralized_json = json.load(data_file)
-                        if locale in centralized_json['locales']:
-                            list_sp = centralized_json['locales'][locale][
-                                'default']['visibleDefaultEngines']
+                        # Only consider shipping locales
+                        if locale in self.shipping_locales[product][channel]:
+                            if locale in centralized_json['locales']:
+                                # We have searchplugins defined
+                                list_sp = centralized_json['locales'][locale][
+                                    'default']['visibleDefaultEngines']
+                            else:
+                                # Fall back to default
+                                list_sp = self.default_searchplugins[
+                                    product][channel]
+                                warnings.append(
+                                    'locale is falling back to default searchplugins')
                         else:
-                            errors.append('locale is not defined in list.json')
+                            errors.append(
+                                'locale is not defined in list.json and not shipping for this product/channel')
                     except Exception as e:
                         print e
                 else:
@@ -689,7 +721,13 @@ def main():
     local_hg = parser.get('config', 'local_hg')
     config_files = os.path.join(parser.get('config', 'config'), 'sources')
 
-    p12n = ProductizationData(local_install)
+    # Path to ../config, for the list of shipping locales
+    script_config_folder = os.path.abspath(
+        os.path.join(os.path.dirname(__file__),
+                     os.pardir,
+                     'config'))
+
+    p12n = ProductizationData(local_install, script_config_folder)
     for channel in ['release', 'beta', 'aurora', 'trunk']:
         if args.branch in ['all', channel]:
             source_name = 'central.txt' if channel == 'trunk' else '{0}.txt'.format(

@@ -43,6 +43,7 @@ def main():
 
     diff = difflib.context_diff(
         output_old, output_new, args.old_file, args.new_file)
+
     for line in diff:
         sys.stdout.write(line)
 
