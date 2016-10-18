@@ -41,7 +41,8 @@ class ProductizationData():
         self.default_searchplugins = nested_dict()
 
         try:
-            shipping_locales_list = os.path.join(script_config_folder, 'shipping_locales.json')
+            shipping_locales_list = os.path.join(
+                script_config_folder, 'shipping_locales.json')
             with open(shipping_locales_list) as data_file:
                 self.shipping_locales = json.load(data_file)
         except Exception as e:
@@ -90,7 +91,6 @@ class ProductizationData():
             except Exception as e:
                 print e
 
-
     def extract_searchplugins_product(self, centralized_source, search_path, product, locale, channel):
         '''Extract information about searchplugings'''
 
@@ -112,10 +112,13 @@ class ProductizationData():
                             # If it's a shipping locale and is missing from
                             # list.json, we fallback to 'default'
                             if locale in self.shipping_locales[product][channel]:
-                                list_sp = self.default_searchplugins[product][channel]
-                                warnings.append('locale is falling back to default searchplugins')
+                                list_sp = self.default_searchplugins[
+                                    product][channel]
+                                warnings.append(
+                                    'locale is falling back to default searchplugins')
                             else:
-                                errors.append('locale is not defined in list.json and not shipping for this product/channel')
+                                errors.append(
+                                    'locale is not defined in list.json and not shipping for this product/channel')
                     except Exception as e:
                         print e
                 else:
