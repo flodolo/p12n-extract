@@ -105,20 +105,21 @@ class ProductizationData():
                     try:
                         with open(centralized_source) as data_file:
                             centralized_json = json.load(data_file)
-                        if locale in centralized_json['locales']:
-                            list_sp = centralized_json['locales'][locale][
-                                'default']['visibleDefaultEngines']
-                        else:
-                            # If it's a shipping locale and is missing from
-                            # list.json, we fallback to 'default'
-                            if locale in self.shipping_locales[product][channel]:
+                        # Only consider shipping locales
+                        if locale in self.shipping_locales[product][channel]:
+                            if locale in centralized_json['locales']:
+                                # We have searchplugins defined
+                                list_sp = centralized_json['locales'][locale][
+                                    'default']['visibleDefaultEngines']
+                            else:
+                                # Fall back to default
                                 list_sp = self.default_searchplugins[
                                     product][channel]
                                 warnings.append(
                                     'locale is falling back to default searchplugins')
-                            else:
-                                errors.append(
-                                    'locale is not defined in list.json and not shipping for this product/channel')
+                        else:
+                            errors.append(
+                                'locale is not defined in list.json and not shipping for this product/channel')
                     except Exception as e:
                         print e
                 else:
