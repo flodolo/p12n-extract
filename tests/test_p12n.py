@@ -231,10 +231,8 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         # Check warning
         single_record = self.p12n.errors[
             'locales']['test2']['browser']['aurora']
-        self.assertEqual(len(single_record['errors']), 1)
+        self.assertEqual(len(single_record['errors']), 0)
         self.assertEqual(len(single_record['warnings']), 0)
-        self.assertIn(
-            'locale is not defined in list.json and not shipping for this product/channel', single_record['errors'])
 
     def testCentralizedExtractInfoSearchpluginAA(self):
         # Read en-US searchplugins
