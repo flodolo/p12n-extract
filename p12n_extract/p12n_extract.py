@@ -117,9 +117,6 @@ class ProductizationData():
                                     product][channel]
                                 warnings.append(
                                     'locale is falling back to default searchplugins')
-                        else:
-                            errors.append(
-                                'locale is not defined in list.json and not shipping for this product/channel')
                     except Exception as e:
                         print e
                 else:
