@@ -44,7 +44,8 @@ class TestSearchpluginAnalysis(unittest.TestCase):
     def testListEnglishSearchplugins(self):
         search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
 
-        self.p12n.extract_shared_defaults('', search_path, 'browser', 'aurora')
+        self.p12n.extract_shared(search_path, 'browser', 'aurora')
+        self.p12n.extract_defaults('', 'browser', 'aurora')
         self.assertEqual(
             len(self.p12n.shared_searchplugins['browser']['aurora']), 2)
         self.assertIn('google', self.p12n.shared_searchplugins[
@@ -142,8 +143,8 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
         centralized_source = os.path.join(self.files_path, 'list.json')
 
-        self.p12n.extract_shared_defaults(
-            centralized_source, search_path, 'browser', 'aurora')
+        self.p12n.extract_shared(search_path, 'browser', 'aurora')
+        self.p12n.extract_defaults(centralized_source, 'browser', 'aurora')
 
         self.assertEqual(
             len(self.p12n.shared_searchplugins['browser']['aurora']), 2)
@@ -193,8 +194,8 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         search_path = os.path.join(self.files_path, 'en-US', 'searchplugins')
         centralized_source = os.path.join(self.files_path, 'list.json')
 
-        self.p12n.extract_shared_defaults(centralized_source, search_path,
-                                          'browser', 'aurora')
+        self.p12n.extract_shared(search_path, 'browser', 'aurora')
+        self.p12n.extract_defaults(centralized_source, 'browser', 'aurora')
 
         self.p12n.extract_searchplugins_product(
             centralized_source, search_path, 'browser', 'shared', 'aurora')
