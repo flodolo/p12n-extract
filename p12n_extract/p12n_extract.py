@@ -20,7 +20,7 @@ from xml.dom import minidom
 class ProductizationData():
 
     def __init__(self, install_path, script_config_folder):
-        '''Initialize object'''
+        ''' Initialize object '''
 
         # Check if the path to store files exists. If it doesn't, create it
         web_p12n_folder = os.path.join(install_path, 'web', 'p12n')
@@ -62,8 +62,11 @@ class ProductizationData():
             'ElFTkSuQmCC'
         ]
 
-    def extract_shared_defaults(self, centralized_source, path, product, channel):
-        '''Store in shared_searchplugins a list of searchplugins in /en-US (*.xml)'''
+    def extract_shared(self, path, product, channel):
+        ''' Store in shared_searchplugins a list of searchplugins (*.xml) from
+        a shared folder. It could be en-US or a special locales/searchplugins
+        folder.
+        '''
 
         # Store all XML files in self.shared_searchplugins
         try:
@@ -77,10 +80,11 @@ class ProductizationData():
                     self.shared_searchplugins[product][
                         channel] = [searchplugin_noext]
         except Exception as e:
-            print 'Error: problem reading list of shared searchplugins from {0}'.format(pathsource)
+            print 'Error: problem reading list of shared searchplugins from {0}'.format(path)
             print e
 
-        # Store the default list of searchplugins
+    def extract_defaults(self, centralized_source, product, channel):
+        ''' Store the default list of searchplugins '''
         if centralized_source != '' and os.path.isfile(centralized_source):
             # Use centralized JSON as data source
             try:
@@ -92,7 +96,7 @@ class ProductizationData():
                 print e
 
     def extract_searchplugins_product(self, centralized_source, search_path, product, locale, channel):
-        '''Extract information about searchplugings'''
+        ''' Extract information about searchplugings '''
 
         try:
             list_sp = []
@@ -348,7 +352,7 @@ class ProductizationData():
             print '[{0}] problem reading {1}'.format(locale, file_list)
 
     def extract_productization_product(self, region_file, product, locale, channel):
-        '''Extract productization data and check for errors'''
+        ''' Extract productization data and check for errors '''
 
         # Extract p12n information from region.properties
         errors = []
@@ -557,7 +561,7 @@ class ProductizationData():
             print e
 
     def extract_p12n_channel(self, requested_product, channel_data, requested_channel, check_p12n):
-        '''Extract information from all products for this channel'''
+        ''' Extract information from all products for this channel '''
 
         try:
             # Analyze en-US searchplugins first
@@ -590,20 +594,31 @@ class ProductizationData():
 
                     # Define path to centralized list.json
                     path_centralized = ''
+                    path_shared = path_enUS
                     if product == 'browser':
                         repo_folder = 'mozilla-central' if requested_channel == 'trunk' else 'mozilla-{0}'.format(
                             requested_channel)
                         path_centralized = os.path.join(
                             channel_data['source_path'], repo_folder, 'browser', 'locales', 'search', 'list.json')
+                        path_shared = os.path.join(
+                            channel_data['source_path'], repo_folder, 'browser', 'locales', 'searchplugins')
+                        if not os.path.isdir(path_shared):
+                            # If the folder doesn't exist, fall back to en-US as source
+                            # for shared searchplugins. This is needed while the
+                            # centralization change rides the trains
+                            path_shared = path_enUS
                     elif product == 'mail':
                         repo_folder = 'comm-central' if requested_channel == 'trunk' else 'comm-{0}'.format(
                             requested_channel)
                         path_centralized = os.path.join(
                             channel_data['source_path'], repo_folder, 'mail', 'locales', 'search', 'list.json')
 
-                    self.extract_shared_defaults(
-                        path_centralized, path_enUS, product,
-                        requested_channel)
+                    self.extract_shared(
+                        path_shared, product, requested_channel)
+
+                    if path_centralized != '':
+                        self.extract_defaults(
+                            path_centralized, product, requested_channel)
 
                     # Extract all shared searchplugins in a special 'shared'
                     # locale
@@ -655,7 +670,7 @@ class ProductizationData():
             print e
 
     def output_data(self, pretty_output):
-        '''Complete the JSON structure and output data to files'''
+        ''' Complete the JSON structure and output data to files '''
 
         # Add images to the JSON
         images_data = {}
