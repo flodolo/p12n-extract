@@ -619,7 +619,8 @@ class ProductizationData():
                             # If the folder doesn't exist, fall back to en-US as source
                             # for shared searchplugins. This is needed while the
                             # centralization change rides the trains
-                            self.activity_log(product, requested_channel, 'Folder for shared searchplugins doesn\'t exist: {0}'.format(path_shared))
+                            self.activity_log(
+                                product, requested_channel, 'Folder for shared searchplugins doesn\'t exist: {0}'.format(path_shared))
                             path_shared = path_enUS
                     elif product == 'mail':
                         repo_folder = 'comm-central' if requested_channel == 'trunk' else 'comm-{0}'.format(

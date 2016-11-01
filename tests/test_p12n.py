@@ -106,9 +106,6 @@ class TestSearchpluginAnalysis(unittest.TestCase):
 
         # Name should fall back to English
         self.assertEqual(single_record['google']['name'], 'Google')
-        # Description should include '(en-US)'
-        self.assertEqual(single_record['twitter'][
-                         'description'], '(en-US) Realtime Twitter Search')
         # Missing image should fall back to record 0
         self.assertEqual(single_record['wikipedia-it']['images'], [0])
 
@@ -260,9 +257,6 @@ class TestSearchpluginAnalysis(unittest.TestCase):
 
         # Name should fall back to English
         self.assertEqual(single_record['google']['name'], 'Google')
-        # Description should include '(en-US)'
-        self.assertEqual(single_record['twitter'][
-                         'description'], '(en-US) Realtime Twitter Search')
         # Missing image should fall back to record 0
         self.assertEqual(single_record['wikipedia-it']['images'], [0])
 
