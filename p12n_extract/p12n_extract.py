@@ -187,8 +187,8 @@ class ProductizationData():
                 if sp in self.shared_searchplugins[product][channel] and existing_file and locale not in ['en-US', 'shared']:
                     # There's a problem: file exists but has the same name of an
                     # en-US searchplugin. This file will never be picked at build
-                    # time, so let's analyze en-US and use it for JSON, acting
-                    # like the file doesn't exist, and printing an error
+                    # time, so let's analyze the shared one and use it for JSON,
+                    # acting like the file doesn't exist, and printing an error
                     existing_file = False
 
                 if existing_file:
@@ -339,7 +339,7 @@ class ProductizationData():
                         self.data['locales'][locale][product][channel]['searchplugins'][sp] = {
                             'file': '{0}.xml'.format(sp),
                             'name': searchplugin_shared['name'],
-                            'description': '(en-US) {0}'.format(searchplugin_shared['description']),
+                            'description': searchplugin_shared['description'],
                             'url': searchplugin_shared['url'],
                             'secure': searchplugin_shared['secure'],
                             'images': searchplugin_shared['images']
@@ -362,7 +362,7 @@ class ProductizationData():
                 self.errors['locales'][locale][product][
                     channel]['warnings'] = warnings
         except Exception as e:
-            print '[{0}] problem reading {1}'.format(locale, file_list)
+            print '[{0}] problem reading searchplugins'.format(locale), e
 
     def extract_productization_product(self, region_file, product, locale, channel):
         ''' Extract productization data and check for errors '''
@@ -637,12 +637,12 @@ class ProductizationData():
                     # Extract all shared searchplugins in a special 'shared'
                     # locale
                     self.extract_searchplugins_product(
-                        path_centralized, path_enUS, product, 'shared',
+                        path_centralized, path_shared, product, 'shared',
                         requested_channel)
 
                     # Extract searchplugins for en-US
                     self.extract_searchplugins_product(
-                        path_centralized, path_enUS, product, 'en-US',
+                        path_centralized, path_shared, product, 'en-US',
                         requested_channel)
 
                     if check_p12n:
