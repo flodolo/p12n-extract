@@ -39,6 +39,7 @@ class ProductizationData():
         self.hashes = nested_dict()
         self.shared_searchplugins = nested_dict()
         self.default_searchplugins = nested_dict()
+        self.verbose_mode = False
 
         try:
             shipping_locales_list = os.path.join(
@@ -61,6 +62,18 @@ class ProductizationData():
             'KrPLSOop+3+ekPFRu6FAPNNQh1FdeWDaxioRx/wo3i2vIbdynAJ3C4ViylVaDnAAAAA'
             'ElFTkSuQmCC'
         ]
+
+    def set_verbose_mode(self):
+        ''' Set verbose mode '''
+
+        self.verbose_mode = True
+
+    def activity_log(self, product, channel, message):
+        ''' Print log '''
+
+        if self.verbose_mode:
+            print('[{0}][{1}] - {2}'.format(
+                product, channel, message))
 
     def extract_shared(self, path, product, channel):
         ''' Store in shared_searchplugins a list of searchplugins (*.xml) from
@@ -174,8 +187,8 @@ class ProductizationData():
                 if sp in self.shared_searchplugins[product][channel] and existing_file and locale not in ['en-US', 'shared']:
                     # There's a problem: file exists but has the same name of an
                     # en-US searchplugin. This file will never be picked at build
-                    # time, so let's analyze en-US and use it for JSON, acting
-                    # like the file doesn't exist, and printing an error
+                    # time, so let's analyze the shared one and use it for JSON,
+                    # acting like the file doesn't exist, and printing an error
                     existing_file = False
 
                 if existing_file:
@@ -326,7 +339,7 @@ class ProductizationData():
                         self.data['locales'][locale][product][channel]['searchplugins'][sp] = {
                             'file': '{0}.xml'.format(sp),
                             'name': searchplugin_shared['name'],
-                            'description': '(en-US) {0}'.format(searchplugin_shared['description']),
+                            'description': searchplugin_shared['description'],
                             'url': searchplugin_shared['url'],
                             'secure': searchplugin_shared['secure'],
                             'images': searchplugin_shared['images']
@@ -349,7 +362,7 @@ class ProductizationData():
                 self.errors['locales'][locale][product][
                     channel]['warnings'] = warnings
         except Exception as e:
-            print '[{0}] problem reading {1}'.format(locale, file_list)
+            print '[{0}] problem reading searchplugins'.format(locale), e
 
     def extract_productization_product(self, region_file, product, locale, channel):
         ''' Extract productization data and check for errors '''
@@ -606,6 +619,8 @@ class ProductizationData():
                             # If the folder doesn't exist, fall back to en-US as source
                             # for shared searchplugins. This is needed while the
                             # centralization change rides the trains
+                            self.activity_log(
+                                product, requested_channel, 'Folder for shared searchplugins doesn\'t exist: {0}'.format(path_shared))
                             path_shared = path_enUS
                     elif product == 'mail':
                         repo_folder = 'comm-central' if requested_channel == 'trunk' else 'comm-{0}'.format(
@@ -623,12 +638,12 @@ class ProductizationData():
                     # Extract all shared searchplugins in a special 'shared'
                     # locale
                     self.extract_searchplugins_product(
-                        path_centralized, path_enUS, product, 'shared',
+                        path_centralized, path_shared, product, 'shared',
                         requested_channel)
 
                     # Extract searchplugins for en-US
                     self.extract_searchplugins_product(
-                        path_centralized, path_enUS, product, 'en-US',
+                        path_centralized, path_shared, product, 'en-US',
                         requested_channel)
 
                     if check_p12n:
@@ -717,6 +732,8 @@ def main():
                            help='Disable productization checks', action='store_false')
     cl_parser.add_argument('--pretty',
                            help='Generate pretty output', action='store_true')
+    cl_parser.add_argument('--verbose',
+                           help='Display verbose log', action='store_true')
     args = cl_parser.parse_args()
 
     # Read Transvision's configuration file by getting the absolute path of
@@ -740,6 +757,9 @@ def main():
                      'config'))
 
     p12n = ProductizationData(local_install, script_config_folder)
+    if args.verbose:
+        p12n.set_verbose_mode()
+
     for channel in ['release', 'beta', 'aurora', 'trunk']:
         if args.branch in ['all', channel]:
             source_name = 'central.txt' if channel == 'trunk' else '{0}.txt'.format(
