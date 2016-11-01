@@ -39,6 +39,7 @@ class ProductizationData():
         self.hashes = nested_dict()
         self.shared_searchplugins = nested_dict()
         self.default_searchplugins = nested_dict()
+        self.verbose_mode = False
 
         try:
             shipping_locales_list = os.path.join(
@@ -61,6 +62,18 @@ class ProductizationData():
             'KrPLSOop+3+ekPFRu6FAPNNQh1FdeWDaxioRx/wo3i2vIbdynAJ3C4ViylVaDnAAAAA'
             'ElFTkSuQmCC'
         ]
+
+    def set_verbose_mode(self):
+        ''' Set verbose mode '''
+
+        self.verbose_mode = True
+
+    def activity_log(self, product, channel, message):
+        ''' Print log '''
+
+        if self.verbose_mode:
+            print('[{0}][{1}] - {2}'.format(
+                product, channel, message))
 
     def extract_shared(self, path, product, channel):
         ''' Store in shared_searchplugins a list of searchplugins (*.xml) from
@@ -606,6 +619,7 @@ class ProductizationData():
                             # If the folder doesn't exist, fall back to en-US as source
                             # for shared searchplugins. This is needed while the
                             # centralization change rides the trains
+                            self.activity_log(product, requested_channel, 'Folder for shared searchplugins doesn\'t exist: {0}'.format(path_shared))
                             path_shared = path_enUS
                     elif product == 'mail':
                         repo_folder = 'comm-central' if requested_channel == 'trunk' else 'comm-{0}'.format(
@@ -717,6 +731,8 @@ def main():
                            help='Disable productization checks', action='store_false')
     cl_parser.add_argument('--pretty',
                            help='Generate pretty output', action='store_true')
+    cl_parser.add_argument('--verbose',
+                           help='Display verbose log', action='store_true')
     args = cl_parser.parse_args()
 
     # Read Transvision's configuration file by getting the absolute path of
@@ -740,6 +756,9 @@ def main():
                      'config'))
 
     p12n = ProductizationData(local_install, script_config_folder)
+    if args.verbose:
+        p12n.set_verbose_mode()
+
     for channel in ['release', 'beta', 'aurora', 'trunk']:
         if args.branch in ['all', channel]:
             source_name = 'central.txt' if channel == 'trunk' else '{0}.txt'.format(
