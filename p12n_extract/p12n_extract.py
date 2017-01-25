@@ -4,6 +4,7 @@
 # installation (https://github.com/mozfr/transvision)
 
 import argparse
+import base64
 import collections
 import glob
 import hashlib
@@ -62,6 +63,7 @@ class ProductizationData():
             'KrPLSOop+3+ekPFRu6FAPNNQh1FdeWDaxioRx/wo3i2vIbdynAJ3C4ViylVaDnAAAAA'
             'ElFTkSuQmCC'
         ]
+        self.resource_images = nested_dict()
 
     def set_verbose_mode(self):
         ''' Set verbose mode '''
@@ -105,6 +107,33 @@ class ProductizationData():
                     centralized_json = json.load(data_file)
                 self.default_searchplugins[product][channel] = centralized_json[
                     'default']['visibleDefaultEngines']
+            except Exception as e:
+                print e
+
+    def extract_shared_resource_images(self, images_path, product, channel):
+        ''' Extract shared resource:// images for searchplugins '''
+        if os.path.isdir(images_path):
+            ext_mapping = {
+                '.ico': 'x-icon',
+                '.png': 'png'
+            }
+            try:
+                for image in glob.glob(os.path.join(images_path, '*')):
+                    filename = os.path.basename(image)
+                    ext = os.path.splitext(filename)[1]
+
+                    data_header = 'data:image/{0};base64,'.format(
+                        ext_mapping.get(ext, ''))
+                    with open(image, 'rb') as f:
+                        data = f.read()
+                    image_data = data_header + base64.b64encode(data)
+
+                    self.resource_images[product][channel][
+                        filename] = image_data
+
+                    # Store image in image_list if not already available
+                    if not image in self.images_list:
+                        self.images_list.append(image_data)
             except Exception as e:
                 print e
 
@@ -286,14 +315,35 @@ class ProductizationData():
                                 nodes = xmldoc.getElementsByTagName('os:Image')
                             for node in nodes:
                                 image = node.childNodes[0].nodeValue
+
+                                # If searchplugin is using a resource:// image,
+                                # make sure it's available in images_list
+                                # before checking further
+                                if image.startswith('resource://'):
+                                    # resource:// image
+                                    filename = os.path.basename(
+                                        image.split('//', 1)[1])
+                                    try:
+                                        if filename in self.resource_images[product][channel]:
+                                            image = self.resource_images[
+                                                product][channel][filename]
+                                        else:
+                                            errors.append(
+                                                'resource:// image not {0} available {1}'.format(image, searchplugin_info))
+                                    except KeyError:
+                                        # There are no resource:// images for
+                                        # this product and channel
+                                        errors.append(
+                                            'There are no resource:// images available {1}'.format(searchplugin_info))
+
                                 if image in self.images_list:
-                                    # Image already stored in the JSON record. Store
-                                    # only the index
+                                    # Image already stored in the JSON
+                                    # record. Store only the index
                                     images.append(
                                         self.images_list.index(image))
                                 else:
-                                    # Store image in images_list, get index and
-                                    # store in json
+                                    # Store image in images_list, get index
+                                    # and store in json
                                     self.images_list.append(image)
                                     images.append(len(self.images_list) - 1)
 
@@ -634,6 +684,12 @@ class ProductizationData():
                     if path_centralized != '':
                         self.extract_defaults(
                             path_centralized, product, requested_channel)
+
+                    # Extract shared resource:// images from
+                    # searchplugins/images
+                    self.extract_shared_resource_images(
+                        os.path.join(path_shared, 'images'),
+                        product, requested_channel)
 
                     # Extract all shared searchplugins in a special 'shared'
                     # locale
