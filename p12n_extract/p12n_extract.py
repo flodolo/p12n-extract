@@ -658,13 +658,13 @@ class ProductizationData():
                     # Define path to centralized list.json
                     path_centralized = ''
                     path_shared = path_enUS
-                    if product == 'browser':
+                    if product in ['browser', 'mobile']:
                         repo_folder = 'mozilla-central' if requested_channel == 'trunk' else 'mozilla-{0}'.format(
                             requested_channel)
                         path_centralized = os.path.join(
-                            channel_data['source_path'], repo_folder, 'browser', 'locales', 'search', 'list.json')
+                            channel_data['source_path'], repo_folder, product, 'locales', 'search', 'list.json')
                         path_shared = os.path.join(
-                            channel_data['source_path'], repo_folder, 'browser', 'locales', 'searchplugins')
+                            channel_data['source_path'], repo_folder, product, 'locales', 'searchplugins')
                         if not os.path.isdir(path_shared):
                             # If the folder doesn't exist, fall back to en-US as source
                             # for shared searchplugins. This is needed while the
