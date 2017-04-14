@@ -783,7 +783,7 @@ def main():
     cl_parser.add_argument('-p', '--product', help='Choose a specific product',
                            choices=['browser', 'mobile', 'mail', 'suite', 'all'], default='all')
     cl_parser.add_argument('-b', '--branch', help='Choose a specific branch',
-                           choices=['release', 'beta', 'aurora', 'trunk', 'all'], default='all')
+                           choices=['release', 'beta', 'trunk', 'all'], default='all')
     cl_parser.add_argument('-n', '--noproductization',
                            help='Disable productization checks', action='store_false')
     cl_parser.add_argument('--pretty',
@@ -816,7 +816,7 @@ def main():
     if args.verbose:
         p12n.set_verbose_mode()
 
-    for channel in ['release', 'beta', 'aurora', 'trunk']:
+    for channel in ['release', 'beta', 'trunk']:
         if args.branch in ['all', channel]:
             source_name = 'central.txt' if channel == 'trunk' else '{0}.txt'.format(
                 channel)

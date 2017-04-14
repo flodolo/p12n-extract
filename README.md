@@ -6,7 +6,7 @@ p12n_extract.py: extract data from searchplugins, productization errors, product
 Usage:
 ```
 usage: p12n_extract.py [-h] [-p {browser,mobile,mail,suite,all}]
-                       [-b {release,beta,aurora,trunk,all}] [-n] [--pretty]
+                       [-b {release,beta,trunk,all}] [-n] [--pretty]
                        config_folder
 
 positional arguments:
@@ -16,7 +16,7 @@ optional arguments:
   -h, --help            show this help message and exit
   -p {browser,mobile,mail,suite,all}, --product {browser,mobile,mail,suite,all}
                         Choose a specific product
-  -b {release,beta,aurora,trunk,all}, --branch {release,beta,aurora,trunk,all}
+  -b {release,beta,trunk,all}, --branch {release,beta,trunk,all}
                         Choose a specific branch
   -n, --noproductization
                         Disable productization checks
