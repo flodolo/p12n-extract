@@ -11,9 +11,6 @@ def main():
             'trunk': [
                 'http://hg.mozilla.org/mozilla-central/raw-file/default/browser/locales/all-locales'
             ],
-            'aurora': [
-                'http://hg.mozilla.org/releases/mozilla-aurora/raw-file/default/browser/locales/all-locales'
-            ],
             'beta': [
                 'http://hg.mozilla.org/releases/mozilla-beta/raw-file/default/browser/locales/shipped-locales'
             ],
@@ -24,9 +21,6 @@ def main():
         'mail': {
             'trunk': [
                 'http://hg.mozilla.org/comm-central/raw-file/default/mail/locales/all-locales'
-            ],
-            'aurora': [
-                'http://hg.mozilla.org/releases/comm-aurora/raw-file/default/mail/locales/all-locales'
             ],
             'beta': [
                 'http://hg.mozilla.org/releases/comm-beta/raw-file/default/mail/locales/shipped-locales'
@@ -40,10 +34,6 @@ def main():
                 'http://hg.mozilla.org/mozilla-central/raw-file/default/mobile/android/locales/maemo-locales',
                 'http://hg.mozilla.org/mozilla-central/raw-file/default/mobile/android/locales/all-locales'
             ],
-            'aurora': [
-                'http://hg.mozilla.org/releases/mozilla-aurora/raw-file/default/mobile/android/locales/maemo-locales',
-                'http://hg.mozilla.org/releases/mozilla-aurora/raw-file/default/mobile/android/locales/all-locales'
-            ],
             'beta': [
                 'http://hg.mozilla.org/releases/mozilla-beta/raw-file/default/mobile/android/locales/maemo-locales',
                 'http://hg.mozilla.org/releases/mozilla-beta/raw-file/default/mobile/android/locales/all-locales'
@@ -56,9 +46,6 @@ def main():
         'suite': {
             'trunk': [
                 'http://hg.mozilla.org/comm-central/raw-file/default/suite/locales/all-locales'
-            ],
-            'aurora': [
-                'http://hg.mozilla.org/releases/comm-aurora/raw-file/default/suite/locales/all-locales'
             ],
             'beta': [
                 'http://hg.mozilla.org/releases/comm-beta/raw-file/default/suite/locales/shipped-locales'

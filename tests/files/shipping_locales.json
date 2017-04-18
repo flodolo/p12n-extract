@@ -1,6 +1,6 @@
 {
     "browser": {
-        "aurora": [
+        "release": [
             "aa", "bb", "en-US", "test"
         ]
     }
