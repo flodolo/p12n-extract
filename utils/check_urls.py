@@ -20,9 +20,9 @@ locales.sort()
 for locale in locales:
     print "\n\n------\nAnalyzing %s..." % locale
     for product in products:
-        if product in json_data['locales'][locale] and 'aurora' in json_data['locales'][locale][product]:
+        if product in json_data['locales'][locale] and 'central' in json_data['locales'][locale][product]:
             searchplugins = json_data['locales'][locale][
-                product]['aurora']['searchplugins']
+                product]['central']['searchplugins']
             for searchplugin in searchplugins:
                 if '(en-US)' not in searchplugins[searchplugin]['description']:
                     print 'Checking %s' % searchplugins[searchplugin]['file']

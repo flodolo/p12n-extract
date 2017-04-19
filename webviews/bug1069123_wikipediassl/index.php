@@ -79,7 +79,6 @@
     // Supported channels
     $channels = [
         'trunk'   => 'Nightly',
-        'aurora'  => 'Developer Edition',
         'beta'    => 'Beta',
         'release' => 'Release',
     ];
@@ -87,12 +86,11 @@
     //Supported products
     $products = [
         'browser' => 'Firefox',
-        'mobile'  => 'Firefox for Android',
         'suite'   => 'Seamonkey',
         'mail'    => 'Thunderbird',
     ];
 
-    $channel = 'aurora';
+    $channel = 'central';
     if (isset($_REQUEST['channel'])) {
         if (isset($channels[$_REQUEST['channel']])) {
             $channel = $_REQUEST['channel'];

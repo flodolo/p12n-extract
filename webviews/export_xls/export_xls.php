@@ -23,7 +23,6 @@ sort($locales);
 // Supported channels
 $channels = [
     'trunk'   => 'Nightly',
-    'aurora'  => 'Developer Edition',
     'beta'    => 'Beta',
     'release' => 'Release',
 ];

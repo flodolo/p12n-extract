@@ -78,7 +78,6 @@
 
     $channels = [
         'trunk'   => 'Nightly',
-        'aurora'  => 'Developer Edition',
         'beta'    => 'Beta',
         'release' => 'Release',
     ];
@@ -90,7 +89,7 @@
         'mail'    => 'Thunderbird',
     ];
 
-    $channel = 'aurora';
+    $channel = 'central';
     if (isset($_REQUEST['channel'])) {
         if (isset($channels[$_REQUEST['channel']])) {
             $channel = $_REQUEST['channel'];

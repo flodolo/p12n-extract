@@ -62,7 +62,6 @@
     // Supported channels
     $channels = [
         'trunk'   => 'Nightly',
-        'aurora'  => 'Developer Edition',
         'beta'    => 'Beta',
         'release' => 'Release',
     ];
@@ -89,7 +88,7 @@
             $requested_channel = $_REQUEST['channel'];
         }
     } else {
-        $requested_channel = 'aurora';
+        $requested_channel = 'central';
     }
 
     $html_output = "<h1>Images for $products[$requested_product] ($channels[$requested_channel])</h1>";

@@ -81,7 +81,6 @@
     // Supported channels
     $channels = [
         'trunk'   => 'Nightly',
-        'aurora'  => 'Developer Edition',
         'beta'    => 'Beta',
         'release' => 'Release',
     ];
@@ -102,7 +101,7 @@
         }
     }
 
-    $requested_channel = 'aurora';
+    $requested_channel = 'central';
     if (isset($_REQUEST['channel'])) {
         if (isset($channels[$_REQUEST['channel']])) {
             $requested_channel = $_REQUEST['channel'];

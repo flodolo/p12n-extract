@@ -93,11 +93,10 @@
     // Supported channels
     $channels = [
         'trunk'   => 'Nightly',
-        'aurora'  => 'Developer Edition',
         'beta'    => 'Beta',
         'release' => 'Release',
     ];
-    $channel = 'aurora';
+    $channel = 'central';
     if (isset($_REQUEST['channel'])) {
         if (isset($channels[$_REQUEST['channel']])) {
             $channel = $_REQUEST['channel'];
@@ -106,7 +105,6 @@
 
     $repositories = [
         'trunk'   => 'https://hg.mozilla.org/l10n-central/',
-        'aurora'  => 'https://hg.mozilla.org/releases/l10n/mozilla-aurora/',
         'beta'    => 'https://hg.mozilla.org/releases/l10n/mozilla-beta/',
         'release' => 'https://hg.mozilla.org/releases/l10n/mozilla-release/',
     ];
