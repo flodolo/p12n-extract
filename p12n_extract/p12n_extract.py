@@ -50,6 +50,8 @@ class ProductizationData():
         except Exception as e:
             print 'Error reading config/shipping_locales.json', e
 
+        self.data_folder = os.path.join(script_config_folder, os.pardir, 'data')
+
         # Initialize images with a default one
         self.images_list = [
             'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34A'
@@ -591,7 +593,7 @@ class ProductizationData():
                             # search.order and default
                             tmp_data = self.data['locales'][
                                 locale][product][channel]['p12n']
-                            if '/common/region.properties' in region_file:
+                            if 'common' in region_file:
                                 tmp_data[
                                     'defaultenginename'] = default_engine_name
                                 tmp_data['searchorder'] = search_order
@@ -628,23 +630,22 @@ class ProductizationData():
 
         try:
             # Analyze en-US searchplugins first
-            base = os.path.join(channel_data['source_path'], 'COMMUN')
+            channel_folder = 'central' if requested_channel == 'trunk' else requested_channel
+            base = os.path.join(self.data_folder, channel_folder)
             search_path_enUS = {
                 'sp': {
-                    'browser': os.path.join(base, 'browser', 'locales', 'en-US', 'en-US', 'searchplugins'),
-                    'mobile': os.path.join(base, 'mobile', 'locales', 'en-US', 'en-US', 'searchplugins'),
-                    'mail': os.path.join(base, 'mail', 'locales', 'en-US', 'en-US', 'searchplugins'),
-                    'suite': os.path.join(base, 'suite', 'locales', 'en-US', 'en-US', 'searchplugins')
+                    'browser': os.path.join(base, 'browser', 'searchplugins'),
+                    'mobile': os.path.join(base, 'mobile', 'searchplugins'),
+                    'mail': os.path.join(base, 'mail', 'searchplugins'),
+                    'suite': os.path.join(base, 'suite', 'searchplugins')
                 },
                 'p12n': {
-                    'browser': [os.path.join(base, 'browser', 'locales', 'en-US', 'en-US', 'chrome', 'browser-region', 'region.properties')],
-                    'mobile': [os.path.join(base, 'mobile', 'locales', 'en-US', 'en-US', 'chrome', 'region.properties')],
-                    'mail': [os.path.join(base, 'mail', 'locales', 'en-US', 'en-US', 'chrome', 'messenger-region', 'region.properties')],
+                    'browser': [os.path.join(base, 'browser', 'browser-region', 'region.properties')],
+                    'mobile': [os.path.join(base, 'mobile', 'browser-region', 'region.properties')],
+                    'mail': [os.path.join(base, 'mail', 'browser-region', 'region.properties')],
                     'suite': [
-                        os.path.join(base, 'suite', 'locales', 'en-US',
-                                     'en-US', 'chrome', 'browser', 'region.properties'),
-                        os.path.join(base, 'suite', 'locales', 'en-US',
-                                     'en-US', 'chrome', 'common', 'region.properties')
+                        os.path.join(base, 'suite', 'browser-region', 'region-browser.properties'),
+                        os.path.join(base, 'suite', 'browser-region', 'region-common.properties')
                     ]
                 }
             }
@@ -658,13 +659,12 @@ class ProductizationData():
                     # Define path to centralized list.json
                     path_centralized = ''
                     path_shared = path_enUS
-                    if product in ['browser', 'mobile']:
-                        repo_folder = 'mozilla-central' if requested_channel == 'trunk' else 'mozilla-{0}'.format(
-                            requested_channel)
+                    if product in ['browser', 'mail', 'mobile']:
+                        channel_folder = 'central' if requested_channel == 'trunk' else requested_channel
                         path_centralized = os.path.join(
-                            channel_data['source_path'], repo_folder, product, 'locales', 'search', 'list.json')
+                            self.data_folder, channel_folder, product, 'search', 'list.json')
                         path_shared = os.path.join(
-                            channel_data['source_path'], repo_folder, product, 'locales', 'searchplugins')
+                            self.data_folder, channel_folder, product, 'searchplugins')
                         if not os.path.isdir(path_shared):
                             # If the folder doesn't exist, fall back to en-US as source
                             # for shared searchplugins. This is needed while the
@@ -672,11 +672,6 @@ class ProductizationData():
                             self.activity_log(
                                 product, requested_channel, 'Folder for shared searchplugins doesn\'t exist: {0}'.format(path_shared))
                             path_shared = path_enUS
-                    elif product == 'mail':
-                        repo_folder = 'comm-central' if requested_channel == 'trunk' else 'comm-{0}'.format(
-                            requested_channel)
-                        path_centralized = os.path.join(
-                            channel_data['source_path'], repo_folder, 'mail', 'locales', 'search', 'list.json')
 
                     self.extract_shared(
                         path_shared, product, requested_channel)
@@ -822,8 +817,7 @@ def main():
                 channel)
             channel_data = {
                 'l10n_path': os.path.join(local_hg, '{0}_L10N'.format(channel.upper())),
-                'locales_file': os.path.join(config_files, source_name),
-                'source_path': os.path.join(local_hg, '{0}_EN-US'.format(channel.upper()))
+                'locales_file': os.path.join(config_files, source_name)
             }
             p12n.extract_p12n_channel(
                 args.product, channel_data, channel, args.noproductization)
