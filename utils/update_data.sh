@@ -20,7 +20,7 @@ function echoyellow() {
 
 if [ $# -lt 1 ]
   then
-    red "ERROR: no arguments supplied."
+    echored "ERROR: no arguments supplied."
     echo "Usage: update_data.sh *path-to-mozilla-unified*"
     exit 1
 fi
@@ -36,7 +36,6 @@ then
     exit 1
 fi
 
-# Copy mozilla-* settings
 branches+=( central beta release )
 for branch in "${branches[@]}"
 do
@@ -44,12 +43,16 @@ do
     hg -R $unified_path update $branch
     base_folder="${data_folder}/${branch}"
 
-    # Copy browser settings
-    if [ ! -d "${base_folder}/browser" ]
-    then
-        echo "Creating folder: ${base_folder}/browser"
-        mkdir -p "${base_folder}/browser"
-    fi
+    # Firefox (/browser)
+    folders=( browser-region search searchplugins )
+    for folder in "${folders[@]}"
+    do
+        if [ ! -d "${base_folder}/browser/${folder}" ]
+        then
+            echo "Creating missing folder: ${base_folder}/browser/${folder}"
+            mkdir -p "${base_folder}/browser/${folder}"
+        fi
+    done
     echo "Copying browser/search"
     cp -r "${unified_path}/browser/locales/search" "${base_folder}/browser"
     echo "Copying browser/searchplugins"
@@ -57,21 +60,74 @@ do
     echo "Copying region.properties"
     cp -r "${unified_path}/browser/locales/en-US/chrome/browser-region" "${base_folder}/browser"
 
-    # Copy mobile settings
-    if [ ! -d "${base_folder}/mobile" ]
+    # Fennec (/mobile)
+    folders=( browser-region search searchplugins )
+    for folder in "${folders[@]}"
+    do
+        if [ ! -d "${base_folder}/mobile/${folder}" ]
+        then
+            echo "Creating missing folder: ${base_folder}/mobile/${folder}"
+            mkdir -p "${base_folder}/mobile/${folder}"
+        fi
+    done
+
+    # Mobile is still in the middle of moving to centralized searchplugins for
+    # all branches. Need to copy en-US searchplugins is /search is missing
+    if [ ! -d "${unified_path}/mobile/locales/search" ]
     then
-        echo "Creating folder: ${base_folder}/mobile"
-        mkdir -p "${base_folder}/mobile"
-    fi
-    echo "Copying mobile/search"
-    cp -r "${unified_path}/mobile/locales/search" "${base_folder}/mobile"
-    echo "Copying mobile/searchplugins"
-    cp -r "${unified_path}/mobile/locales/searchplugins" "${base_folder}/mobile"
-    if [ ! -d "$base_folder/mobile/browser-region" ]
-    then
-        echo "Creating folder: $base_folder/mobile/browser-region"
-        mkdir -p "$base_folder/mobile/browser-region"
+        echo "Copying mobile/en-US/searchplugins"
+        cp -r "${unified_path}/mobile/locales/en-US/searchplugins" "${base_folder}/mobile"
+    else
+        echo "Copying mobile/search"
+        cp -r "${unified_path}/mobile/locales/search" "${base_folder}/mobile"
+        echo "Copying mobile/searchplugins"
+        cp -r "${unified_path}/mobile/locales/searchplugins" "${base_folder}/mobile"
     fi
     echo "Copying region.properties"
-    cp -r "${unified_path}/mobile/locales/en-US/chrome/region.properties" "${base_folder}/mobile/browser-region/"
+    cp "${unified_path}/mobile/locales/en-US/chrome/region.properties" "${base_folder}/mobile/browser-region/"
+
+    # Download comm-central settings
+    if [ "${branch}" == "central" ]
+    then
+        base_url="https://hg.mozilla.org/comm-central/raw-file/default"
+    else
+        base_url="https://hg.mozilla.org/releases/comm-${branch}/raw-file/default"
+    fi
+
+    # Thunderbird (/mail)
+    folders=( browser-region search searchplugins )
+    for folder in "${folders[@]}"
+    do
+        if [ ! -d "${base_folder}/mail/${folder}" ]
+        then
+            echo "Creating missing folder: ${base_folder}/mail/${folder}"
+            mkdir -p "${base_folder}/mail/${folder}"
+        fi
+    done
+    wget -q "${base_url}/mail/locales/en-US/chrome/messenger-region/region.properties" -O "${base_folder}/mail/browser-region/region.properties"
+    wget -q "${base_url}/mail/locales/search/list.json" -O "${base_folder}/mail/search/list.json"
+    searchplugins=( amazondotcom aol-web-search bing google twitter wikipedia yahoo )
+    for sp in "${searchplugins[@]}"
+    do
+        wget -q "${base_url}/mail/locales/en-US/searchplugins/${sp}.xml" -O "${base_folder}/mail/searchplugins/${sp}.xml"
+    done
+
+    # SeaMonkey
+    folders=( browser-region searchplugins )
+    for folder in "${folders[@]}"
+    do
+        if [ ! -d "${base_folder}/suite/${folder}" ]
+        then
+            echo "Creating missing folder: ${base_folder}/suite/${folder}"
+            mkdir -p "${base_folder}/suite/${folder}"
+        fi
+    done
+    wget -q "${base_url}/suite/locales/en-US/chrome/common/region.properties" -O "${base_folder}/suite/browser-region/region-common.properties"
+    wget -q "${base_url}/suite/locales/en-US/chrome/browser/region.properties" -O "${base_folder}/suite/browser-region/region-browser.properties"
+    wget -q "${base_url}/suite/locales/en-US/searchplugins/list.txt" -O "${base_folder}/suite/searchplugins/list.txt"
+    searchplugins=( duckduckgo google wikipedia yahoo )
+    for sp in "${searchplugins[@]}"
+    do
+        wget -q "${base_url}/suite/locales/en-US/searchplugins/${sp}.xml" -O "${base_folder}/suite/searchplugins/${sp}.xml"
+    done
 done
