@@ -593,7 +593,7 @@ class ProductizationData():
                             # search.order and default
                             tmp_data = self.data['locales'][
                                 locale][product][channel]['p12n']
-                            if '/common/region.properties' in region_file:
+                            if 'common' in region_file:
                                 tmp_data[
                                     'defaultenginename'] = default_engine_name
                                 tmp_data['searchorder'] = search_order
