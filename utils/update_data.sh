@@ -42,13 +42,13 @@ for branch in "${branches[@]}"
 do
     echo "Updating mozilla-unified to bookmark ${branch}"
     hg -R $unified_path update $branch
-    base_folder="${data_folder}/mozilla-${branch}"
+    base_folder="${data_folder}/${branch}"
 
     # Copy browser settings
-    if [ ! -d "$base_folder/browser" ]
+    if [ ! -d "${base_folder}/browser" ]
     then
-        echo "Creating folder: $base_folder/browser"
-        mkdir -p "$base_folder/browser"
+        echo "Creating folder: ${base_folder}/browser"
+        mkdir -p "${base_folder}/browser"
     fi
     echo "Copying browser/search"
     cp -r "${unified_path}/browser/locales/search" "${base_folder}/browser"
@@ -58,10 +58,10 @@ do
     cp -r "${unified_path}/browser/locales/en-US/chrome/browser-region" "${base_folder}/browser"
 
     # Copy mobile settings
-    if [ ! -d "$base_folder/mobile" ]
+    if [ ! -d "${base_folder}/mobile" ]
     then
-        echo "Creating folder: $base_folder/mobile"
-        mkdir -p "$base_folder/mobile"
+        echo "Creating folder: ${base_folder}/mobile"
+        mkdir -p "${base_folder}/mobile"
     fi
     echo "Copying mobile/search"
     cp -r "${unified_path}/mobile/locales/search" "${base_folder}/mobile"
