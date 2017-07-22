@@ -62,14 +62,19 @@ foreach ($errors_data['locales'] as $locale_id => $locale_data) {
             foreach($product_data as $channel_id => $channel_data) {
                 // Check only if is a channel I care about
                 if (isset($channels[$channel_id])) {
-                    $output .= "<h2>{$locale_id}</h2>\n" .
-                               "<p>There are errors in {$products[$product_id]} ({$channels[$channel_id]} channel):</p>\n<ul>\n";
                     foreach ($channel_data as $type => $error_group) {
-                        foreach ($error_group as $error_message) {
-                            $output .= "  <li><strong>{$type}</strong>: {$error_message}</li>\n";
+                        // Only email for errors
+                        if (strpos($type, 'error') !== false) {
+                            if ($output == '') {
+                                $output .= "<h2>{$locale_id}</h2>\n" .
+                                           "<p>There are errors in {$products[$product_id]} ({$channels[$channel_id]} channel):</p>\n<ul>\n";
+                            }
+                            foreach ($error_group as $error_message) {
+                                $output .= "  <li><strong>{$type}</strong>: {$error_message}</li>\n";
+                            }
+                            $output .= "</ul>\n";
                         }
                     }
-                    $output .= "</ul>\n";
                 }
             }
         }
