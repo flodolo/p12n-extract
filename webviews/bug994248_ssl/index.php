@@ -89,7 +89,7 @@
         'mail'    => 'Thunderbird',
     ];
 
-    $channel = 'central';
+    $channel = 'trunk';
     if (isset($_REQUEST['channel'])) {
         if (isset($channels[$_REQUEST['channel']])) {
             $channel = $_REQUEST['channel'];
@@ -200,9 +200,6 @@
                                 }
                             }
                         }
-                    } else {
-                        $html_output .= "<p class='red'>webcal handler is missing</p>";
-                        $html_errors .= "<li>{$locale} - {$product}: webcal handler is missing</li>";
                     }
 
                     if (isset($p12n_data['feedhandlers'])) {

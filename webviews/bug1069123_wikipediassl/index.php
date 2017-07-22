@@ -90,7 +90,7 @@
         'mail'    => 'Thunderbird',
     ];
 
-    $channel = 'central';
+    $channel = 'trunk';
     if (isset($_REQUEST['channel'])) {
         if (isset($channels[$_REQUEST['channel']])) {
             $channel = $_REQUEST['channel'];

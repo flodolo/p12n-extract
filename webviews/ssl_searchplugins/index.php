@@ -99,7 +99,7 @@
         }
     }
 
-    $requested_channel = 'central';
+    $requested_channel = 'trunk';
     if (isset($_REQUEST['channel'])) {
         if (isset($channels[$_REQUEST['channel']])) {
             $requested_channel = $_REQUEST['channel'];

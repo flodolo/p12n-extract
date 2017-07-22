@@ -88,7 +88,7 @@
             $requested_channel = $_REQUEST['channel'];
         }
     } else {
-        $requested_channel = 'central';
+        $requested_channel = 'trunk';
     }
 
     $html_output = "<h1>Images for $products[$requested_product] ($channels[$requested_channel])</h1>";
