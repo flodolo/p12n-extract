@@ -27,6 +27,7 @@ fi
 
 # Get absolute path to /data folder from script relative path
 cd $PWD/$(dirname "$0")/..
+root_folder=$PWD
 data_folder=$PWD/data
 unified_path=$1
 
@@ -36,7 +37,7 @@ then
     exit 1
 fi
 
-branches+=( central beta release )
+branches+=(  )
 for branch in "${branches[@]}"
 do
     echo "Updating mozilla-unified to bookmark ${branch}"
@@ -131,3 +132,6 @@ do
         wget -q "${base_url}/suite/locales/en-US/searchplugins/${sp}.xml" -O "${base_folder}/suite/searchplugins/${sp}.xml"
     done
 done
+
+echo "Updating locales..."
+${root_folder}/utils/update_locales.py
