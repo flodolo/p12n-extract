@@ -37,7 +37,7 @@ then
     exit 1
 fi
 
-branches+=(  )
+branches+=( release beta central )
 for branch in "${branches[@]}"
 do
     echo "Updating mozilla-unified to bookmark ${branch}"
