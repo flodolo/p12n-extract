@@ -88,7 +88,7 @@ def main():
     print "Storing JSON file in /config"
     file_name = os.path.join(config_folder, 'shipping_locales.json')
     f = open(file_name, 'w')
-    f.write(json.dumps(supported_locales))
+    f.write(json.dumps(supported_locales, indent=4, sort_keys=True))
     f.close()
 
 
