@@ -649,8 +649,6 @@ class ProductizationData():
                     ]
                 }
             }
-            locales_list = open(
-                channel_data['locales_file'], 'r').read().splitlines()
             for product in ['browser', 'mobile', 'mail', 'suite']:
                 if requested_product in ['all', product]:
                     # Analyze en-US first
@@ -703,7 +701,7 @@ class ProductizationData():
                                 path, product, 'en-US', requested_channel)
 
                     # Analyze all other locales for this product
-                    for locale in locales_list:
+                    for locale in self.shipping_locales[product][requested_channel]:
                         base = os.path.join(channel_data['l10n_path'], locale)
                         search_path_l10n = {
                             'sp': {
@@ -811,16 +809,17 @@ def main():
     if args.verbose:
         p12n.set_verbose_mode()
 
-    for channel in ['release', 'beta', 'trunk']:
-        if args.branch in ['all', channel]:
-            source_name = 'central.txt' if channel == 'trunk' else '{0}.txt'.format(
-                channel)
-            channel_data = {
-                'l10n_path': os.path.join(local_hg, '{0}_L10N'.format(channel.upper())),
-                'locales_file': os.path.join(config_files, source_name)
-            }
-            p12n.extract_p12n_channel(
-                args.product, channel_data, channel, args.noproductization)
+    if args.branch == 'all':
+        channels = ['release', 'beta', 'trunk']
+    else:
+        channels = [args.branch]
+
+    for channel in channels:
+        channel_data = {
+            'l10n_path': os.path.join(local_hg, 'gecko_strings')
+        }
+        p12n.extract_p12n_channel(
+            args.product, channel_data, channel, args.noproductization)
     p12n.output_data(args.pretty)
 
 
