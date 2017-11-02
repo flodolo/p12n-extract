@@ -9,49 +9,49 @@ def main():
     update_sources = {
         'browser': {
             'trunk': [
-                'http://hg.mozilla.org/mozilla-central/raw-file/default/browser/locales/all-locales'
+                'https://hg.mozilla.org/mozilla-central/raw-file/default/browser/locales/all-locales'
             ],
             'beta': [
-                'http://hg.mozilla.org/releases/mozilla-beta/raw-file/default/browser/locales/shipped-locales'
+                'https://hg.mozilla.org/releases/mozilla-beta/raw-file/default/browser/locales/shipped-locales'
             ],
             'release': [
-                'http://hg.mozilla.org/releases/mozilla-release/raw-file/default/browser/locales/shipped-locales'
+                'https://hg.mozilla.org/releases/mozilla-release/raw-file/default/browser/locales/shipped-locales'
             ]
         },
         'mail': {
             'trunk': [
-                'http://hg.mozilla.org/comm-central/raw-file/default/mail/locales/all-locales'
+                'https://hg.mozilla.org/comm-central/raw-file/default/mail/locales/all-locales'
             ],
             'beta': [
-                'http://hg.mozilla.org/releases/comm-beta/raw-file/default/mail/locales/shipped-locales'
+                'https://hg.mozilla.org/releases/comm-beta/raw-file/default/mail/locales/shipped-locales'
             ],
             'release': [
-                'http://hg.mozilla.org/releases/comm-release/raw-file/default/mail/locales/shipped-locales'
+                'https://hg.mozilla.org/releases/comm-release/raw-file/default/mail/locales/shipped-locales'
             ]
         },
         'mobile': {
             'trunk': [
-                'http://hg.mozilla.org/mozilla-central/raw-file/default/mobile/android/locales/maemo-locales',
-                'http://hg.mozilla.org/mozilla-central/raw-file/default/mobile/android/locales/all-locales'
+                'https://hg.mozilla.org/mozilla-central/raw-file/default/mobile/android/locales/maemo-locales',
+                'https://hg.mozilla.org/mozilla-central/raw-file/default/mobile/android/locales/all-locales'
             ],
             'beta': [
-                'http://hg.mozilla.org/releases/mozilla-beta/raw-file/default/mobile/android/locales/maemo-locales',
-                'http://hg.mozilla.org/releases/mozilla-beta/raw-file/default/mobile/android/locales/all-locales'
+                'https://hg.mozilla.org/releases/mozilla-beta/raw-file/default/mobile/android/locales/maemo-locales',
+                'https://hg.mozilla.org/releases/mozilla-beta/raw-file/default/mobile/android/locales/all-locales'
             ],
             'release': [
-                'http://hg.mozilla.org/releases/mozilla-release/raw-file/default/mobile/android/locales/maemo-locales',
-                'http://hg.mozilla.org/releases/mozilla-release/raw-file/default/mobile/android/locales/all-locales'
+                'https://hg.mozilla.org/releases/mozilla-release/raw-file/default/mobile/android/locales/maemo-locales',
+                'https://hg.mozilla.org/releases/mozilla-release/raw-file/default/mobile/android/locales/all-locales'
             ]
         },
         'suite': {
             'trunk': [
-                'http://hg.mozilla.org/comm-central/raw-file/default/suite/locales/all-locales'
+                'https://hg.mozilla.org/comm-central/raw-file/default/suite/locales/all-locales'
             ],
             'beta': [
-                'http://hg.mozilla.org/releases/comm-beta/raw-file/default/suite/locales/shipped-locales'
+                'https://hg.mozilla.org/releases/comm-beta/raw-file/default/suite/locales/shipped-locales'
             ],
             'release': [
-                'http://hg.mozilla.org/releases/comm-release/raw-file/default/suite/locales/shipped-locales'
+                'https://hg.mozilla.org/releases/comm-release/raw-file/default/suite/locales/shipped-locales'
             ]
         },
     }
