@@ -56,6 +56,8 @@ do
     done
     echo "Copying browser/search"
     cp -r "${unified_path}/browser/locales/search" "${base_folder}/browser"
+    echo "Removing existing browser/searchplugins folder"
+    rm -r "${base_folder}/browser/searchplugins"
     echo "Copying browser/searchplugins"
     cp -r "${unified_path}/browser/locales/searchplugins" "${base_folder}/browser"
     echo "Copying region.properties"
@@ -72,18 +74,13 @@ do
         fi
     done
 
-    # Mobile is still in the middle of moving to centralized searchplugins for
-    # all branches. Need to copy en-US searchplugins is /search is missing
-    if [ ! -d "${unified_path}/mobile/locales/search" ]
-    then
-        echo "Copying mobile/en-US/searchplugins"
-        cp -r "${unified_path}/mobile/locales/en-US/searchplugins" "${base_folder}/mobile"
-    else
-        echo "Copying mobile/search"
-        cp -r "${unified_path}/mobile/locales/search" "${base_folder}/mobile"
-        echo "Copying mobile/searchplugins"
-        cp -r "${unified_path}/mobile/locales/searchplugins" "${base_folder}/mobile"
-    fi
+    # Fennec (/mobile)
+    echo "Copying mobile/search"
+    cp -r "${unified_path}/mobile/locales/search" "${base_folder}/mobile"
+    echo "Removing existing mobile/searchplugins folder"
+    rm -r "${base_folder}/mobile/searchplugins"
+    echo "Copying mobile/searchplugins"
+    cp -r "${unified_path}/mobile/locales/searchplugins" "${base_folder}/mobile"
     echo "Copying region.properties"
     cp "${unified_path}/mobile/locales/en-US/chrome/region.properties" "${base_folder}/mobile/browser-region/"
 
