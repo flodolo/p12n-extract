@@ -320,9 +320,9 @@ class TestSearchpluginAnalysis(unittest.TestCase):
             '', search_path, 'browser', 'bb', 'release')
 
         # Extract p12n data
-        search_path = os.path.join(self.files_path, 'bb', 'region.properties')
+        region_path = os.path.join(self.files_path, 'bb', 'region.properties')
         self.p12n.extract_productization_product(
-            search_path, 'browser', 'bb', 'release')
+            '', region_path, 'browser', 'bb', 'release')
 
         # Check searchplugin data
         single_record = self.p12n.data['locales'][
@@ -378,6 +378,27 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         self.assertEqual(
             single_record['region.properties'], '97f6db5f07a911cc9b0969c5b8cf3114')
 
+    def testDefaultSearchEngine(self):
+        centralized_source = os.path.join(self.files_path, 'list.json')
+
+        # Default engine name coming from default
+        self.p12n.data['locales']['aa']['browser']['release']['searchplugins'] = {};
+        self.p12n.extract_productization_product(
+            centralized_source, '', 'browser', 'aa', 'release')
+        self.assertEqual(self.p12n.data['locales']['aa']['browser']['release']['p12n']['defaultenginename'], 'Google')
+
+        # Default engine name coming from locale
+        self.p12n.data['locales']['it']['browser']['release']['searchplugins'] = {};
+        self.p12n.extract_productization_product(
+            centralized_source, '', 'browser', 'it', 'release')
+        self.assertEqual(self.p12n.data['locales']['it']['browser']['release']['p12n']['defaultenginename'], 'Yahoo')
+
+        # Default engine name coming from region in locale
+        self.p12n.data['locales']['zh-CN']['browser']['release']['searchplugins'] = {};
+        self.p12n.extract_productization_product(
+            centralized_source, '', 'browser', 'zh-CN', 'release')
+        self.assertEqual(self.p12n.data['locales']['zh-CN']['browser']['release']['p12n']['defaultenginename'].encode('utf-8'), '百度')
+
     def testOutputData(self):
         search_path = os.path.join(self.files_path, 'bb', 'searchplugins')
         self.p12n.shared_searchplugins = {
@@ -391,7 +412,7 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         # Extract p12n data
         search_path = os.path.join(self.files_path, 'bb', 'region.properties')
         self.p12n.extract_productization_product(
-            search_path, 'browser', 'bb', 'release')
+            '', search_path, 'browser', 'bb', 'release')
 
         data_mapping = {
             'errors': self.p12n.errors,
