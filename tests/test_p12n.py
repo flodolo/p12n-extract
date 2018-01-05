@@ -11,7 +11,7 @@ import unittest
 class TestSearchpluginAnalysis(unittest.TestCase):
 
     def setUp(self):
-        nested_dict = lambda: collections.defaultdict(nested_dict)
+        def nested_dict(): return collections.defaultdict(nested_dict)
         self.files_path = os.path.join(os.path.dirname(__file__), 'files')
         self.p12n = p12n_extract.p12n_extract.ProductizationData(
             self.files_path, self.files_path)
@@ -382,40 +382,48 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         centralized_source = os.path.join(self.files_path, 'list.json')
 
         # Default engine name coming from default
-        self.p12n.data['locales']['aa']['browser']['release']['searchplugins'] = {};
+        self.p12n.data['locales']['aa']['browser']['release']['searchplugins'] = {}
         self.p12n.extract_productization_product(
             centralized_source, '', 'browser', 'aa', 'release')
-        self.assertEqual(self.p12n.data['locales']['aa']['browser']['release']['p12n']['defaultenginename'], 'Google')
+        self.assertEqual(self.p12n.data['locales']['aa']['browser']
+                         ['release']['p12n']['defaultenginename'], 'Google')
 
         # Default engine name coming from locale
-        self.p12n.data['locales']['it']['browser']['release']['searchplugins'] = {};
+        self.p12n.data['locales']['it']['browser']['release']['searchplugins'] = {}
         self.p12n.extract_productization_product(
             centralized_source, '', 'browser', 'it', 'release')
-        self.assertEqual(self.p12n.data['locales']['it']['browser']['release']['p12n']['defaultenginename'], 'Yahoo')
+        self.assertEqual(self.p12n.data['locales']['it']['browser']
+                         ['release']['p12n']['defaultenginename'], 'Yahoo')
 
         # Default engine name coming from region in locale
-        self.p12n.data['locales']['zh-CN']['browser']['release']['searchplugins'] = {};
+        self.p12n.data['locales']['zh-CN']['browser']['release']['searchplugins'] = {}
         self.p12n.extract_productization_product(
             centralized_source, '', 'browser', 'zh-CN', 'release')
-        self.assertEqual(self.p12n.data['locales']['zh-CN']['browser']['release']['p12n']['defaultenginename'].encode('utf-8'), '百度')
+        self.assertEqual(self.p12n.data['locales']['zh-CN']['browser']
+                         ['release']['p12n']['defaultenginename'].encode('utf-8'), '百度')
 
     def testSearchOrder(self):
         centralized_source = os.path.join(self.files_path, 'list.json')
 
         # Search order coming from default
-        self.p12n.data['locales']['aa']['browser']['release']['searchplugins'] = {};
+        self.p12n.data['locales']['aa']['browser']['release']['searchplugins'] = {}
         self.p12n.extract_productization_product(
             centralized_source, '', 'browser', 'aa', 'release')
-        self.assertEqual(self.p12n.data['locales']['aa']['browser']['release']['p12n']['searchorder']['1'], 'Google')
-        self.assertEqual(self.p12n.data['locales']['aa']['browser']['release']['p12n']['searchorder']['2'], 'Yahoo')
-        self.assertEqual(self.p12n.data['locales']['aa']['browser']['release']['p12n']['searchorder']['3'], 'Bing')
+        self.assertEqual(self.p12n.data['locales']['aa']['browser']
+                         ['release']['p12n']['searchorder']['1'], 'Google')
+        self.assertEqual(self.p12n.data['locales']['aa']['browser']
+                         ['release']['p12n']['searchorder']['2'], 'Yahoo')
+        self.assertEqual(self.p12n.data['locales']['aa']['browser']
+                         ['release']['p12n']['searchorder']['3'], 'Bing')
 
         # Search order coming from locale
-        self.p12n.data['locales']['it']['browser']['release']['searchplugins'] = {};
+        self.p12n.data['locales']['it']['browser']['release']['searchplugins'] = {}
         self.p12n.extract_productization_product(
             centralized_source, '', 'browser', 'it', 'release')
-        self.assertEqual(self.p12n.data['locales']['it']['browser']['release']['p12n']['searchorder']['1'], 'Yahoo')
-        self.assertEqual(self.p12n.data['locales']['it']['browser']['release']['p12n']['searchorder']['2'], 'Bing')
+        self.assertEqual(self.p12n.data['locales']['it']['browser']
+                         ['release']['p12n']['searchorder']['1'], 'Yahoo')
+        self.assertEqual(self.p12n.data['locales']['it']['browser']
+                         ['release']['p12n']['searchorder']['2'], 'Bing')
 
     def testOutputData(self):
         search_path = os.path.join(self.files_path, 'bb', 'searchplugins')

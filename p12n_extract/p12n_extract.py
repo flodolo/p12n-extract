@@ -55,7 +55,7 @@ class ProductizationData():
         # Create a dictionary that auto-generates keys when trying to set a
         # a value for a key that doesn't exist (no need to check for its
         # existence)
-        nested_dict = lambda: collections.defaultdict(nested_dict)
+        def nested_dict(): return collections.defaultdict(nested_dict)
 
         # Data storage
         self.data = nested_dict()
@@ -80,7 +80,8 @@ class ProductizationData():
             print('Error reading config/shipping_locales.json')
             print(e)
 
-        self.data_folder = os.path.join(script_config_folder, os.pardir, 'data')
+        self.data_folder = os.path.join(
+            script_config_folder, os.pardir, 'data')
 
         # Initialize images with a default one
         self.images_list = [
@@ -127,7 +128,8 @@ class ProductizationData():
                     self.shared_searchplugins[product][
                         channel] = [searchplugin_noext]
         except Exception as e:
-            print('Error: problem reading list of shared searchplugins from {}'.format(path))
+            print(
+                'Error: problem reading list of shared searchplugins from {}'.format(path))
             print(e)
 
     def extract_defaults(self, centralized_source, product, channel):
@@ -454,7 +456,8 @@ class ProductizationData():
         # Extract p12n information from region.properties
         errors = []
         warnings = []
-        nested_dict = lambda: collections.defaultdict(nested_dict)
+
+        def nested_dict(): return collections.defaultdict(nested_dict)
 
         try:
             available_searchplugins = []
@@ -494,7 +497,8 @@ class ProductizationData():
                             default_engine_name = locale_data['default']['searchDefault']
 
                         # As a last resort, use region override
-                        locale_region = self.region_mappings.get(locale, locale.upper())
+                        locale_region = self.region_mappings.get(
+                            locale, locale.upper())
                         if locale_region in locale_data and 'searchDefault' in locale_data[locale_region]:
                             default_engine_name = locale_data[locale_region]['searchDefault']
 
@@ -513,7 +517,8 @@ class ProductizationData():
                         search_order_list = []
                         if 'searchOrder' in centralized_json['default']:
                             # 1st is always the default search engine
-                            search_order_list.append(centralized_json['default']['searchDefault'])
+                            search_order_list.append(
+                                centralized_json['default']['searchDefault'])
                             # Add other search engines
                             for engine_name in centralized_json['default']['searchOrder']:
                                 search_order_list.append(engine_name)
@@ -585,7 +590,8 @@ class ProductizationData():
                             property_name = 'browser.search.defaultenginename'
                             if key.startswith(property_name):
                                 if central_default:
-                                    warnings.append('{} is obsolete'.format(key))
+                                    warnings.append(
+                                        '{} is obsolete'.format(key))
                                 else:
                                     line_ok = True
                                     default_engine_name = settings[property_name]
@@ -598,7 +604,8 @@ class ProductizationData():
                             # browser.search.order.1=Google
                             if key.startswith('browser.search.order.'):
                                 if central_default:
-                                    warnings.append('{} is obsolete'.format(key))
+                                    warnings.append(
+                                        '{} is obsolete'.format(key))
                                 else:
                                     line_ok = True
                                     search_order[key[-1:]] = value
@@ -676,7 +683,8 @@ class ProductizationData():
                                 warnings.append(
                                     'unknown key in region.properties <code>{}={}</code>'.format(key, value))
                     except Exception as e:
-                        print('Error extracting data from region.properties (key: {}, {}, {}, {})'.format(key, locale, product, channel))
+                        print('Error extracting data from region.properties (key: {}, {}, {}, {})'.format(
+                            key, locale, product, channel))
                         print(available_searchplugins)
                         print(key)
                         print(e)
@@ -728,7 +736,8 @@ class ProductizationData():
                 self.errors['locales'][locale][product][
                     channel]['p12n_warnings'] = warnings
         except Exception as e:
-            print('[{}] No searchplugins available for this locale ({})'.format(product, locale))
+            print('[{}] No searchplugins available for this locale ({})'.format(
+                product, locale))
             print(e)
 
     def extract_p12n_channel(self, requested_product, channel_data, requested_channel, check_p12n):
@@ -750,8 +759,10 @@ class ProductizationData():
                     'mobile': [os.path.join(base, 'mobile', 'browser-region', 'region.properties')],
                     'mail': [os.path.join(base, 'mail', 'browser-region', 'region.properties')],
                     'suite': [
-                        os.path.join(base, 'suite', 'browser-region', 'region-browser.properties'),
-                        os.path.join(base, 'suite', 'browser-region', 'region-common.properties')
+                        os.path.join(base, 'suite', 'browser-region',
+                                     'region-browser.properties'),
+                        os.path.join(base, 'suite', 'browser-region',
+                                     'region-common.properties')
                     ]
                 }
             }
