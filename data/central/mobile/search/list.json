@@ -1,5 +1,7 @@
 {
   "default": {
+    "searchDefault": "Google",
+    "searchOrder": ["Yahoo", "Bing"],
     "visibleDefaultEngines": [
       "google", "bing", "amazondotcom", "ddg", "twitter", "wikipedia"
     ]
@@ -57,6 +59,18 @@
         "visibleDefaultEngines": [
           "google", "bing", "ddg", "wikipedia-be", "yandex.by"
         ]
+      },
+      "BY": {
+        "searchDefault": "Яндекс"
+      },
+      "KZ": {
+        "searchDefault": "Яндекс"
+      },
+      "RU": {
+        "searchDefault": "Яндекс"
+      },
+      "TR": {
+        "searchDefault": "Яндекс"
       }
     },
     "bg": {
@@ -117,6 +131,7 @@
     },
     "cy": {
       "default": {
+        "searchOrder": ["Yahoo.co.uk"],
         "visibleDefaultEngines": [
           "google", "bing", "amazon-co-uk", "ddg", "wikipedia-cy"
         ]
@@ -152,6 +167,7 @@
     },
     "en-GB": {
       "default": {
+        "searchOrder": ["Yahoo.co.uk"],
         "visibleDefaultEngines": [
           "google", "bing", "amazon-co-uk", "ddg", "qwant", "twitter", "wikipedia"
         ]
@@ -289,6 +305,7 @@
     },
     "gd": {
       "default": {
+        "searchOrder": ["Yahoo.co.uk"],
         "visibleDefaultEngines": [
           "google", "bing", "ddg", "faclair-beag", "wikipedia-gd"
         ]
@@ -411,6 +428,18 @@
         "visibleDefaultEngines": [
           "yandex", "google", "bing", "twitter", "wikipedia-kk"
         ]
+      },
+      "KZ": {
+        "searchDefault": "Яндекс"
+      },
+      "BY": {
+        "searchDefault": "Яндекс"
+      },
+      "RU": {
+        "searchDefault": "Яндекс"
+      },
+      "TR": {
+        "searchDefault": "Яндекс"
       }
     },
     "km": {
@@ -617,6 +646,18 @@
         "visibleDefaultEngines": [
           "google", "yandex-ru", "twitter", "wikipedia-ru"
         ]
+      },
+      "RU": {
+        "searchDefault": "Яндекс"
+      },
+      "BY": {
+        "searchDefault": "Яндекс"
+      },
+      "KZ": {
+        "searchDefault": "Яндекс"
+      },
+      "TR": {
+        "searchDefault": "Яндекс"
       }
     },
     "sk": {
@@ -694,11 +735,22 @@
         "visibleDefaultEngines": [
           "yandex-tr", "google", "twitter", "wikipedia-tr"
         ]
+      },
+      "TR": {
+        "searchDefault": "Yandex"
+      },
+      "BY": {
+        "searchDefault": "Yandex"
+      },
+      "KZ": {
+        "searchDefault": "Yandex"
+      },
+      "RU": {
+        "searchDefault": "Yandex"
       }
     },
     "trs": {
       "default": {
-        "searchDefault": "Google",
         "visibleDefaultEngines": [
           "amazondotcom", "bing", "google", "twitter", "wikipedia-es"
         ]
@@ -758,6 +810,9 @@
         "visibleDefaultEngines": [
           "google", "baidu", "bing", "taobao", "wikipedia-zh-CN"
         ]
+      },
+      "CN": {
+        "searchDefault": "百度"
       }
     },
     "zh-TW": {

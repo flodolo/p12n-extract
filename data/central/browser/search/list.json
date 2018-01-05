@@ -1,5 +1,7 @@
 {
   "default": {
+    "searchDefault": "Google",
+    "searchOrder": ["Yahoo", "Bing"],
     "visibleDefaultEngines": [
       "google", "amazondotcom", "bing", "ddg", "ebay", "twitter", "wikipedia"
     ]
@@ -107,6 +109,18 @@
         "visibleDefaultEngines": [
           "yandex-by", "google", "ddg", "wikipedia-be", "wikipedia-be-tarask"
         ]
+      },
+      "BY": {
+        "searchDefault": "Яндекс"
+      },
+      "KZ": {
+        "searchDefault": "Яндекс"
+      },
+      "RU": {
+        "searchDefault": "Яндекс"
+      },
+      "TR": {
+        "searchDefault": "Яндекс"
       }
     },
     "bg": {
@@ -167,6 +181,7 @@
     },
     "cs": {
       "default": {
+        "searchOrder": ["Seznam"],
         "visibleDefaultEngines": [
           "google", "seznam-cz", "ddg", "heureka-cz", "mapy-cz", "wikipedia-cz"
         ]
@@ -174,6 +189,7 @@
     },
     "cy": {
       "default": {
+        "searchOrder": ["Yahoo.co.uk"],
         "visibleDefaultEngines": [
           "google", "amazon-en-GB", "ddg", "ebay-uk", "palasprint", "termau", "wikipedia-cy"
         ]
@@ -216,6 +232,7 @@
     },
     "en-GB": {
       "default": {
+        "searchOrder": ["Yahoo.co.uk", "Bing"],
         "visibleDefaultEngines": [
           "google", "bing", "amazon-en-GB", "chambers-en-GB", "ddg", "ebay-uk", "twitter", "wikipedia"
         ]
@@ -241,6 +258,7 @@
       }
     },
     "es-AR": {
+      "searchOrder": ["Yahoo Argentina"],
       "default": {
         "visibleDefaultEngines": [
           "google", "amazondotcom", "drae", "ddg", "mercadolibre-ar", "wikipedia-es"
@@ -275,6 +293,7 @@
     },
     "et": {
       "default": {
+      "searchOrder": ["Neti"],
         "visibleDefaultEngines": [
           "google", "neti-ee", "ddg", "osta-ee", "wikipedia-et", "eki-ee"
         ]
@@ -329,6 +348,7 @@
     },
     "ga-IE": {
       "default": {
+        "searchOrder": ["Yahoo.co.uk"],
         "visibleDefaultEngines": [
           "google", "amazon-en-GB", "ddg", "ebay-ie", "tearma", "twitter", "wikipedia-ga-IE"
         ]
@@ -336,6 +356,7 @@
     },
     "gd": {
       "default": {
+        "searchOrder": ["Yahoo.co.uk"],
         "visibleDefaultEngines": [
           "google", "amazon-en-GB", "bbc-alba", "ddg", "ebay-uk", "faclair-beag", "wikipedia-gd"
         ]
@@ -434,6 +455,7 @@
     },
     "ja-JP-mac": {
       "default": {
+        "searchOrder": ["Yahoo! JAPAN", "Bing", "Amazon.co.jp", "楽天市場", "ヤフオク!", "教えて！goo", "Twitter", "Wikipedia (ja)"],
         "visibleDefaultEngines": [
           "google", "yahoo-jp", "bing", "amazon-jp", "rakuten", "yahoo-jp-auctions", "oshiete-goo", "twitter-ja", "wikipedia-ja", "ddg"
         ]
@@ -441,6 +463,7 @@
     },
     "ja": {
       "default": {
+        "searchOrder": ["Yahoo! JAPAN", "Bing", "Amazon.co.jp", "楽天市場", "ヤフオク!", "教えて！goo", "Twitter", "Wikipedia (ja)"],
         "visibleDefaultEngines": [
           "google", "yahoo-jp", "bing", "amazon-jp", "rakuten", "yahoo-jp-auctions", "oshiete-goo", "twitter-ja", "wikipedia-ja", "ddg"
         ]
@@ -465,6 +488,18 @@
         "visibleDefaultEngines": [
           "yandex-kk", "google", "ddg", "flip", "kaz-kk", "twitter", "wikipedia-kk"
         ]
+      },
+      "KZ": {
+        "searchDefault": "Яндекс"
+      },
+      "BY": {
+        "searchDefault": "Яндекс"
+      },
+      "RU": {
+        "searchDefault": "Яндекс"
+      },
+      "TR": {
+        "searchDefault": "Яндекс"
       }
     },
     "km": {
@@ -664,6 +699,18 @@
         "visibleDefaultEngines": [
           "yandex-ru", "google", "ddg", "ozonru", "priceru", "wikipedia-ru", "mailru"
         ]
+      },
+      "RU": {
+        "searchDefault": "Яндекс"
+      },
+      "BY": {
+        "searchDefault": "Яндекс"
+      },
+      "KZ": {
+        "searchDefault": "Яндекс"
+      },
+      "TR": {
+        "searchDefault": "Яндекс"
       }
     },
     "si": {
@@ -748,6 +795,18 @@
         "visibleDefaultEngines": [
           "yandex-tr", "google", "ddg", "twitter", "wikipedia-tr"
         ]
+      },
+      "TR": {
+        "searchDefault": "Yandex"
+      },
+      "BY": {
+        "searchDefault": "Yandex"
+      },
+      "KZ": {
+        "searchDefault": "Yandex"
+      },
+      "RU": {
+        "searchDefault": "Yandex"
       }
     },
     "uk": {
@@ -797,6 +856,9 @@
         "visibleDefaultEngines": [
           "baidu", "google", "bing", "ddg", "wikipedia-zh-CN", "amazondotcn"
         ]
+      },
+      "CN": {
+        "searchDefault": "百度"
       }
     },
     "zh-TW": {
