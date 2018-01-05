@@ -502,7 +502,7 @@ class ProductizationData():
                             central_default = True
 
                         if default_engine_name not in available_searchplugins:
-                            errors.append(u'{0} is set as default but not available in searchplugins (check if the name is spelled correctly)'.format(
+                            errors.append(u'{} is set as default but not available in searchplugins (check if the name is spelled correctly)'.format(
                                 default_engine_name))
 
                         # Read SEARCH ORDER
@@ -717,7 +717,7 @@ class ProductizationData():
                     self.data['locales'][locale][product][
                         channel]['p12n'] = tmp_data
             except Exception as e:
-                errors.append('problem saving data into JSON from {0} ({1}, {2}, {3})'.format(
+                errors.append('problem saving data into JSON from {} ({}, {}, {})'.format(
                     region_file, locale, product, channel))
 
             # Save errors and warnings
