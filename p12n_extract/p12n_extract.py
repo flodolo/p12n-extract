@@ -520,8 +520,7 @@ class ProductizationData():
                         search_order_list = []
                         if 'searchOrder' in centralized_json['default']:
                             # 1st is always the default search engine
-                            search_order_list.append(
-                                centralized_json['default']['searchDefault'])
+                            search_order_list.append(default_engine_name)
                             # Add other search engines
                             for engine_name in centralized_json['default']['searchOrder']:
                                 search_order_list.append(engine_name)
