@@ -128,8 +128,7 @@ class ProductizationData():
                     self.shared_searchplugins[product][
                         channel] = [searchplugin_noext]
         except Exception as e:
-            print(
-                'Error: problem reading list of shared searchplugins from {}'.format(path))
+            print('Error: problem reading list of shared searchplugins from {}'.format(path))
             print(e)
 
     def extract_defaults(self, centralized_source, product, channel):
@@ -142,6 +141,7 @@ class ProductizationData():
                 self.default_searchplugins[product][channel] = centralized_json[
                     'default']['visibleDefaultEngines']
             except Exception as e:
+                print('Error extracting defaults: {}, {}'.format(product, channel))
                 print(e)
 
     def extract_shared_resource_images(self, images_path, product, channel):
@@ -166,6 +166,7 @@ class ProductizationData():
                     if image not in self.images_list:
                         self.images_list.append(image_data)
             except Exception as e:
+                print('Error extracting shared images: {}, {}'.format(product, channel))
                 print(e)
 
     def extract_searchplugins_product(self, centralized_source, search_path, product, locale, channel):
@@ -195,6 +196,7 @@ class ProductizationData():
                                 warnings.append(
                                     'locale is falling back to default searchplugins')
                     except Exception as e:
+                        print('Error reading centralized source: {}, {}, {}'.format(product, locale, channel))
                         print(e)
                 else:
                     # Read the list of searchplugins from list.txt
@@ -492,22 +494,23 @@ class ProductizationData():
                             default_engine_name = centralized_json['default']['searchDefault']
 
                         # Check if there's a default for the locale
-                        locale_data = centralized_json['locales'][locale]
-                        if 'default' in locale_data and 'searchDefault' in locale_data['default']:
-                            default_engine_name = locale_data['default']['searchDefault']
+                        if locale in centralized_json['locales']:
+                            locale_data = centralized_json['locales'][locale]
+                            if 'default' in locale_data and 'searchDefault' in locale_data['default']:
+                                default_engine_name = locale_data['default']['searchDefault']
 
-                        # As a last resort, use region override
-                        locale_region = self.region_mappings.get(
-                            locale, locale.upper())
-                        if locale_region in locale_data and 'searchDefault' in locale_data[locale_region]:
-                            default_engine_name = locale_data[locale_region]['searchDefault']
+                            # As a last resort, use region override
+                            locale_region = self.region_mappings.get(
+                                locale, locale.upper())
+                            if locale_region in locale_data and 'searchDefault' in locale_data[locale_region]:
+                                default_engine_name = locale_data[locale_region]['searchDefault']
 
                         if default_engine_name != '-':
                             central_default = True
 
-                        if default_engine_name not in available_searchplugins:
-                            errors.append(u'{} is set as default but not available in searchplugins (check if the name is spelled correctly)'.format(
-                                default_engine_name))
+                            if default_engine_name not in available_searchplugins:
+                                errors.append(u'{} is set as default but not available in searchplugins (check if the name is spelled correctly)'.format(
+                                    default_engine_name))
 
                         # Read SEARCH ORDER
                         # If default is defined in list.json, search order is
@@ -524,13 +527,14 @@ class ProductizationData():
                                 search_order_list.append(engine_name)
 
                         # Check if search order is defined for the locale
-                        if 'default' in locale_data and 'searchOrder' in locale_data['default']:
-                            search_order_list = []
-                            # 1st is always the default search engine. Use the value already determined
-                            search_order_list.append(default_engine_name)
-                            # Add other search engines
-                            for engine_name in locale_data['default']['searchOrder']:
-                                search_order_list.append(engine_name)
+                        if locale in centralized_json['locales']:
+                            if 'default' in locale_data and 'searchOrder' in locale_data['default']:
+                                search_order_list = []
+                                # 1st is always the default search engine. Use the value already determined
+                                search_order_list.append(default_engine_name)
+                                # Add other search engines
+                                for engine_name in locale_data['default']['searchOrder']:
+                                    search_order_list.append(engine_name)
 
                         # Store the list
                         i = 1
@@ -541,6 +545,7 @@ class ProductizationData():
                                 errors.append(
                                     '{} is defined in searchorder but not available in searchplugins (check if the name is spelled correctly)'.format(engine_name))
                     except Exception as e:
+                        print('Error reading default and source order from list.json: {}, {}, {}'.format(product, locale, channel))
                         print(e)
 
                 existing_file = os.path.isfile(region_file)
@@ -725,7 +730,7 @@ class ProductizationData():
                     self.data['locales'][locale][product][
                         channel]['p12n'] = tmp_data
             except Exception as e:
-                errors.append('problem saving data into JSON from {} ({}, {}, {})'.format(
+                errors.append('Error saving data into JSON from {} ({}, {}, {})'.format(
                     region_file, locale, product, channel))
 
             # Save errors and warnings
