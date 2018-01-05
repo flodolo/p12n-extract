@@ -594,11 +594,11 @@ class ProductizationData():
                             # browser.search.defaultenginename=Google
                             property_name = 'browser.search.defaultenginename'
                             if key.startswith(property_name):
+                                line_ok = True
                                 if central_default:
                                     warnings.append(
                                         '{} is obsolete'.format(key))
                                 else:
-                                    line_ok = True
                                     default_engine_name = settings[property_name]
                                     if to_unicode(default_engine_name) not in available_searchplugins:
                                         pass
@@ -608,11 +608,11 @@ class ProductizationData():
                             # Search engines order. Example:
                             # browser.search.order.1=Google
                             if key.startswith('browser.search.order.'):
+                                line_ok = True
                                 if central_default:
                                     warnings.append(
                                         '{} is obsolete'.format(key))
                                 else:
-                                    line_ok = True
                                     search_order[key[-1:]] = value
                                     if to_unicode(value) not in available_searchplugins:
                                         if value != '':
