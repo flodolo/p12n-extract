@@ -1,6 +1,7 @@
 {
   "default": {
     "searchDefault": "Google",
+    "searchOrder": ["Yahoo", "Bing"],
     "visibleDefaultEngines": [
       "google", "yahoo", "amazondotcom", "bing", "ddg", "twitter", "wikipedia"
     ]
@@ -22,7 +23,8 @@
     },
     "it": {
       "default": {
-        "searchDefault": "Yahoo"
+        "searchDefault": "Yahoo",
+        "searchOrder": ["Bing"]
       }
     },
     "zh-CN": {

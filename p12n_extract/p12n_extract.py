@@ -482,6 +482,8 @@ class ProductizationData():
                     try:
                         with open(centralized_source) as data_file:
                             centralized_json = json.load(data_file)
+
+                        # Read DEFAULT ENGINE
                         # Start with the generic default
                         if 'searchDefault' in centralized_json['default']:
                             default_engine_name = centralized_json['default']['searchDefault']
@@ -502,6 +504,37 @@ class ProductizationData():
                         if default_engine_name not in available_searchplugins:
                             errors.append(u'{0} is set as default but not available in searchplugins (check if the name is spelled correctly)'.format(
                                 default_engine_name))
+
+                        # Read SEARCH ORDER
+                        # If default is defined in list.json, search order is
+                        # defined too, no need to store another check.
+
+                        # Start with the generic default
+                        search_order_list = []
+                        if 'searchOrder' in centralized_json['default']:
+                            # 1st is always the default search engine
+                            search_order_list.append(centralized_json['default']['searchDefault'])
+                            # Add other search engines
+                            for engine_name in centralized_json['default']['searchOrder']:
+                                search_order_list.append(engine_name)
+
+                        # Check if search order is defined for the locale
+                        if 'default' in locale_data and 'searchOrder' in locale_data['default']:
+                            search_order_list = []
+                            # 1st is always the default search engine. Use the value already determined
+                            search_order_list.append(default_engine_name)
+                            # Add other search engines
+                            for engine_name in locale_data['default']['searchOrder']:
+                                search_order_list.append(engine_name)
+
+                        # Store the list
+                        i = 1
+                        for engine_name in search_order_list:
+                            search_order[str(i)] = engine_name
+                            i += 1
+                            if engine_name not in available_searchplugins:
+                                errors.append(
+                                    '{} is defined in searchorder but not available in searchplugins (check if the name is spelled correctly)'.format(engine_name))
                     except Exception as e:
                         print(e)
 
@@ -551,7 +584,9 @@ class ProductizationData():
                             # browser.search.defaultenginename=Google
                             property_name = 'browser.search.defaultenginename'
                             if key.startswith(property_name):
-                                if not central_default:
+                                if central_default:
+                                    warnings.append('{} is obsolete'.format(key))
+                                else:
                                     line_ok = True
                                     default_engine_name = settings[property_name]
                                     if to_unicode(default_engine_name) not in available_searchplugins:
@@ -562,16 +597,18 @@ class ProductizationData():
                             # Search engines order. Example:
                             # browser.search.order.1=Google
                             if key.startswith('browser.search.order.'):
-                                line_ok = True
-                                search_order[key[-1:]] = value
-                                if to_unicode(value) not in available_searchplugins:
-                                    if value != '':
-                                        pass
-                                        errors.append(
-                                            '{} is defined in searchorder but not available in searchplugins (check if the name is spelled correctly)'.format(value))
-                                    else:
-                                        errors.append(
-                                            '<code>{}</code> is empty'.format(key))
+                                if central_default:
+                                    warnings.append('{} is obsolete'.format(key))
+                                else:
+                                    line_ok = True
+                                    search_order[key[-1:]] = value
+                                    if to_unicode(value) not in available_searchplugins:
+                                        if value != '':
+                                            errors.append(
+                                                '{} is defined in searchorder but not available in searchplugins (check if the name is spelled correctly)'.format(value))
+                                        else:
+                                            errors.append(
+                                                '<code>{}</code> is empty'.format(key))
 
                             # Feed handlers. Example:
                             # browser.contentHandlers.types.0.title=My Yahoo!
