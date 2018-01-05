@@ -507,7 +507,6 @@ class ProductizationData():
 
                         if default_engine_name != '-':
                             central_default = True
-
                             if default_engine_name not in available_searchplugins:
                                 errors.append(u'{} is set as default but not available in searchplugins (check if the name is spelled correctly)'.format(
                                     default_engine_name))
@@ -515,21 +514,24 @@ class ProductizationData():
                         # Read SEARCH ORDER
                         # If default is defined in list.json, search order is
                         # defined too, no need to store another check.
+                        # Ignore searchplugins that are not available in the
+                        # locale
 
                         # Start with the generic default
                         search_order_list = []
                         if 'searchOrder' in centralized_json['default']:
                             # 1st is always the default search engine
                             search_order_list.append(default_engine_name)
-                            # Add other search engines
+                            # Add other search engines, if available for this locale
                             for engine_name in centralized_json['default']['searchOrder']:
-                                search_order_list.append(engine_name)
+                                if engine_name in available_searchplugins:
+                                    search_order_list.append(engine_name)
 
                         # Check if search order is defined for the locale
                         if locale in centralized_json['locales']:
                             if 'default' in locale_data and 'searchOrder' in locale_data['default']:
                                 search_order_list = []
-                                # 1st is always the default search engine. Use the value already determined
+                                # 1st is always the default search engine
                                 search_order_list.append(default_engine_name)
                                 # Add other search engines
                                 for engine_name in locale_data['default']['searchOrder']:

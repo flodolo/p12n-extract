@@ -406,7 +406,11 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         centralized_source = os.path.join(self.files_path, 'list.json')
 
         # Search order coming from default
-        self.p12n.data['locales']['aa']['browser']['release']['searchplugins'] = {}
+        self.p12n.data['locales']['aa']['browser']['release']['searchplugins'] = {
+            'google': { 'name': 'Google'},
+            'yahoo': { 'name': 'Yahoo'},
+            'bing': { 'name': 'Bing'},
+        }
         self.p12n.extract_productization_product(
             centralized_source, '', 'browser', 'aa', 'release')
         self.assertEqual(self.p12n.data['locales']['aa']['browser']
