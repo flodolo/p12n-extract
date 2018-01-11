@@ -407,9 +407,9 @@ class TestSearchpluginAnalysis(unittest.TestCase):
 
         # Search order coming from default
         self.p12n.data['locales']['aa']['browser']['release']['searchplugins'] = {
-            'google': { 'name': 'Google'},
-            'yahoo': { 'name': 'Yahoo'},
-            'bing': { 'name': 'Bing'},
+            'google': {'name': 'Google'},
+            'yahoo': {'name': 'Yahoo'},
+            'bing': {'name': 'Bing'},
         }
         self.p12n.extract_productization_product(
             centralized_source, '', 'browser', 'aa', 'release')

@@ -128,7 +128,8 @@ class ProductizationData():
                     self.shared_searchplugins[product][
                         channel] = [searchplugin_noext]
         except Exception as e:
-            print('Error: problem reading list of shared searchplugins from {}'.format(path))
+            print(
+                'Error: problem reading list of shared searchplugins from {}'.format(path))
             print(e)
 
     def extract_defaults(self, centralized_source, product, channel):
@@ -166,7 +167,8 @@ class ProductizationData():
                     if image not in self.images_list:
                         self.images_list.append(image_data)
             except Exception as e:
-                print('Error extracting shared images: {}, {}'.format(product, channel))
+                print('Error extracting shared images: {}, {}'.format(
+                    product, channel))
                 print(e)
 
     def extract_searchplugins_product(self, centralized_source, search_path, product, locale, channel):
@@ -196,7 +198,8 @@ class ProductizationData():
                                 warnings.append(
                                     'locale is falling back to default searchplugins')
                     except Exception as e:
-                        print('Error reading centralized source: {}, {}, {}'.format(product, locale, channel))
+                        print('Error reading centralized source: {}, {}, {}'.format(
+                            product, locale, channel))
                         print(e)
                 else:
                     # Read the list of searchplugins from list.txt
@@ -539,7 +542,8 @@ class ProductizationData():
                                     '{} is defined in searchorder but not available in searchplugins (check if the name is spelled correctly)'.format(engine_name))
 
                     except Exception as e:
-                        print('Error reading default and source order from list.json: {}, {}, {}'.format(product, locale, channel))
+                        print('Error reading default and source order from list.json: {}, {}, {}'.format(
+                            product, locale, channel))
                         print(e)
 
                 existing_file = os.path.isfile(region_file)
