@@ -421,7 +421,10 @@ class TestSearchpluginAnalysis(unittest.TestCase):
                          ['release']['p12n']['searchorder']['3'], 'Bing')
 
         # Search order coming from locale
-        self.p12n.data['locales']['it']['browser']['release']['searchplugins'] = {}
+        self.p12n.data['locales']['it']['browser']['release']['searchplugins'] = {
+            'yahoo': {'name': 'Yahoo'},
+            'bing': {'name': 'Bing'},
+        }
         self.p12n.extract_productization_product(
             centralized_source, '', 'browser', 'it', 'release')
         self.assertEqual(self.p12n.data['locales']['it']['browser']
