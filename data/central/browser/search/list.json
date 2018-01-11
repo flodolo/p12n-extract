@@ -1,7 +1,7 @@
 {
   "default": {
     "searchDefault": "Google",
-    "searchOrder": ["Yahoo", "Bing"],
+    "searchOrder": ["Google", "Yahoo", "Bing"],
     "visibleDefaultEngines": [
       "google", "amazondotcom", "bing", "ddg", "ebay", "twitter", "wikipedia"
     ]
@@ -181,7 +181,7 @@
     },
     "cs": {
       "default": {
-        "searchOrder": ["Seznam"],
+        "searchOrder": ["Google", "Seznam"],
         "visibleDefaultEngines": [
           "google", "seznam-cz", "ddg", "heureka-cz", "mapy-cz", "wikipedia-cz"
         ]
@@ -189,7 +189,7 @@
     },
     "cy": {
       "default": {
-        "searchOrder": ["Yahoo.co.uk"],
+        "searchOrder": ["Google", "Yahoo.co.uk"],
         "visibleDefaultEngines": [
           "google", "amazon-en-GB", "ddg", "ebay-uk", "palasprint", "termau", "wikipedia-cy"
         ]
@@ -232,7 +232,7 @@
     },
     "en-GB": {
       "default": {
-        "searchOrder": ["Yahoo.co.uk", "Bing"],
+        "searchOrder": ["Google", "Yahoo.co.uk", "Bing"],
         "visibleDefaultEngines": [
           "google", "bing", "amazon-en-GB", "chambers-en-GB", "ddg", "ebay-uk", "twitter", "wikipedia"
         ]
@@ -258,8 +258,8 @@
       }
     },
     "es-AR": {
-      "searchOrder": ["Yahoo Argentina"],
       "default": {
+        "searchOrder": ["Google", "Yahoo Argentina"],
         "visibleDefaultEngines": [
           "google", "amazondotcom", "drae", "ddg", "mercadolibre-ar", "wikipedia-es"
         ]
@@ -293,7 +293,6 @@
     },
     "et": {
       "default": {
-      "searchOrder": ["Neti"],
         "visibleDefaultEngines": [
           "google", "neti-ee", "ddg", "osta-ee", "wikipedia-et", "eki-ee"
         ]
@@ -348,7 +347,7 @@
     },
     "ga-IE": {
       "default": {
-        "searchOrder": ["Yahoo.co.uk"],
+        "searchOrder": ["Google", "Yahoo.co.uk"],
         "visibleDefaultEngines": [
           "google", "amazon-en-GB", "ddg", "ebay-ie", "tearma", "twitter", "wikipedia-ga-IE"
         ]
@@ -356,7 +355,7 @@
     },
     "gd": {
       "default": {
-        "searchOrder": ["Yahoo.co.uk"],
+        "searchOrder": ["Google", "Yahoo.co.uk"],
         "visibleDefaultEngines": [
           "google", "amazon-en-GB", "bbc-alba", "ddg", "ebay-uk", "faclair-beag", "wikipedia-gd"
         ]
@@ -455,7 +454,7 @@
     },
     "ja-JP-mac": {
       "default": {
-        "searchOrder": ["Yahoo! JAPAN", "Bing", "Amazon.co.jp", "楽天市場", "ヤフオク!", "教えて！goo", "Twitter", "Wikipedia (ja)"],
+        "searchOrder": ["Google", "Yahoo! JAPAN", "Bing", "Amazon.co.jp", "楽天市場", "ヤフオク!", "教えて！goo", "Twitter", "Wikipedia (ja)"],
         "visibleDefaultEngines": [
           "google", "yahoo-jp", "bing", "amazon-jp", "rakuten", "yahoo-jp-auctions", "oshiete-goo", "twitter-ja", "wikipedia-ja", "ddg"
         ]
@@ -463,7 +462,7 @@
     },
     "ja": {
       "default": {
-        "searchOrder": ["Yahoo! JAPAN", "Bing", "Amazon.co.jp", "楽天市場", "ヤフオク!", "教えて！goo", "Twitter", "Wikipedia (ja)"],
+        "searchOrder": ["Google", "Yahoo! JAPAN", "Bing", "Amazon.co.jp", "楽天市場", "ヤフオク!", "教えて！goo", "Twitter", "Wikipedia (ja)"],
         "visibleDefaultEngines": [
           "google", "yahoo-jp", "bing", "amazon-jp", "rakuten", "yahoo-jp-auctions", "oshiete-goo", "twitter-ja", "wikipedia-ja", "ddg"
         ]

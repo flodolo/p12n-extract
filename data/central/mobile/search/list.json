@@ -1,7 +1,7 @@
 {
   "default": {
     "searchDefault": "Google",
-    "searchOrder": ["Yahoo", "Bing"],
+    "searchOrder": ["Google", "Yahoo", "Bing"],
     "visibleDefaultEngines": [
       "google", "bing", "amazondotcom", "ddg", "twitter", "wikipedia"
     ]
@@ -131,7 +131,7 @@
     },
     "cy": {
       "default": {
-        "searchOrder": ["Yahoo.co.uk"],
+        "searchOrder": ["Google", "Yahoo.co.uk"],
         "visibleDefaultEngines": [
           "google", "bing", "amazon-co-uk", "ddg", "wikipedia-cy"
         ]
@@ -167,7 +167,7 @@
     },
     "en-GB": {
       "default": {
-        "searchOrder": ["Yahoo.co.uk"],
+        "searchOrder": ["Google", "Yahoo.co.uk"],
         "visibleDefaultEngines": [
           "google", "bing", "amazon-co-uk", "ddg", "qwant", "twitter", "wikipedia"
         ]
@@ -305,7 +305,7 @@
     },
     "gd": {
       "default": {
-        "searchOrder": ["Yahoo.co.uk"],
+        "searchOrder": ["Google", "Yahoo.co.uk"],
         "visibleDefaultEngines": [
           "google", "bing", "ddg", "faclair-beag", "wikipedia-gd"
         ]
