@@ -520,22 +520,12 @@ class ProductizationData():
                         # Start with the generic default
                         search_order_list = []
                         if 'searchOrder' in centralized_json['default']:
-                            # 1st is always the default search engine
-                            search_order_list.append(default_engine_name)
-                            # Add other search engines, if available for this locale
-                            for engine_name in centralized_json['default']['searchOrder']:
-                                if engine_name in available_searchplugins:
-                                    search_order_list.append(engine_name)
+                            search_order_list = centralized_json['default']['searchOrder']
 
                         # Check if search order is defined for the locale
                         if locale in centralized_json['locales']:
                             if 'default' in locale_data and 'searchOrder' in locale_data['default']:
-                                search_order_list = []
-                                # 1st is always the default search engine
-                                search_order_list.append(default_engine_name)
-                                # Add other search engines
-                                for engine_name in locale_data['default']['searchOrder']:
-                                    search_order_list.append(engine_name)
+                                search_order_list = locale_data['default']['searchOrder']
 
                         # Store the list
                         i = 1
