@@ -530,11 +530,14 @@ class ProductizationData():
                         # Store the list
                         i = 1
                         for engine_name in search_order_list:
-                            search_order[str(i)] = engine_name
-                            i += 1
-                            if engine_name not in available_searchplugins:
+                            if engine_name in available_searchplugins:
+                                # Ignore search plugin if not available
+                                search_order[str(i)] = engine_name
+                                i += 1
+                            else:
                                 errors.append(
                                     '{} is defined in searchorder but not available in searchplugins (check if the name is spelled correctly)'.format(engine_name))
+
                     except Exception as e:
                         print('Error reading default and source order from list.json: {}, {}, {}'.format(product, locale, channel))
                         print(e)
