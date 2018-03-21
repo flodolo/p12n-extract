@@ -8,15 +8,36 @@ import base64
 import collections
 import glob
 import hashlib
+import io
 import json
 import os
 import re
-import StringIO
 import sys
-from ConfigParser import SafeConfigParser
 from time import strftime, localtime
 from xml.dom import minidom
 
+# Python 2/3 compatibility
+try:
+    from ConfigParser import SafeConfigParser
+except ImportError:
+    from configparser import SafeConfigParser
+
+try:
+    dict.iteritems
+except AttributeError:
+    # Python 3
+    def iteritems(d):
+        return iter(d.items())
+else:
+    # Python 2
+    def iteritems(d):
+        return d.iteritems()
+
+def to_unicode(s):
+    try:
+        return unicode(s, 'utf-8')
+    except NameError:
+        return s
 
 class ProductizationData():
 
@@ -48,7 +69,8 @@ class ProductizationData():
             with open(shipping_locales_list) as data_file:
                 self.shipping_locales = json.load(data_file)
         except Exception as e:
-            print 'Error reading config/shipping_locales.json', e
+            print('Error reading config/shipping_locales.json')
+            print(e)
 
         self.data_folder = os.path.join(script_config_folder, os.pardir, 'data')
 
@@ -76,7 +98,7 @@ class ProductizationData():
         ''' Print log '''
 
         if self.verbose_mode:
-            print('[{0}][{1}] - {2}'.format(
+            print('[{}][{}] - {}'.format(
                 product, channel, message))
 
     def extract_shared(self, path, product, channel):
@@ -97,8 +119,8 @@ class ProductizationData():
                     self.shared_searchplugins[product][
                         channel] = [searchplugin_noext]
         except Exception as e:
-            print 'Error: problem reading list of shared searchplugins from {0}'.format(path)
-            print e
+            print('Error: problem reading list of shared searchplugins from {}'.format(path))
+            print(e)
 
     def extract_defaults(self, centralized_source, product, channel):
         ''' Store the default list of searchplugins '''
@@ -110,7 +132,7 @@ class ProductizationData():
                 self.default_searchplugins[product][channel] = centralized_json[
                     'default']['visibleDefaultEngines']
             except Exception as e:
-                print e
+                print(e)
 
     def extract_shared_resource_images(self, images_path, product, channel):
         ''' Extract shared resource:// images for searchplugins '''
@@ -124,20 +146,17 @@ class ProductizationData():
                     filename = os.path.basename(image)
                     ext = os.path.splitext(filename)[1]
 
-                    data_header = 'data:image/{0};base64,'.format(
-                        ext_mapping.get(ext, ''))
                     with open(image, 'rb') as f:
                         data = f.read()
-                    image_data = data_header + base64.b64encode(data)
+                    image_data = 'data:image/{};base64,{}'.format(
+                        ext_mapping.get(ext, ''), base64.b64encode(data).decode())
 
-                    self.resource_images[product][channel][
-                        filename] = image_data
-
+                    self.resource_images[product][channel][filename] = image_data
                     # Store image in image_list if not already available
                     if not image in self.images_list:
                         self.images_list.append(image_data)
             except Exception as e:
-                print e
+                print(e)
 
     def extract_searchplugins_product(self, centralized_source, search_path, product, locale, channel):
         ''' Extract information about searchplugings '''
@@ -166,14 +185,15 @@ class ProductizationData():
                                 warnings.append(
                                     'locale is falling back to default searchplugins')
                     except Exception as e:
-                        print e
+                        print(e)
                 else:
                     # Read the list of searchplugins from list.txt
                     file_list = os.path.join(search_path, 'list.txt')
                     if os.path.isfile(file_list):
-                        list_sp = open(file_list, 'r').read().splitlines()
-                        # Remove empty lines
-                        list_sp = filter(bool, list_sp)
+                        with open(file_list, 'r') as f:
+                            list_sp = f.read().splitlines()
+                            # Remove empty lines
+                            list_sp = list(filter(bool, list_sp))
                 # Check for duplicates
                 if len(list_sp) != len(set(list_sp)):
                     # set(list_sp) removes duplicates. If I'm here, there are
@@ -183,7 +203,7 @@ class ProductizationData():
                         collections.Counter(list_sp).items() if y > 1
                     ]
                     duplicated_items_str = ', '.join(duplicated_items)
-                    errors.append('there are duplicated items ({0}) in the list'.format(
+                    errors.append('there are duplicated items ({}) in the list'.format(
                         duplicated_items_str))
             else:
                 # For 'shared' I must analyze all XML files in the folder,
@@ -201,18 +221,18 @@ class ProductizationData():
                         # File exists but has the same name of an en-US
                         # searchplugin.
                         errors.append(
-                            'file {0} should not exist in the locale folder, same name of en-US searchplugin'.format(filename))
+                            'file {} should not exist in the locale folder, same name of en-US searchplugin'.format(filename))
                     else:
                         if filename_noext not in list_sp and filename != 'list.txt':
                             # Extra file or unused searchplugin, should be
                             # removed
                             errors.append(
-                                'file {0} not expected'.format(filename))
+                                'file {} not expected'.format(filename))
 
             # For each searchplugin check if the file exists (localized version) or
             # not (using en-US version to extract data)
             for sp in list_sp:
-                sp_file = os.path.join(search_path, sp + '.xml')
+                sp_file = os.path.join(search_path, '{}.xml'.format(sp))
                 existing_file = os.path.isfile(sp_file)
 
                 if sp in self.shared_searchplugins[product][channel] and existing_file and locale not in ['en-US', 'shared']:
@@ -226,11 +246,12 @@ class ProductizationData():
                     try:
                         # Store md5 hash for this file. All files are very
                         # small, so I don't bother using a buffer
-                        file_content = open(sp_file, 'rb').read()
+                        with open(sp_file, 'rb') as f:
+                            file_content = f.read()
                         self.hashes['locales'][locale][product][channel][
-                            sp + '.xml'] = hashlib.md5(file_content).hexdigest()
+                            '{}.xml'.format(sp)] = hashlib.md5(file_content).hexdigest()
 
-                        searchplugin_info = '({0}, {1}, {2}, {3}.xml)'.format(
+                        searchplugin_info = '({}, {}, {}, {}.xml)'.format(
                             locale, product, channel, sp)
                         try:
                             xmldoc = minidom.parse(sp_file)
@@ -241,28 +262,30 @@ class ProductizationData():
                             # remove lines starting with # and parse that content
                             # instead of the original XML file
                             preprocessor = False
-                            cleaned_sp_content = ''
-                            for line in open(sp_file, 'r').readlines():
-                                if re.match('^#', line):
-                                    # Line starts with a #
-                                    preprocessor = True
-                                else:
-                                    # Line is OK, adding it to newspcontent
-                                    cleaned_sp_content += line
+                            cleaned_sp_content = b''
+                            with open(sp_file, 'r') as f:
+                                for line in f.readlines():
+                                    if re.match('^#', line):
+                                        # Line starts with a #
+                                        preprocessor = True
+                                    else:
+                                        # Line is OK, adding it to newspcontent
+                                        cleaned_sp_content += line.encode()
                             if preprocessor:
-                                warnings.append('searchplugin contains preprocessor instructions (e.g. #define, #if) that have been stripped in order to parse the XML {0}'.format(
+                                warnings.append('searchplugin contains preprocessor instructions (e.g. #define, #if) that have been stripped in order to parse the XML {}'.format(
                                     searchplugin_info))
                                 try:
-                                    xmldoc = minidom.parse(
-                                        StringIO.StringIO(cleaned_sp_content))
+                                    with io.BytesIO(cleaned_sp_content) as f:
+                                        xmldoc = minidom.parse(f)
                                 except Exception as e:
+                                    print(e)
                                     errors.append(
-                                        'error parsing XML {0}'.format(searchplugin_info))
+                                        'error parsing XML {}'.format(searchplugin_info))
                             else:
                                 # XML is broken
                                 xmldoc = []
                                 errors.append(
-                                    'error parsing XML {0} <code>{1}</code>'.format(searchplugin_info, str(e)))
+                                    'error parsing XML {} <code>{}</code>'.format(searchplugin_info, str(e)))
 
                         # Some searchplugins use the form <tag>, others
                         # <os:tag>
@@ -274,7 +297,7 @@ class ProductizationData():
                             name = node[0].childNodes[0].nodeValue
                         except Exception as e:
                             errors.append(
-                                'error extracting name {0}'.format(searchplugin_info))
+                                'error extracting name {}'.format(searchplugin_info))
                             name = 'not available'
 
                         try:
@@ -305,7 +328,7 @@ class ProductizationData():
                                 secure = 1
                         except Exception as e:
                             errors.append(
-                                'error extracting URL {0}'.format(searchplugin_info))
+                                'error extracting URL {}'.format(searchplugin_info))
                             url = 'not available'
 
                         try:
@@ -331,12 +354,12 @@ class ProductizationData():
                                                 product][channel][filename]
                                         else:
                                             errors.append(
-                                                'resource:// image not {0} available {1}'.format(image, searchplugin_info))
+                                                'resource:// image not {} available {}'.format(image, searchplugin_info))
                                     except KeyError:
                                         # There are no resource:// images for
                                         # this product and channel
                                         errors.append(
-                                            'There are no resource:// images available {1}'.format(searchplugin_info))
+                                            'There are no resource:// images available {}'.format(searchplugin_info))
 
                                 if image in self.images_list:
                                     # Image already stored in the JSON
@@ -354,23 +377,23 @@ class ProductizationData():
                                 # case
                                 if product == 'mobile':
                                     if '%' in image:
-                                        warnings.append('searchplugin\'s image on mobile can\'t contain % character {0}'.format(
+                                        warnings.append('searchplugin\'s image on mobile can\'t contain % character {}'.format(
                                             searchplugin_info))
                         except Exception as e:
                             errors.append(
-                                'error extracting image {0}'.format(searchplugin_info))
+                                'error extracting image {}'.format(searchplugin_info))
                             # Use default empty image
                             images.append(0)
 
                         # No images in the searchplugin
                         if not images:
                             errors.append(
-                                'no images available {0}'.format(searchplugin_info))
+                                'no images available {}'.format(searchplugin_info))
                             # Use default empty image
                             images = [0]
 
                         self.data['locales'][locale][product][channel]['searchplugins'][sp] = {
-                            'file': '{0}.xml'.format(sp),
+                            'file': '{}.xml'.format(sp),
                             'name': name,
                             'description': description,
                             'url': url,
@@ -379,7 +402,7 @@ class ProductizationData():
                         }
                     except Exception as e:
                         errors.append(
-                            'error analyzing searchplugin {0} <code>{1}</code>'.format(searchplugin_info, str(e)))
+                            'error analyzing searchplugin {} <code>{}</code>'.format(searchplugin_info, str(e)))
                 else:
                     # File does not exist, locale is using the same plugin
                     # available in the shared folder. I have to retrieve it
@@ -389,7 +412,7 @@ class ProductizationData():
                             'shared'][product][channel]['searchplugins'][sp]
 
                         self.data['locales'][locale][product][channel]['searchplugins'][sp] = {
-                            'file': '{0}.xml'.format(sp),
+                            'file': '{}.xml'.format(sp),
                             'name': searchplugin_shared['name'],
                             'description': searchplugin_shared['description'],
                             'url': searchplugin_shared['url'],
@@ -403,7 +426,7 @@ class ProductizationData():
                         # Starting from April 2016, we need to deal with :hidden
                         # searchplugins in l10n repos (don't report errors)
                         if not sp.endswith(':hidden'):
-                            errors.append('file referenced in the list of searchplugins but not available ({0}, {1}, {2}, {3}.xml)'.format(
+                            errors.append('file referenced in the list of searchplugins but not available ({}, {}, {}, {}.xml)'.format(
                                 locale, product, channel, sp))
 
             # Save errors and warnings
@@ -414,7 +437,8 @@ class ProductizationData():
                 self.errors['locales'][locale][product][
                     channel]['warnings'] = warnings
         except Exception as e:
-            print '[{0}] problem reading searchplugins'.format(locale), e
+            print('[{}] problem reading searchplugins'.format(locale))
+            print(e)
 
     def extract_productization_product(self, region_file, product, locale, channel):
         ''' Extract productization data and check for errors '''
@@ -429,7 +453,8 @@ class ProductizationData():
             if channel in self.data['locales'][locale][product]:
                 # I need to proceed only if I have searchplugins for this
                 # branch+product+locale
-                for sp_name, sp_data in self.data['locales'][locale][product][channel]['searchplugins'].iteritems():
+                sp_record = self.data['locales'][locale][product][channel]['searchplugins']
+                for sp_name, sp_data in iteritems(sp_record):
                     # Store the 'name' attribute of each searchplugin, used to
                     # validate search.order
                     if 'name' in sp_data:
@@ -441,34 +466,36 @@ class ProductizationData():
                         # Store md5 hash for this file. All files are very
                         # small, so I don't bother using a buffer. 'suite' is
                         # a special case since it has 2 of them.
-                        file_content = open(region_file, 'rb').read()
+                        with open(region_file, 'rb') as f:
+                            file_content = f.read()
                         index_name = os.path.basename(region_file)
                         if product == 'suite':
                             if 'common' in region_file:
-                                index_name = 'common_' + index_name
+                                index_name = 'common_{}'.format(index_name)
                             else:
-                                index_name = 'browser_' + index_name
+                                index_name = 'browser_{}'.format(index_name)
                         self.hashes['locales'][locale][product][channel][
                             index_name] = hashlib.md5(file_content).hexdigest()
 
                         # Read region.properties, ignore comments and empty
                         # lines
                         settings = {}
-                        for line in open(region_file):
-                            li = line.strip()
-                            if not li.startswith('#') and li != '':
-                                try:
-                                    # Split considering only the first =
-                                    key, value = li.split('=', 1)
-                                    # Remove whitespaces, some locales use key =
-                                    # value instead of key=value
-                                    settings[key.strip()] = value.strip()
-                                except:
-                                    errors.append('problem parsing {0} ({1}, {2}, {3})'.format(
-                                        region_file, locale, product, channel))
+                        with open(region_file) as f:
+                            for line in f:
+                                li = line.strip()
+                                if not li.startswith('#') and li != '':
+                                    try:
+                                        # Split considering only the first =
+                                        key, value = li.split('=', 1)
+                                        # Remove whitespaces, some locales use key =
+                                        # value instead of key=value
+                                        settings[key.strip()] = value.strip()
+                                    except:
+                                        errors.append('problem parsing {} ({}, {}, {})'.format(
+                                            region_file, locale, product, channel))
                     except Exception as e:
-                        print e
-                        errors.append('problem reading {0} ({1}, {2}, {3})'.format(
+                        print(e)
+                        errors.append('problem reading {} ({}, {}, {})'.format(
                             region_file, locale, product, channel))
 
                     default_engine_name = '-'
@@ -478,7 +505,7 @@ class ProductizationData():
                     content_handlers = nested_dict()
 
                     try:
-                        for key, value in settings.iteritems():
+                        for key, value in iteritems(settings):
                             line_ok = False
 
                             # Default search engine name. Example:
@@ -487,9 +514,9 @@ class ProductizationData():
                             if key.startswith(property_name):
                                 line_ok = True
                                 default_engine_name = settings[property_name]
-                                if unicode(default_engine_name, 'utf-8') not in available_searchplugins:
+                                if to_unicode(default_engine_name) not in available_searchplugins:
                                     pass
-                                    errors.append('{0} is set as default but not available in searchplugins (check if the name is spelled correctly)'.format(
+                                    errors.append('{} is set as default but not available in searchplugins (check if the name is spelled correctly)'.format(
                                         default_engine_name))
 
                             # Search engines order. Example:
@@ -497,14 +524,14 @@ class ProductizationData():
                             if key.startswith('browser.search.order.'):
                                 line_ok = True
                                 search_order[key[-1:]] = value
-                                if unicode(value, 'utf-8') not in available_searchplugins:
+                                if to_unicode(value) not in available_searchplugins:
                                     if value != '':
                                         pass
                                         errors.append(
-                                            '{0} is defined in searchorder but not available in searchplugins (check if the name is spelled correctly)'.format(value))
+                                            '{} is defined in searchorder but not available in searchplugins (check if the name is spelled correctly)'.format(value))
                                     else:
                                         errors.append(
-                                            '<code>{0}</code> is empty'.format(key))
+                                            '<code>{}</code> is empty'.format(key))
 
                             # Feed handlers. Example:
                             # browser.contentHandlers.types.0.title=My Yahoo!
@@ -520,7 +547,7 @@ class ProductizationData():
                                     # Print warning for Google Reader
                                     if 'google' in value.lower():
                                         warnings.append(
-                                            'Google Reader has been dismissed, see bug 882093 (<code>{0}</code>)'.format(key))
+                                            'Google Reader has been dismissed, see bug 882093 (<code>{}</code>)'.format(key))
                                 if key.endswith('.uri'):
                                     feed_handler_number = key[-5:-4]
                                     feed_handlers[feed_handler_number][
@@ -570,11 +597,12 @@ class ProductizationData():
                             # Unrecognized line, print warning (not for en-US)
                             if not line_ok and locale != 'en-US':
                                 warnings.append(
-                                    'unknown key in region.properties <code>{0}={1}</code>'.format(key, value))
+                                    'unknown key in region.properties <code>{}={}</code>'.format(key, value))
                     except Exception as e:
-                        print available_searchplugins, key
-                        print 'Error extracting data from region.properties (key: {0}, {1}, {2}, {3})'.format(key, locale, product, channel)
-                        print e
+                        print(available_searchplugins)
+                        print(key)
+                        print('Error extracting data from region.properties (key: {}, {}, {}, {})'.format(key, locale, product, channel))
+                        print(e)
 
                     try:
                         if product != 'suite':
@@ -608,10 +636,10 @@ class ProductizationData():
                             self.data['locales'][locale][product][
                                 channel]['p12n'] = tmp_data
                     except Exception as e:
-                        errors.append('problem saving data into JSON from {0} ({1}, {2}, {3})'.format(
+                        errors.append('problem saving data into JSON from {} ({}, {}, {})'.format(
                             region_file, locale, product, channel))
                 else:
-                    errors.append('file does not exist {0} ({1}, {2}, {3})'.format(
+                    errors.append('file does not exist {} ({}, {}, {})'.format(
                         region_file, locale, product, channel))
 
             # Save errors and warnings
@@ -622,8 +650,8 @@ class ProductizationData():
                 self.errors['locales'][locale][product][
                     channel]['p12n_warnings'] = warnings
         except Exception as e:
-            print '[{0}] No searchplugins available for this locale ({1})'.format(product, locale)
-            print e
+            print('[{}] No searchplugins available for this locale ({})'.format(product, locale))
+            print(e)
 
     def extract_p12n_channel(self, requested_product, channel_data, requested_channel, check_p12n):
         ''' Extract information from all products for this channel '''
@@ -668,7 +696,7 @@ class ProductizationData():
                             # for shared searchplugins. This is needed while the
                             # centralization change rides the trains
                             self.activity_log(
-                                product, requested_channel, 'Folder for shared searchplugins doesn\'t exist: {0}'.format(path_shared))
+                                product, requested_channel, 'Folder for shared searchplugins doesn\'t exist: {}'.format(path_shared))
                             path_shared = path_enUS
 
                     self.extract_shared(
@@ -731,7 +759,7 @@ class ProductizationData():
                                 self.extract_productization_product(
                                     path, product, locale, requested_channel)
         except Exception as e:
-            print e
+            print(e)
 
     def output_data(self, pretty_output):
         ''' Complete the JSON structure and output data to files '''
@@ -759,7 +787,7 @@ class ProductizationData():
             if 'shared' in json_data['locales']:
                 del(json_data['locales']['shared'])
 
-            file_name = os.path.join(self.output_folder, group + '.json')
+            file_name = os.path.join(self.output_folder, '{}.json'.format(group))
             f = open(file_name, 'w')
             if pretty_output:
                 f.write(json.dumps(json_data, sort_keys=True, indent=4))
@@ -792,7 +820,7 @@ def main():
     transvision_config = os.path.abspath(
         os.path.join(args.config_folder, 'config.ini'))
     if not os.path.isfile(transvision_config):
-        print "config.ini not found in {0}".format(args.config_folder)
+        print('config.ini not found in {}'.format(args.config_folder))
         sys.exit(1)
     parser.read(transvision_config)
     local_install = parser.get('config', 'install')
