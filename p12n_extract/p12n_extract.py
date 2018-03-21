@@ -881,7 +881,8 @@ class ProductizationData():
             if 'shared' in json_data['locales']:
                 del(json_data['locales']['shared'])
 
-            file_name = os.path.join(self.output_folder, '{}.json'.format(group))
+            file_name = os.path.join(
+                self.output_folder, '{}.json'.format(group))
             f = open(file_name, 'w')
             if pretty_output:
                 f.write(json.dumps(json_data, sort_keys=True, indent=4))

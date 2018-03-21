@@ -399,8 +399,18 @@ class TestSearchpluginAnalysis(unittest.TestCase):
         self.p12n.data['locales']['zh-CN']['browser']['release']['searchplugins'] = {}
         self.p12n.extract_productization_product(
             centralized_source, '', 'browser', 'zh-CN', 'release')
-        self.assertEqual(self.p12n.data['locales']['zh-CN']['browser']
-                         ['release']['p12n']['defaultenginename'].encode('utf-8'), '百度')
+
+        # Python 2/3 compatibility
+        try:
+            str.decode('utf-8')
+        except AttributeError:
+            # Python 3
+            self.assertEqual(self.p12n.data['locales']['zh-CN']['browser']
+                             ['release']['p12n']['defaultenginename'], '百度')
+        else:
+            # Python 2
+            self.assertEqual(self.p12n.data['locales']['zh-CN']['browser']
+                             ['release']['p12n']['defaultenginename'].encode('utf-8'), '百度')
 
     def testSearchOrder(self):
         centralized_source = os.path.join(self.files_path, 'list.json')
