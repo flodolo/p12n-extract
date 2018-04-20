@@ -486,6 +486,7 @@ class ProductizationData():
                 # Check if there is a centralized source, and it has information
                 # on default engine
                 central_default = False
+                central_search_order = False
                 if centralized_source != '' and os.path.isfile(centralized_source):
                     try:
                         with open(centralized_source) as data_file:
@@ -515,11 +516,6 @@ class ProductizationData():
                                     default_engine_name))
 
                         # Read SEARCH ORDER
-                        # If default is defined in list.json, search order is
-                        # defined too, no need to store another check.
-                        # Ignore searchplugins that are not available in the
-                        # locale
-
                         # Start with the generic default
                         search_order_list = []
                         if 'searchOrder' in centralized_json['default']:
@@ -528,6 +524,7 @@ class ProductizationData():
                         # Check if search order is defined for the locale
                         if locale in centralized_json['locales']:
                             if 'default' in locale_data and 'searchOrder' in locale_data['default']:
+                                central_search_order = True
                                 search_order_list = locale_data['default']['searchOrder']
 
                         # Store the list
@@ -607,7 +604,7 @@ class ProductizationData():
                             # browser.search.order.1=Google
                             if key.startswith('browser.search.order.'):
                                 line_ok = True
-                                if central_default:
+                                if central_search_order:
                                     warnings.append(
                                         '{} is obsolete'.format(key))
                                 else:
