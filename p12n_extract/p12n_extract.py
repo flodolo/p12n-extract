@@ -33,11 +33,13 @@ else:
     def iteritems(d):
         return d.iteritems()
 
+
 def to_unicode(s):
     try:
         return unicode(s, 'utf-8')
     except NameError:
         return s
+
 
 class ProductizationData():
 
@@ -153,7 +155,7 @@ class ProductizationData():
 
                     self.resource_images[product][channel][filename] = image_data
                     # Store image in image_list if not already available
-                    if not image in self.images_list:
+                    if image not in self.images_list:
                         self.images_list.append(image_data)
             except Exception as e:
                 print(e)
@@ -490,7 +492,7 @@ class ProductizationData():
                                         # Remove whitespaces, some locales use key =
                                         # value instead of key=value
                                         settings[key.strip()] = value.strip()
-                                    except:
+                                    except Exception as e:
                                         errors.append('problem parsing {} ({}, {}, {})'.format(
                                             region_file, locale, product, channel))
                     except Exception as e:
@@ -825,7 +827,6 @@ def main():
     parser.read(transvision_config)
     local_install = parser.get('config', 'install')
     local_hg = parser.get('config', 'local_hg')
-    config_files = os.path.join(parser.get('config', 'config'), 'sources')
 
     # Path to ../config, for the list of shipping locales
     script_config_folder = os.path.abspath(

@@ -69,7 +69,9 @@ def main():
         for channel_id, update_sources in channels.iteritems():
             channel_locales = []
             for update_source in update_sources:
-                print 'Reading sources for {0}-{1} from {2}'.format(product, channel_id, update_source)
+                print(
+                    'Reading sources for {}-{} from {}'.format(
+                        product, channel_id, update_source))
                 response = urllib2.urlopen(update_source)
                 for line in response:
                     locale = line.rstrip('\r\n')
@@ -85,7 +87,7 @@ def main():
             channel_locales.sort()
             supported_locales[product][channel_id] = channel_locales
 
-    print "Storing JSON file in /config"
+    print('Storing JSON file in /config')
     file_name = os.path.join(config_folder, 'shipping_locales.json')
     f = open(file_name, 'w')
     f.write(json.dumps(supported_locales, indent=4, sort_keys=True))
