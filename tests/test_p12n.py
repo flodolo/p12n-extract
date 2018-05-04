@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import collections
 import json
 import os
 import p12n_extract.p12n_extract
@@ -11,7 +10,6 @@ import unittest
 class TestSearchpluginAnalysis(unittest.TestCase):
 
     def setUp(self):
-        def nested_dict(): return collections.defaultdict(nested_dict)
         self.files_path = os.path.join(os.path.dirname(__file__), 'files')
         self.p12n = p12n_extract.p12n_extract.ProductizationData(
             self.files_path, self.files_path)

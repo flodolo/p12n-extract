@@ -1,9 +1,7 @@
 #! /usr/bin/env python
 
 import argparse
-import difflib
 import json
-import sys
 
 
 def main():

@@ -52,17 +52,12 @@ class ProductizationData():
             os.makedirs(web_p12n_folder)
         self.output_folder = web_p12n_folder
 
-        # Create a dictionary that auto-generates keys when trying to set a
-        # a value for a key that doesn't exist (no need to check for its
-        # existence)
-        def nested_dict(): return collections.defaultdict(nested_dict)
-
         # Data storage
-        self.data = nested_dict()
-        self.errors = nested_dict()
-        self.hashes = nested_dict()
-        self.shared_searchplugins = nested_dict()
-        self.default_searchplugins = nested_dict()
+        self.data = self.nested_dict()
+        self.errors = self.nested_dict()
+        self.hashes = self.nested_dict()
+        self.shared_searchplugins = self.nested_dict()
+        self.default_searchplugins = self.nested_dict()
         self.verbose_mode = False
 
         self.region_mappings = {
@@ -96,7 +91,15 @@ class ProductizationData():
             'KrPLSOop+3+ekPFRu6FAPNNQh1FdeWDaxioRx/wo3i2vIbdynAJ3C4ViylVaDnAAAAA'
             'ElFTkSuQmCC'
         ]
-        self.resource_images = nested_dict()
+        self.resource_images = self.nested_dict()
+
+    def nested_dict(self):
+        '''
+            Create a dictionary that auto-generates keys when trying to set a
+            a value for a key that doesn't exist (no need to check for its
+            existence)
+        '''
+        return collections.defaultdict(self.nested_dict)
 
     def set_verbose_mode(self):
         ''' Set verbose mode '''
@@ -462,8 +465,6 @@ class ProductizationData():
         errors = []
         warnings = []
 
-        def nested_dict(): return collections.defaultdict(nested_dict)
-
         try:
             available_searchplugins = []
             if channel in self.data['locales'][locale][product]:
@@ -478,10 +479,10 @@ class ProductizationData():
 
                 # Initialize defaults
                 default_engine_name = '-'
-                search_order = nested_dict()
-                feed_handlers = nested_dict()
+                search_order = self.nested_dict()
+                feed_handlers = self.nested_dict()
                 handler_version = '-'
-                content_handlers = nested_dict()
+                content_handlers = self.nested_dict()
 
                 # Check if there is a centralized source, and it has information
                 # on default engine
