@@ -12,21 +12,6 @@
       "ebay": "ebay-ca",
       "ebay-fr": "ebay-ca"
     },
-    "KZ": {
-      "google": "google-nocodes"
-    },
-    "BY": {
-      "google": "google-nocodes"
-    },
-    "RU": {
-      "google": "google-nocodes"
-    },
-    "TR": {
-      "google": "google-nocodes"
-    },
-    "CN": {
-      "google": "google-nocodes"
-    },
     "AT": {
       "ebay-de": "ebay-at"
     },
@@ -219,6 +204,13 @@
       "default": {
         "visibleDefaultEngines": [
           "google", "amazon-en-GB", "bing", "ddg", "wikipedia-el"
+        ]
+      }
+    },
+    "en-CA": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "amazon-ca", "bing", "ddg", "ebay-ca", "twitter", "wikipedia"
         ]
       }
     },
