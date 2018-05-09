@@ -52,18 +52,19 @@ class ProductizationData():
             os.makedirs(web_p12n_folder)
         self.output_folder = web_p12n_folder
 
-        # Create a dictionary that auto-generates keys when trying to set a
-        # a value for a key that doesn't exist (no need to check for its
-        # existence)
-        nested_dict = lambda: collections.defaultdict(nested_dict)
-
         # Data storage
-        self.data = nested_dict()
-        self.errors = nested_dict()
-        self.hashes = nested_dict()
-        self.shared_searchplugins = nested_dict()
-        self.default_searchplugins = nested_dict()
+        self.data = self.nested_dict()
+        self.errors = self.nested_dict()
+        self.hashes = self.nested_dict()
+        self.shared_searchplugins = self.nested_dict()
+        self.default_searchplugins = self.nested_dict()
         self.verbose_mode = False
+
+        self.region_mappings = {
+            'be': 'BY',
+            'kk': 'KZ',
+            'zh-CN': 'CN',
+        }
 
         try:
             shipping_locales_list = os.path.join(
@@ -74,7 +75,8 @@ class ProductizationData():
             print('Error reading config/shipping_locales.json')
             print(e)
 
-        self.data_folder = os.path.join(script_config_folder, os.pardir, 'data')
+        self.data_folder = os.path.join(
+            script_config_folder, os.pardir, 'data')
 
         # Initialize images with a default one
         self.images_list = [
@@ -89,7 +91,15 @@ class ProductizationData():
             'KrPLSOop+3+ekPFRu6FAPNNQh1FdeWDaxioRx/wo3i2vIbdynAJ3C4ViylVaDnAAAAA'
             'ElFTkSuQmCC'
         ]
-        self.resource_images = nested_dict()
+        self.resource_images = self.nested_dict()
+
+    def nested_dict(self):
+        '''
+            Create a dictionary that auto-generates keys when trying to set a
+            a value for a key that doesn't exist (no need to check for its
+            existence)
+        '''
+        return collections.defaultdict(self.nested_dict)
 
     def set_verbose_mode(self):
         ''' Set verbose mode '''
@@ -121,7 +131,8 @@ class ProductizationData():
                     self.shared_searchplugins[product][
                         channel] = [searchplugin_noext]
         except Exception as e:
-            print('Error: problem reading list of shared searchplugins from {}'.format(path))
+            print(
+                'Error: problem reading list of shared searchplugins from {}'.format(path))
             print(e)
 
     def extract_defaults(self, centralized_source, product, channel):
@@ -134,6 +145,7 @@ class ProductizationData():
                 self.default_searchplugins[product][channel] = centralized_json[
                     'default']['visibleDefaultEngines']
             except Exception as e:
+                print('Error extracting defaults: {}, {}'.format(product, channel))
                 print(e)
 
     def extract_shared_resource_images(self, images_path, product, channel):
@@ -158,6 +170,8 @@ class ProductizationData():
                     if image not in self.images_list:
                         self.images_list.append(image_data)
             except Exception as e:
+                print('Error extracting shared images: {}, {}'.format(
+                    product, channel))
                 print(e)
 
     def extract_searchplugins_product(self, centralized_source, search_path, product, locale, channel):
@@ -187,6 +201,8 @@ class ProductizationData():
                                 warnings.append(
                                     'locale is falling back to default searchplugins')
                     except Exception as e:
+                        print('Error reading centralized source: {}, {}, {}'.format(
+                            product, locale, channel))
                         print(e)
                 else:
                     # Read the list of searchplugins from list.txt
@@ -442,13 +458,12 @@ class ProductizationData():
             print('[{}] problem reading searchplugins'.format(locale))
             print(e)
 
-    def extract_productization_product(self, region_file, product, locale, channel):
+    def extract_productization_product(self, centralized_source, region_file, product, locale, channel):
         ''' Extract productization data and check for errors '''
 
         # Extract p12n information from region.properties
         errors = []
         warnings = []
-        nested_dict = lambda: collections.defaultdict(nested_dict)
 
         try:
             available_searchplugins = []
@@ -461,6 +476,73 @@ class ProductizationData():
                     # validate search.order
                     if 'name' in sp_data:
                         available_searchplugins.append(sp_data['name'])
+
+                # Initialize defaults
+                default_engine_name = '-'
+                search_order = self.nested_dict()
+                feed_handlers = self.nested_dict()
+                handler_version = '-'
+                content_handlers = self.nested_dict()
+
+                # Check if there is a centralized source, and it has information
+                # on default engine
+                central_default = False
+                central_search_order = False
+                if centralized_source != '' and os.path.isfile(centralized_source):
+                    try:
+                        with open(centralized_source) as data_file:
+                            centralized_json = json.load(data_file)
+
+                        # Read DEFAULT ENGINE
+                        # Start with the generic default
+                        if 'searchDefault' in centralized_json['default']:
+                            default_engine_name = centralized_json['default']['searchDefault']
+
+                        # Check if there's a default for the locale
+                        if locale in centralized_json['locales']:
+                            locale_data = centralized_json['locales'][locale]
+                            if 'default' in locale_data and 'searchDefault' in locale_data['default']:
+                                default_engine_name = locale_data['default']['searchDefault']
+
+                            # As a last resort, use region override
+                            locale_region = self.region_mappings.get(
+                                locale, locale.upper())
+                            if locale_region in locale_data and 'searchDefault' in locale_data[locale_region]:
+                                default_engine_name = locale_data[locale_region]['searchDefault']
+
+                        if default_engine_name != '-':
+                            central_default = True
+                            if default_engine_name not in available_searchplugins:
+                                errors.append(u'{} is set as default but not available in searchplugins (check if the name is spelled correctly)'.format(
+                                    default_engine_name))
+
+                        # Read SEARCH ORDER
+                        # Start with the generic default
+                        search_order_list = []
+                        if 'searchOrder' in centralized_json['default']:
+                            search_order_list = centralized_json['default']['searchOrder']
+
+                        # Check if search order is defined for the locale
+                        if locale in centralized_json['locales']:
+                            if 'default' in locale_data and 'searchOrder' in locale_data['default']:
+                                central_search_order = True
+                                search_order_list = locale_data['default']['searchOrder']
+
+                        # Store the list
+                        i = 1
+                        for engine_name in search_order_list:
+                            if engine_name in available_searchplugins:
+                                # Ignore search plugin if not available
+                                search_order[str(i)] = engine_name
+                                i += 1
+                            else:
+                                errors.append(
+                                    '{} is defined in searchorder but not available in searchplugins (check if the name is spelled correctly)'.format(engine_name))
+
+                    except Exception as e:
+                        print('Error reading default and source order from list.json: {}, {}, {}'.format(
+                            product, locale, channel))
+                        print(e)
 
                 existing_file = os.path.isfile(region_file)
                 if existing_file:
@@ -500,12 +582,6 @@ class ProductizationData():
                         errors.append('problem reading {} ({}, {}, {})'.format(
                             region_file, locale, product, channel))
 
-                    default_engine_name = '-'
-                    search_order = nested_dict()
-                    feed_handlers = nested_dict()
-                    handler_version = '-'
-                    content_handlers = nested_dict()
-
                     try:
                         for key, value in iteritems(settings):
                             line_ok = False
@@ -515,25 +591,32 @@ class ProductizationData():
                             property_name = 'browser.search.defaultenginename'
                             if key.startswith(property_name):
                                 line_ok = True
-                                default_engine_name = settings[property_name]
-                                if to_unicode(default_engine_name) not in available_searchplugins:
-                                    pass
-                                    errors.append('{} is set as default but not available in searchplugins (check if the name is spelled correctly)'.format(
-                                        default_engine_name))
+                                if central_default:
+                                    warnings.append(
+                                        '{} is obsolete'.format(key))
+                                else:
+                                    default_engine_name = settings[property_name]
+                                    if to_unicode(default_engine_name) not in available_searchplugins:
+                                        pass
+                                        errors.append('{} is set as default but not available in searchplugins (check if the name is spelled correctly)'.format(
+                                            default_engine_name))
 
                             # Search engines order. Example:
                             # browser.search.order.1=Google
                             if key.startswith('browser.search.order.'):
                                 line_ok = True
-                                search_order[key[-1:]] = value
-                                if to_unicode(value) not in available_searchplugins:
-                                    if value != '':
-                                        pass
-                                        errors.append(
-                                            '{} is defined in searchorder but not available in searchplugins (check if the name is spelled correctly)'.format(value))
-                                    else:
-                                        errors.append(
-                                            '<code>{}</code> is empty'.format(key))
+                                if central_search_order:
+                                    warnings.append(
+                                        '{} is obsolete'.format(key))
+                                else:
+                                    search_order[key[-1:]] = value
+                                    if to_unicode(value) not in available_searchplugins:
+                                        if value != '':
+                                            errors.append(
+                                                '{} is defined in searchorder but not available in searchplugins (check if the name is spelled correctly)'.format(value))
+                                        else:
+                                            errors.append(
+                                                '<code>{}</code> is empty'.format(key))
 
                             # Feed handlers. Example:
                             # browser.contentHandlers.types.0.title=My Yahoo!
@@ -601,48 +684,53 @@ class ProductizationData():
                                 warnings.append(
                                     'unknown key in region.properties <code>{}={}</code>'.format(key, value))
                     except Exception as e:
+                        print('Error extracting data from region.properties (key: {}, {}, {}, {})'.format(
+                            key, locale, product, channel))
                         print(available_searchplugins)
                         print(key)
-                        print('Error extracting data from region.properties (key: {}, {}, {}, {})'.format(key, locale, product, channel))
                         print(e)
+                else:
+                    errors.append('file does not exist {} ({}, {}, {})'.format(
+                        region_file, locale, product, channel))
 
-                    try:
-                        if product != 'suite':
-                            self.data['locales'][locale][product][channel]['p12n'] = {
+            # Store data
+            try:
+                # Only store data if region.properties exists, or the defaults
+                # are centralized
+                if existing_file or central_default:
+                    if product != 'suite':
+                        self.data['locales'][locale][product][channel]['p12n'] = {
+                            'defaultenginename': default_engine_name,
+                            'searchorder': search_order,
+                            'feedhandlers': feed_handlers,
+                            'handlerversion': handler_version,
+                            'contenthandlers': content_handlers
+                        }
+                    else:
+                        # Seamonkey has 2 different region.properties files:
+                        # browser: has contenthandlers
+                        # common: has search.order
+                        # When analyzing common only update
+                        # search.order and default
+                        tmp_data = self.data['locales'][
+                            locale][product][channel]['p12n']
+                        if 'common' in region_file:
+                            tmp_data[
+                                'defaultenginename'] = default_engine_name
+                            tmp_data['searchorder'] = search_order
+                        else:
+                            tmp_data = {
                                 'defaultenginename': default_engine_name,
                                 'searchorder': search_order,
                                 'feedhandlers': feed_handlers,
                                 'handlerversion': handler_version,
                                 'contenthandlers': content_handlers
                             }
-                        else:
-                            # Seamonkey has 2 different region.properties files:
-                            # browser: has contenthandlers
-                            # common: has search.order
-                            # When analyzing common only update
-                            # search.order and default
-                            tmp_data = self.data['locales'][
-                                locale][product][channel]['p12n']
-                            if 'common' in region_file:
-                                tmp_data[
-                                    'defaultenginename'] = default_engine_name
-                                tmp_data['searchorder'] = search_order
-                            else:
-                                tmp_data = {
-                                    'defaultenginename': default_engine_name,
-                                    'searchorder': search_order,
-                                    'feedhandlers': feed_handlers,
-                                    'handlerversion': handler_version,
-                                    'contenthandlers': content_handlers
-                                }
-                            self.data['locales'][locale][product][
-                                channel]['p12n'] = tmp_data
-                    except Exception as e:
-                        errors.append('problem saving data into JSON from {} ({}, {}, {})'.format(
-                            region_file, locale, product, channel))
-                else:
-                    errors.append('file does not exist {} ({}, {}, {})'.format(
-                        region_file, locale, product, channel))
+                        self.data['locales'][locale][product][
+                            channel]['p12n'] = tmp_data
+            except Exception as e:
+                errors.append('Error saving data into JSON from {} ({}, {}, {})'.format(
+                    region_file, locale, product, channel))
 
             # Save errors and warnings
             if errors:
@@ -652,7 +740,8 @@ class ProductizationData():
                 self.errors['locales'][locale][product][
                     channel]['p12n_warnings'] = warnings
         except Exception as e:
-            print('[{}] No searchplugins available for this locale ({})'.format(product, locale))
+            print('[{}] No searchplugins available for this locale ({})'.format(
+                product, locale))
             print(e)
 
     def extract_p12n_channel(self, requested_product, channel_data, requested_channel, check_p12n):
@@ -674,8 +763,10 @@ class ProductizationData():
                     'mobile': [os.path.join(base, 'mobile', 'browser-region', 'region.properties')],
                     'mail': [os.path.join(base, 'mail', 'browser-region', 'region.properties')],
                     'suite': [
-                        os.path.join(base, 'suite', 'browser-region', 'region-browser.properties'),
-                        os.path.join(base, 'suite', 'browser-region', 'region-common.properties')
+                        os.path.join(base, 'suite', 'browser-region',
+                                     'region-browser.properties'),
+                        os.path.join(base, 'suite', 'browser-region',
+                                     'region-common.properties')
                     ]
                 }
             }
@@ -728,7 +819,8 @@ class ProductizationData():
                     if check_p12n:
                         for path in search_path_enUS['p12n'][product]:
                             self.extract_productization_product(
-                                path, product, 'en-US', requested_channel)
+                                path_centralized, path, product, 'en-US',
+                                requested_channel)
 
                     # Analyze all other locales for this product
                     for locale in self.shipping_locales[product][requested_channel]:
@@ -759,7 +851,8 @@ class ProductizationData():
                         if check_p12n:
                             for path in search_path_l10n['p12n'][product]:
                                 self.extract_productization_product(
-                                    path, product, locale, requested_channel)
+                                    path_centralized, path, product, locale,
+                                    requested_channel)
         except Exception as e:
             print(e)
 
@@ -789,7 +882,8 @@ class ProductizationData():
             if 'shared' in json_data['locales']:
                 del(json_data['locales']['shared'])
 
-            file_name = os.path.join(self.output_folder, '{}.json'.format(group))
+            file_name = os.path.join(
+                self.output_folder, '{}.json'.format(group))
             f = open(file_name, 'w')
             if pretty_output:
                 f.write(json.dumps(json_data, sort_keys=True, indent=4))
