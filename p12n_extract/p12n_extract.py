@@ -695,36 +695,39 @@ class ProductizationData():
 
             # Store data
             try:
-                if product != 'suite':
-                    self.data['locales'][locale][product][channel]['p12n'] = {
-                        'defaultenginename': default_engine_name,
-                        'searchorder': search_order,
-                        'feedhandlers': feed_handlers,
-                        'handlerversion': handler_version,
-                        'contenthandlers': content_handlers
-                    }
-                else:
-                    # Seamonkey has 2 different region.properties files:
-                    # browser: has contenthandlers
-                    # common: has search.order
-                    # When analyzing common only update
-                    # search.order and default
-                    tmp_data = self.data['locales'][
-                        locale][product][channel]['p12n']
-                    if 'common' in region_file:
-                        tmp_data[
-                            'defaultenginename'] = default_engine_name
-                        tmp_data['searchorder'] = search_order
-                    else:
-                        tmp_data = {
+                # Only store data if region.properties exists, or the defaults
+                # are centralized
+                if existing_file or central_default:
+                    if product != 'suite':
+                        self.data['locales'][locale][product][channel]['p12n'] = {
                             'defaultenginename': default_engine_name,
                             'searchorder': search_order,
                             'feedhandlers': feed_handlers,
                             'handlerversion': handler_version,
                             'contenthandlers': content_handlers
                         }
-                    self.data['locales'][locale][product][
-                        channel]['p12n'] = tmp_data
+                    else:
+                        # Seamonkey has 2 different region.properties files:
+                        # browser: has contenthandlers
+                        # common: has search.order
+                        # When analyzing common only update
+                        # search.order and default
+                        tmp_data = self.data['locales'][
+                            locale][product][channel]['p12n']
+                        if 'common' in region_file:
+                            tmp_data[
+                                'defaultenginename'] = default_engine_name
+                            tmp_data['searchorder'] = search_order
+                        else:
+                            tmp_data = {
+                                'defaultenginename': default_engine_name,
+                                'searchorder': search_order,
+                                'feedhandlers': feed_handlers,
+                                'handlerversion': handler_version,
+                                'contenthandlers': content_handlers
+                            }
+                        self.data['locales'][locale][product][
+                            channel]['p12n'] = tmp_data
             except Exception as e:
                 errors.append('Error saving data into JSON from {} ({}, {}, {})'.format(
                     region_file, locale, product, channel))
