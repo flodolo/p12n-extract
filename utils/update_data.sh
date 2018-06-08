@@ -54,14 +54,28 @@ do
             mkdir -p "${base_folder}/browser/${folder}"
         fi
     done
-    echo "Copying browser/search"
-    cp -r "${unified_path}/browser/locales/search" "${base_folder}/browser"
-    echo "Removing existing browser/searchplugins folder"
-    rm -r "${base_folder}/browser/searchplugins"
-    echo "Copying browser/searchplugins"
-    cp -r "${unified_path}/browser/locales/searchplugins" "${base_folder}/browser"
-    echo "Copying region.properties"
-    cp -r "${unified_path}/browser/locales/en-US/chrome/browser-region" "${base_folder}/browser"
+
+    if [ -d "${unified_path}/browser/components/search/searchplugins" ]
+    then
+        echo "Removing existing browser/searchplugins folder"
+        rm -r "${base_folder}/browser/searchplugins"
+        echo "Copying browser/searchplugins"
+        cp -r "${unified_path}/browser/components/search/searchplugins" "${base_folder}/browser"
+        echo "Moving list.json in browser/search"
+        mv "${base_folder}/browser/searchplugins/list.json" "${base_folder}/browser/search"
+        echo "Copying region.properties"
+        cp -r "${unified_path}/browser/locales/en-US/chrome/browser-region" "${base_folder}/browser"
+    else
+        # Necessary until bug 1437942 moves to release
+        echo "Copying browser/search"
+        cp -r "${unified_path}/browser/locales/search" "${base_folder}/browser"
+        echo "Removing existing browser/searchplugins folder"
+        rm -r "${base_folder}/browser/searchplugins"
+        echo "Copying browser/searchplugins"
+        cp -r "${unified_path}/browser/locales/searchplugins" "${base_folder}/browser"
+        echo "Copying region.properties"
+        cp -r "${unified_path}/browser/locales/en-US/chrome/browser-region" "${base_folder}/browser"
+    fi
 
     # Fennec (/mobile)
     folders=( browser-region search searchplugins )
@@ -74,15 +88,27 @@ do
         fi
     done
 
-    # Fennec (/mobile)
-    echo "Copying mobile/search"
-    cp -r "${unified_path}/mobile/locales/search" "${base_folder}/mobile"
-    echo "Removing existing mobile/searchplugins folder"
-    rm -r "${base_folder}/mobile/searchplugins"
-    echo "Copying mobile/searchplugins"
-    cp -r "${unified_path}/mobile/locales/searchplugins" "${base_folder}/mobile"
-    echo "Copying region.properties"
-    cp "${unified_path}/mobile/locales/en-US/chrome/region.properties" "${base_folder}/mobile/browser-region/"
+    if [ -d "${unified_path}/mobile/android/components/search/searchplugins" ]
+    then
+        echo "Removing existing mobile/searchplugins folder"
+        rm -r "${base_folder}/mobile/searchplugins"
+        echo "Copying mobile/searchplugins"
+        cp -r "${unified_path}/mobile/android/components/search/searchplugins" "${base_folder}/browser"
+        echo "Moving list.json in mobile/search"
+        mv "${base_folder}/mobile/searchplugins/list.json" "${base_folder}/mobile/search"
+        echo "Copying region.properties"
+        cp "${unified_path}/mobile/locales/en-US/chrome/region.properties" "${base_folder}/mobile/browser-region/"
+    else
+        # Necessary until bug 1437942 moves to release
+        echo "Copying mobile/search"
+        cp -r "${unified_path}/mobile/locales/search" "${base_folder}/mobile"
+        echo "Removing existing mobile/searchplugins folder"
+        rm -r "${base_folder}/mobile/searchplugins"
+        echo "Copying mobile/searchplugins"
+        cp -r "${unified_path}/mobile/locales/searchplugins" "${base_folder}/mobile"
+        echo "Copying region.properties"
+        cp "${unified_path}/mobile/locales/en-US/chrome/region.properties" "${base_folder}/mobile/browser-region/"
+    fi
 
     # Download comm-central settings
     if [ "${branch}" == "central" ]
