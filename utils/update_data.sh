@@ -93,7 +93,7 @@ do
         echo "Removing existing mobile/searchplugins folder"
         rm -r "${base_folder}/mobile/searchplugins"
         echo "Copying mobile/searchplugins"
-        cp -r "${unified_path}/mobile/android/components/search/searchplugins" "${base_folder}/browser"
+        cp -r "${unified_path}/mobile/android/components/search/searchplugins" "${base_folder}/mobile"
         echo "Moving list.json in mobile/search"
         mv "${base_folder}/mobile/searchplugins/list.json" "${base_folder}/mobile/search"
         echo "Copying region.properties"
