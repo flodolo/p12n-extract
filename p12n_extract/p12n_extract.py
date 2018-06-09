@@ -190,10 +190,16 @@ class ProductizationData():
                             centralized_json = json.load(data_file)
                         # Only consider shipping locales
                         if locale in self.shipping_locales[product][channel]:
-                            if locale in centralized_json['locales']:
+
+                            # ja-JP-mac is ja-JP-macos starting with fx62
+                            json_locale = locale
+                            if locale == 'ja-JP-mac' and locale not in centralized_json['locales']:
+                                json_locale = 'ja-JP-macos'
+
+                            if json_locale in centralized_json['locales']:
                                 # We have searchplugins defined
-                                list_sp = centralized_json['locales'][locale][
-                                    'default']['visibleDefaultEngines']
+                                list_sp = centralized_json['locales'][
+                                    json_locale]['default']['visibleDefaultEngines']
                             else:
                                 # Fall back to default
                                 list_sp = self.default_searchplugins[
@@ -498,15 +504,20 @@ class ProductizationData():
                         if 'searchDefault' in centralized_json['default']:
                             default_engine_name = centralized_json['default']['searchDefault']
 
+                        # ja-JP-mac is ja-JP-macos starting with fx62
+                        json_locale = locale
+                        if locale == 'ja-JP-mac' and locale not in centralized_json['locales']:
+                            json_locale = 'ja-JP-macos'
+
                         # Check if there's a default for the locale
-                        if locale in centralized_json['locales']:
-                            locale_data = centralized_json['locales'][locale]
+                        if json_locale in centralized_json['locales']:
+                            locale_data = centralized_json['locales'][json_locale]
                             if 'default' in locale_data and 'searchDefault' in locale_data['default']:
                                 default_engine_name = locale_data['default']['searchDefault']
 
                             # As a last resort, use region override
                             locale_region = self.region_mappings.get(
-                                locale, locale.upper())
+                                json_locale, json_locale.upper())
                             if locale_region in locale_data and 'searchDefault' in locale_data[locale_region]:
                                 default_engine_name = locale_data[locale_region]['searchDefault']
 
@@ -523,7 +534,7 @@ class ProductizationData():
                             search_order_list = centralized_json['default']['searchOrder']
 
                         # Check if search order is defined for the locale
-                        if locale in centralized_json['locales']:
+                        if json_locale in centralized_json['locales']:
                             if 'default' in locale_data and 'searchOrder' in locale_data['default']:
                                 central_search_order = True
                                 search_order_list = locale_data['default']['searchOrder']
