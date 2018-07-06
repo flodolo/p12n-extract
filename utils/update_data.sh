@@ -129,11 +129,23 @@ do
         fi
     done
     wget -q "${base_url}/mail/locales/en-US/chrome/messenger-region/region.properties" -O "${base_folder}/mail/browser-region/region.properties"
-    wget -q "${base_url}/mail/locales/search/list.json" -O "${base_folder}/mail/search/list.json"
+    
+    if [ "${branch}" == "release" ]
+    then
+        wget -q "${base_url}/mail/locales/search/list.json" -O "${base_folder}/mail/search/list.json"
+    else
+        wget -q "${base_url}/mail/components/search/searchplugins/list.json" -O "${base_folder}/mail/search/list.json"
+    fi
+    
     searchplugins=( amazondotcom aol-web-search bing google twitter wikipedia yahoo )
     for sp in "${searchplugins[@]}"
     do
-        wget -q "${base_url}/mail/locales/en-US/searchplugins/${sp}.xml" -O "${base_folder}/mail/searchplugins/${sp}.xml"
+        if [ "${branch}" == "release" ]
+        then
+            wget -q "${base_url}/mail/locales/en-US/searchplugins/${sp}.xml" -O "${base_folder}/mail/searchplugins/${sp}.xml"
+        else
+            wget -q "${base_url}/mail/components/search/searchplugins/${sp}.xml" -O "${base_folder}/mail/searchplugins/${sp}.xml"
+        fi                
     done
 
     # SeaMonkey
