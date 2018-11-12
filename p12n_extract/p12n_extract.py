@@ -319,7 +319,7 @@ class ProductizationData():
                                 node = xmldoc.getElementsByTagName(
                                     'os:ShortName')
                             name = node[0].childNodes[0].nodeValue
-                        except Exception as e:
+                        except:
                             errors.append(
                                 'error extracting name {}'.format(searchplugin_info))
                             name = 'not available'
@@ -330,7 +330,7 @@ class ProductizationData():
                                 node = xmldoc.getElementsByTagName(
                                     'os:Description')
                             description = node[0].childNodes[0].nodeValue
-                        except Exception as e:
+                        except:
                             # We don't really use description anywhere, and it's
                             # usually removed on mobile, so I don't print
                             # errors
@@ -350,7 +350,7 @@ class ProductizationData():
                             p = re.compile('^https://')
                             if p.match(url):
                                 secure = 1
-                        except Exception as e:
+                        except:
                             errors.append(
                                 'error extracting URL {}'.format(searchplugin_info))
                             url = 'not available'
@@ -403,7 +403,7 @@ class ProductizationData():
                                     if '%' in image:
                                         warnings.append('searchplugin\'s image on mobile can\'t contain % character {}'.format(
                                             searchplugin_info))
-                        except Exception as e:
+                        except:
                             errors.append(
                                 'error extracting image {}'.format(searchplugin_info))
                             # Use default empty image
@@ -585,7 +585,7 @@ class ProductizationData():
                                         # Remove whitespaces, some locales use key =
                                         # value instead of key=value
                                         settings[key.strip()] = value.strip()
-                                    except Exception as e:
+                                    except:
                                         errors.append('problem parsing {} ({}, {}, {})'.format(
                                             region_file, locale, product, channel))
                     except Exception as e:
@@ -739,7 +739,7 @@ class ProductizationData():
                             }
                         self.data['locales'][locale][product][
                             channel]['p12n'] = tmp_data
-            except Exception as e:
+            except:
                 errors.append('Error saving data into JSON from {} ({}, {}, {})'.format(
                     region_file, locale, product, channel))
 
