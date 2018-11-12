@@ -65,16 +65,6 @@ do
         mv "${base_folder}/browser/searchplugins/list.json" "${base_folder}/browser/search"
         echo "Copying region.properties"
         cp -r "${unified_path}/browser/locales/en-US/chrome/browser-region" "${base_folder}/browser"
-    else
-        # Necessary until bug 1437942 moves to release
-        echo "Copying browser/search"
-        cp -r "${unified_path}/browser/locales/search" "${base_folder}/browser"
-        echo "Removing existing browser/searchplugins folder"
-        rm -r "${base_folder}/browser/searchplugins"
-        echo "Copying browser/searchplugins"
-        cp -r "${unified_path}/browser/locales/searchplugins" "${base_folder}/browser"
-        echo "Copying region.properties"
-        cp -r "${unified_path}/browser/locales/en-US/chrome/browser-region" "${base_folder}/browser"
     fi
 
     # Fennec (/mobile)
@@ -98,16 +88,6 @@ do
         mv "${base_folder}/mobile/searchplugins/list.json" "${base_folder}/mobile/search"
         echo "Copying region.properties"
         cp "${unified_path}/mobile/locales/en-US/chrome/region.properties" "${base_folder}/mobile/browser-region/"
-    else
-        # Necessary until bug 1437942 moves to release
-        echo "Copying mobile/search"
-        cp -r "${unified_path}/mobile/locales/search" "${base_folder}/mobile"
-        echo "Removing existing mobile/searchplugins folder"
-        rm -r "${base_folder}/mobile/searchplugins"
-        echo "Copying mobile/searchplugins"
-        cp -r "${unified_path}/mobile/locales/searchplugins" "${base_folder}/mobile"
-        echo "Copying region.properties"
-        cp "${unified_path}/mobile/locales/en-US/chrome/region.properties" "${base_folder}/mobile/browser-region/"
     fi
 
     # Download comm-central settings
@@ -129,23 +109,19 @@ do
         fi
     done
     wget -q "${base_url}/mail/locales/en-US/chrome/messenger-region/region.properties" -O "${base_folder}/mail/browser-region/region.properties"
-    
+
     if [ "${branch}" == "release" ]
     then
-        wget -q "${base_url}/mail/locales/search/list.json" -O "${base_folder}/mail/search/list.json"
-    else
         wget -q "${base_url}/mail/components/search/searchplugins/list.json" -O "${base_folder}/mail/search/list.json"
     fi
-    
+
     searchplugins=( amazondotcom aol-web-search bing google twitter wikipedia yahoo )
     for sp in "${searchplugins[@]}"
     do
         if [ "${branch}" == "release" ]
         then
-            wget -q "${base_url}/mail/locales/en-US/searchplugins/${sp}.xml" -O "${base_folder}/mail/searchplugins/${sp}.xml"
-        else
             wget -q "${base_url}/mail/components/search/searchplugins/${sp}.xml" -O "${base_folder}/mail/searchplugins/${sp}.xml"
-        fi                
+        fi
     done
 
     # SeaMonkey
