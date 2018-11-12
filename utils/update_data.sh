@@ -112,8 +112,6 @@ do
 
     if [ "${branch}" == "release" ]
     then
-        wget -q "${base_url}/mail/locales/search/list.json" -O "${base_folder}/mail/search/list.json"
-    else
         wget -q "${base_url}/mail/components/search/searchplugins/list.json" -O "${base_folder}/mail/search/list.json"
     fi
 
@@ -122,8 +120,6 @@ do
     do
         if [ "${branch}" == "release" ]
         then
-            wget -q "${base_url}/mail/locales/en-US/searchplugins/${sp}.xml" -O "${base_folder}/mail/searchplugins/${sp}.xml"
-        else
             wget -q "${base_url}/mail/components/search/searchplugins/${sp}.xml" -O "${base_folder}/mail/searchplugins/${sp}.xml"
         fi
     done
