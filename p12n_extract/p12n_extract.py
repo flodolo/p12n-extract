@@ -493,7 +493,7 @@ class ProductizationData():
                 # Check if there is a centralized source, and it has information
                 # on default engine
                 central_default = False
-                central_search_order = False
+                custom_central_search_order = False
                 if centralized_source != '' and os.path.isfile(centralized_source):
                     try:
                         with open(centralized_source) as data_file:
@@ -536,7 +536,7 @@ class ProductizationData():
                         # Check if search order is defined for the locale
                         if json_locale in centralized_json['locales']:
                             if 'default' in locale_data and 'searchOrder' in locale_data['default']:
-                                central_search_order = True
+                                custom_central_search_order = True
                                 search_order_list = locale_data['default']['searchOrder']
 
                         # Store the list
@@ -547,7 +547,9 @@ class ProductizationData():
                                 search_order[str(i)] = engine_name
                                 i += 1
                             else:
-                                if not central_search_order:
+                                # Only consider this an error if the locale has
+                                # a custom search order defined
+                                if custom_central_search_order:
                                     errors.append(
                                         '{} is defined in searchorder but not available in searchplugins (check if the name is spelled correctly)'.format(engine_name))
 
@@ -617,7 +619,7 @@ class ProductizationData():
                             # browser.search.order.1=Google
                             if key.startswith('browser.search.order.'):
                                 line_ok = True
-                                if central_search_order:
+                                if custom_central_search_order:
                                     warnings.append(
                                         '{} is obsolete'.format(key))
                                 else:
