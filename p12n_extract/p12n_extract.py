@@ -547,8 +547,9 @@ class ProductizationData():
                                 search_order[str(i)] = engine_name
                                 i += 1
                             else:
-                                errors.append(
-                                    '{} is defined in searchorder but not available in searchplugins (check if the name is spelled correctly)'.format(engine_name))
+                                if not central_search_order:
+                                    errors.append(
+                                        '{} is defined in searchorder but not available in searchplugins (check if the name is spelled correctly)'.format(engine_name))
 
                     except Exception as e:
                         print('Error reading default and source order from list.json: {}, {}, {}'.format(
