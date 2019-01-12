@@ -294,7 +294,7 @@ class ProductizationData():
                                         preprocessor = True
                                     else:
                                         # Line is OK, adding it to newspcontent
-                                        cleaned_sp_content += line.encode()
+                                        cleaned_sp_content += line
                             if preprocessor:
                                 warnings.append('searchplugin contains preprocessor instructions (e.g. #define, #if) that have been stripped in order to parse the XML {}'.format(
                                     searchplugin_info))
@@ -454,11 +454,12 @@ class ProductizationData():
                                 locale, product, channel, sp))
 
             # Save errors and warnings
+            locale_stored = 'en-US' if locale == 'shared' else locale;
             if errors:
-                self.errors['locales'][locale][
+                self.errors['locales'][locale_stored][
                     product][channel]['errors'] = errors
             if warnings:
-                self.errors['locales'][locale][product][
+                self.errors['locales'][locale_stored][product][
                     channel]['warnings'] = warnings
         except Exception as e:
             print('[{}] problem reading searchplugins'.format(locale))
@@ -747,11 +748,12 @@ class ProductizationData():
                     region_file, locale, product, channel))
 
             # Save errors and warnings
+            locale_stored = 'en-US' if locale == 'shared' else locale;
             if errors:
-                self.errors['locales'][locale][product][
+                self.errors['locales'][locale_stored][product][
                     channel]['p12n_errors'] = errors
             if warnings:
-                self.errors['locales'][locale][product][
+                self.errors['locales'][locale_stored][product][
                     channel]['p12n_warnings'] = warnings
         except Exception as e:
             print('[{}] No searchplugins available for this locale ({})'.format(
