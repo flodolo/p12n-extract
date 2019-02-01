@@ -454,7 +454,7 @@ class ProductizationData():
                                 locale, product, channel, sp))
 
             # Save errors and warnings
-            locale_stored = 'en-US' if locale == 'shared' else locale;
+            locale_stored = 'en-US' if locale == 'shared' else locale
             if errors:
                 self.errors['locales'][locale_stored][
                     product][channel]['errors'] = errors
@@ -748,7 +748,7 @@ class ProductizationData():
                     region_file, locale, product, channel))
 
             # Save errors and warnings
-            locale_stored = 'en-US' if locale == 'shared' else locale;
+            locale_stored = 'en-US' if locale == 'shared' else locale
             if errors:
                 self.errors['locales'][locale_stored][product][
                     channel]['p12n_errors'] = errors
