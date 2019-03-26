@@ -1,3 +1,4 @@
 *.pyc
 tests/files/web
 utils/settings.local.inc.php
+venv

@@ -294,7 +294,7 @@ class ProductizationData():
                                         preprocessor = True
                                     else:
                                         # Line is OK, adding it to newspcontent
-                                        cleaned_sp_content += line
+                                        cleaned_sp_content += line.encode()
                             if preprocessor:
                                 warnings.append('searchplugin contains preprocessor instructions (e.g. #define, #if) that have been stripped in order to parse the XML {}'.format(
                                     searchplugin_info))
